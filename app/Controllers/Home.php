@@ -11,7 +11,7 @@ class Home extends BaseController
             'page_title' => 'Welcome to City General Hospital'
         ];
 
-        return view('home', $data);
+        return view('home/home', $data);
     }
 
     public function about(): string
@@ -21,7 +21,7 @@ class Home extends BaseController
             'page_title' => 'About City General Hospital'
         ];
 
-        return view('about', $data);
+        return view('home/about', $data);
     }
 
     public function contact(): string
@@ -31,6 +31,6 @@ class Home extends BaseController
             'page_title' => 'Contact City General Hospital'
         ];
 
-        return view('contact', $data);
+        return view('home/contact', $data);
     }
 }

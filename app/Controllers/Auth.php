@@ -97,15 +97,16 @@ class Auth extends BaseController
         // Show different dashboards based on user role
         switch ($userRole) {
             case 'admin':
-                return view('admin_dashboard', $data);
+                return view('admin/dashboard', $data);
             case 'doctor':
-                return view('doctor_dashboard', $data);
+                return view('doctor/dashboard', $data);
             case 'nurse':
-                return view('nurse_dashboard', $data);
+                return view('nurse/dashboard', $data);
             case 'staff':
-                return view('staff_dashboard', $data);
+                return view('staff/dashboard', $data);
             default:
-                return view('admin_dashboard', $data);
+                // Redirect to login if role is not recognized
+                return redirect()->to('/login')->with('error', 'Invalid user role');
         }
     }
 }
