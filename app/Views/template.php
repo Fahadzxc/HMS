@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? 'City General Hospital' ?></title>
-
-    <!-- Hospital Management System - Custom CSS -->
+    <title><?= $title ?? 'MediCare Hospital' ?></title>
     <style>
-        /* Reset and Base Styles */
+        /* MediCare Hospital - Clean Professional Design */
+
+        /* Reset and base styles */
         * {
             margin: 0;
             padding: 0;
@@ -15,10 +15,12 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: #2c3e50;
-            background-color: #ecf0f1;
+            background-color: #fafbfc;
+            height: 100vh;
+            overflow: hidden;
         }
 
         .container {
@@ -29,10 +31,10 @@
 
         /* Header */
         .header {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
+            background: #ffffff;
             padding: 1.5rem 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-bottom: 1px solid #e8f4f8;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
         .header .container {
@@ -44,40 +46,31 @@
         .logo {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         .logo-icon {
-            font-size: 2.5rem;
-            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
         }
 
         .logo h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-
-        .header-info {
-            text-align: right;
-            font-size: 0.9rem;
-        }
-
-        .header-info p {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #2c3e50;
             margin: 0;
-            opacity: 0.9;
         }
 
         /* Navigation */
         .navbar {
-            background: #2c3e50;
-            padding: 0.75rem 0;
-            border-bottom: 3px solid #3498db;
-        }
-
-        .navbar .container {
             display: flex;
-            justify-content: space-between;
             align-items: center;
         }
 
@@ -87,222 +80,461 @@
             gap: 0;
         }
 
-        .navbar-nav a {
-            color: white;
+        .nav-link {
+            color: #5a6c7d;
             text-decoration: none;
-            padding: 1rem 1.5rem;
+            padding: 0.75rem 1.5rem;
             transition: all 0.3s ease;
             font-weight: 500;
-            border-radius: 0;
-            position: relative;
+            font-size: 0.95rem;
+            border-radius: 6px;
         }
 
-        .navbar-nav a:hover {
-            background-color: #3498db;
-            transform: translateY(-2px);
+        .nav-link:hover {
+            color: #74b9ff;
+            background: #f8f9fa;
         }
 
-        .navbar-nav a.active {
-            background-color: #3498db;
-            border-bottom: 3px solid #2980b9;
+        .nav-link.active {
+            color: #74b9ff;
+            background: #e3f2fd;
         }
 
-        /* Main Content */
+        /* Main content */
         .main-content {
-            min-height: calc(100vh - 200px);
-            padding: 3rem 0;
+            padding: 2rem 0;
+            height: calc(100vh - 140px);
+            overflow-y: auto;
         }
 
-        /* Cards */
-        .card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-            padding: 2.5rem;
-            margin-bottom: 2rem;
-            border: 1px solid #e1e8ed;
-            transition: transform 0.3s ease;
+        /* Homepage styles */
+        .hero-section {
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
-        }
-
-        .card-header {
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .card-title {
-            font-size: 1.8rem;
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 700;
             color: #2c3e50;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
+            margin-bottom: 1rem;
+            line-height: 1.2;
         }
 
-        .card-subtitle {
-            color: #7f8c8d;
+        .hero-subtitle {
             font-size: 1rem;
+            color: #7f8c8d;
+            margin-bottom: 2rem;
             line-height: 1.5;
         }
 
-        /* Buttons */
-        .btn {
-            display: inline-block;
-            padding: 0.875rem 2rem;
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .service-card {
+            background: #ffffff;
+            padding: 1.5rem 1.2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             transition: all 0.3s ease;
+            border: 1px solid #f1f3f4;
+        }
+
+        .service-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+        }
+
+        .service-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 1rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: white;
+        }
+
+        .emergency-icon {
+            background: linear-gradient(135deg, #ff7675, #d63031);
+        }
+
+        .treatment-icon {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+        }
+
+        .care-icon {
+            background: linear-gradient(135deg, #00b894, #00a085);
+        }
+
+        .service-title {
+            font-size: 1.1rem;
             font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.8rem;
+        }
+
+        .service-description {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            line-height: 1.4;
+        }
+
+        /* About page styles */
+        .about-section {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .about-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #2c3e50;
             text-align: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .about-subtitle {
             font-size: 0.95rem;
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            color: #7f8c8d;
+            text-align: center;
+            margin-bottom: 2rem;
+            line-height: 1.5;
         }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+        .story-vision-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
         }
 
-        .btn-secondary {
-            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        .story-section, .vision-section {
+            padding: 1.5rem;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #f1f3f4;
         }
 
-        .btn-success {
-            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        .story-section {
+            background: linear-gradient(135deg, #e8f5e8 0%, #ffffff 100%);
         }
 
-        .btn-danger {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        .vision-section {
+            background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
         }
 
-        .btn-info {
-            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.8rem;
         }
 
-        /* Stats Grid */
+        .section-text {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            line-height: 1.5;
+        }
+
+        .departments-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .department-card {
+            background: #ffffff;
+            padding: 1.2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid #f1f3f4;
+        }
+
+        .department-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        .department-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 0.8rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .cardiology-icon {
+            background: linear-gradient(135deg, #ff7675, #d63031);
+        }
+
+        .neurology-icon {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+        }
+
+        .pediatrics-icon {
+            background: linear-gradient(135deg, #00b894, #00a085);
+        }
+
+        .surgery-icon {
+            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+        }
+
+        .pharmacy-icon {
+            background: linear-gradient(135deg, #fd79a8, #e84393);
+        }
+
+        .laboratory-icon {
+            background: linear-gradient(135deg, #fdcb6e, #e17055);
+        }
+
+        .department-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .stats-section {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            margin: 2rem 0;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
         }
 
-        .stat-card {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-            text-align: center;
-            border-left: 5px solid #3498db;
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
+        .stat-item {
+            color: white;
         }
 
         .stat-number {
-            font-size: 3rem;
+            font-size: 1.8rem;
             font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.3rem;
         }
 
         .stat-label {
-            color: #7f8c8d;
-            font-size: 1.1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 500;
+            font-size: 0.8rem;
+            opacity: 0.9;
         }
 
-        /* Quick Actions */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.5rem;
-            margin: 2rem 0;
+        /* Contact page styles */
+        .contact-section {
+            max-width: 1000px;
+            margin: 0 auto;
         }
 
-        .action-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2rem 1.5rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-            text-decoration: none;
+        .contact-title {
+            font-size: 2.2rem;
+            font-weight: 700;
             color: #2c3e50;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
+            text-align: center;
+            margin-bottom: 0.8rem;
         }
 
-        .action-btn:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 30px rgba(52, 152, 219, 0.2);
-            border-color: #3498db;
+        .contact-subtitle {
+            font-size: 0.95rem;
+            color: #7f8c8d;
+            text-align: center;
+            margin-bottom: 2rem;
+            line-height: 1.5;
         }
 
-        .action-icon {
-            font-size: 3rem;
+        .contact-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .contact-info {
+            background: #ffffff;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #f1f3f4;
+        }
+
+        .contact-info h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1.2rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .contact-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: white;
+        }
+
+        .contact-icon.address {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+        }
+
+        .contact-icon.phone {
+            background: linear-gradient(135deg, #00b894, #00a085);
+        }
+
+        .contact-icon.email {
+            background: linear-gradient(135deg, #fd79a8, #e84393);
+        }
+
+        .contact-icon.emergency {
+            background: linear-gradient(135deg, #ff7675, #d63031);
+        }
+
+        .contact-details h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.2rem;
+        }
+
+        .contact-details p {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .contact-form {
+            background: #ffffff;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #f1f3f4;
+        }
+
+        .contact-form h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group {
             margin-bottom: 1rem;
         }
 
-        .action-text {
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 0.4rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.7rem;
+            border: 2px solid #e8f4f8;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+            background: #fafbfc;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #74b9ff;
+            background: #ffffff;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
             font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(116, 185, 255, 0.3);
+        }
+
+        .emergency-section {
+            background: linear-gradient(135deg, #ff7675, #d63031);
+            color: white;
+            padding: 1.2rem;
+            border-radius: 12px;
             text-align: center;
-            font-size: 1.1rem;
+        }
+
+        .emergency-section h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.6rem;
+        }
+
+        .emergency-section p {
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .emergency-number {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 0.6rem 0;
         }
 
         /* Footer */
         .footer {
             background: #2c3e50;
-            color: white;
-            text-align: center;
-            padding: 3rem 0 1rem 0;
-            margin-top: 4rem;
-        }
-
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .footer-section h3 {
-            margin-bottom: 1.5rem;
-            color: #3498db;
-            font-size: 1.3rem;
-        }
-
-        .footer-section p, .footer-section a {
             color: #bdc3c7;
-            text-decoration: none;
-            line-height: 1.8;
-            font-size: 0.95rem;
+            text-align: center;
+            padding: 1rem 0;
+            margin-top: 0;
         }
 
-        .footer-section a:hover {
-            color: #3498db;
-        }
-
-        .footer-bottom {
-            border-top: 1px solid #34495e;
-            padding-top: 2rem;
-            color: #95a5a6;
-            font-size: 0.9rem;
-        }
-
-        /* Responsive Design */
+        /* Responsive design */
         @media (max-width: 768px) {
             .header .container {
                 flex-direction: column;
@@ -310,105 +542,65 @@
                 text-align: center;
             }
 
-            .navbar .container {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
             .navbar-nav {
-                flex-direction: column;
-                width: 100%;
+                flex-direction: row;
+                gap: 0.5rem;
             }
 
-            .navbar-nav a {
-                text-align: center;
-                border-radius: 8px;
-                margin: 0.25rem 0;
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .story-vision-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .departments-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
             }
 
             .stats-grid {
                 grid-template-columns: 1fr;
+                gap: 1.5rem;
             }
 
-            .quick-actions {
-                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            .contact-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
             }
 
-            .logo h1 {
-                font-size: 1.5rem;
-            }
-
-            .header-info {
-                text-align: center;
+            .about-title, .contact-title {
+                font-size: 2.2rem;
             }
         }
 
-        /* Loading Animation - more human-like */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px) rotate(2deg);
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 2rem;
             }
-            to {
-                opacity: 1;
-                transform: translateY(0) rotate(0deg);
+
+            .service-card, .department-card {
+                padding: 1.5rem;
             }
-        }
 
-        @keyframes wobble {
-            0% { transform: rotate(0deg); }
-            25% { transform: rotate(0.5deg); }
-            50% { transform: rotate(-0.3deg); }
-            75% { transform: rotate(0.2deg); }
-            100% { transform: rotate(0deg); }
-        }
+            .contact-info, .contact-form {
+                padding: 1.5rem;
+            }
 
-        .card {
-            animation: fadeInUp 0.8s ease-out;
-        }
-
-        .stat-card, .action-btn {
-            animation: fadeInUp 0.7s ease-out;
-        }
-
-        /* Add some personality to elements */
-        .navbar-nav a:hover {
-            animation: wobble 0.6s ease-in-out;
-        }
-
-        /* Handwritten feel for some text */
-        .action-text {
-            font-family: 'Comic Sans MS', cursive, sans-serif;
-            font-weight: 600;
-        }
-
-        /* Add some texture */
-        .header {
-            background-image:
-                radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
-                linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-        }
-
-        /* Slightly imperfect borders */
-        .card {
-            border-radius: 12px 8px 12px 8px;
-        }
-
-        .stat-card {
-            border-radius: 8px 12px 8px 12px;
-        }
-
-        /* Add some human touch to buttons */
-        .btn:hover {
-            transform: translateY(-2px) scale(1.02);
-        }
-
-        /* Personal signature style */
-        .footer-bottom::after {
-            content: " - Made with ❤️ by humans, for humans";
-            font-size: 0.8rem;
-            opacity: 0.7;
+            .about-title, .contact-title {
+                font-size: 1.8rem;
+            }
         }
     </style>
 </head>
@@ -417,67 +609,28 @@
     <header class="header">
         <div class="container">
             <div class="logo">
-                <span class="logo-icon">🏥</span>
-                <h1>City General Hospital</h1>
+                <div class="logo-icon">🏥</div>
+                <h1>MediCare Hospital</h1>
             </div>
-            <div class="header-info">
-                <p>Hospital Management System</p>
-                <p><?= date('l, F j, Y') ?></p>
-            </div>
+            <nav class="navbar">
+                <ul class="navbar-nav">
+                    <li><a href="<?= base_url('home') ?>" class="nav-link">Home</a></li>
+                    <li><a href="<?= base_url('about') ?>" class="nav-link">About</a></li>
+                    <li><a href="<?= base_url('contact') ?>" class="nav-link">Contact</a></li>
+                </ul>
+            </nav>
         </div>
     </header>
 
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <ul class="navbar-nav">
-                <li><a href="<?= base_url('home') ?>" class="active">Home</a></li>
-                <li><a href="<?= base_url('about') ?>">About</a></li>
-                <li><a href="<?= base_url('services') ?>">Services</a></li>
-                <li><a href="<?= base_url('doctors') ?>">Doctors</a></li>
-                <li><a href="<?= base_url('contact') ?>">Contact</a></li>
-                <li><a href="<?= base_url('appointments') ?>">Appointments</a></li>
-            </ul>
-        </div>
-    </nav>
-
     <!-- Main Content -->
     <main class="main-content">
-        <div class="container">
-            <?= $this->renderSection('content') ?>
-        </div>
+        <?= $this->renderSection('content') ?>
     </main>
 
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>Contact Information</h3>
-                    <p><strong>Address:</strong> 123 Healthcare Ave, Medical City, MC 12345</p>
-                    <p><strong>Phone:</strong> (555) 123-4567</p>
-                    <p><strong>Email:</strong> info@citygeneralhospital.com</p>
-                    <p><strong>Emergency:</strong> (555) 911-0000</p>
-                </div>
-                <div class="footer-section">
-                    <h3>Quick Links</h3>
-                    <p><a href="<?= base_url('about') ?>">About Us</a></p>
-                    <p><a href="<?= base_url('services') ?>">Our Services</a></p>
-                    <p><a href="<?= base_url('doctors') ?>">Find a Doctor</a></p>
-                    <p><a href="<?= base_url('appointments') ?>">Book Appointment</a></p>
-                    <p><a href="<?= base_url('contact') ?>">Contact Us</a></p>
-                </div>
-                <div class="footer-section">
-                    <h3>Hours of Operation</h3>
-                    <p><strong>Emergency:</strong> 24/7</p>
-                    <p><strong>Outpatient:</strong> 6:00 AM - 10:00 PM</p>
-                    <p><strong>Visiting Hours:</strong> 8:00 AM - 8:00 PM</p>
-                    <p><strong>Pharmacy:</strong> 24/7</p>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; <?= date('Y') ?> City General Hospital. All rights reserved. | Licensed Healthcare Facility</p>
-            </div>
+            <p>&copy; 2024 MediCare Hospital. All rights reserved.</p>
         </div>
     </footer>
 </body>
