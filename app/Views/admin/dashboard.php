@@ -1,99 +1,172 @@
 <?= $this->extend('template') ?>
 
 <?= $this->section('content') ?>
-<div class="container">
-    <!-- Welcome Section -->
-    <div class="card">
-        <div class="card-header">
-            <h1 class="card-title">🏥 Admin Dashboard</h1>
-            <p class="card-subtitle">Welcome back, <?= session()->get('name') ?>!</p>
-        </div>
-    </div>
 
-    <!-- Quick Stats -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-number">150+</div>
-            <div class="stat-label">Total Patients</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">25+</div>
-            <div class="stat-label">Doctors</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">50+</div>
-            <div class="stat-label">Nurses</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">12</div>
-            <div class="stat-label">Departments</div>
-        </div>
-    </div>
-
-    <!-- Admin Actions -->
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">Admin Actions</h2>
-            <p class="card-subtitle">Manage your hospital system</p>
-        </div>
-
-        <div class="quick-actions">
-            <a href="#" class="action-btn">
-                <div class="action-icon">👥</div>
-                <div class="action-text">Manage Users</div>
-            </a>
-            <a href="#" class="action-btn">
-                <div class="action-icon">🏥</div>
-                <div class="action-text">Departments</div>
-            </a>
-            <a href="#" class="action-btn">
-                <div class="action-icon">📊</div>
-                <div class="action-text">Reports</div>
-            </a>
-            <a href="#" class="action-btn">
-                <div class="action-icon">⚙️</div>
-                <div class="action-text">Settings</div>
-            </a>
-        </div>
-    </div>
-
-    <!-- Recent Activity -->
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">Recent Activity</h2>
-            <p class="card-subtitle">Latest hospital activities</p>
-        </div>
-
-        <div style="padding: 1rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #eee;">
-                <div>
-                    <strong>New patient registered</strong>
-                    <p style="color: #666; margin: 0;">John Doe - Emergency Department</p>
+<!-- Dashboard KPI Cards -->
+<section class="panel">
+    <header class="panel-header">
+        <h2>Dashboard Overview</h2>
+        <p>Today's key metrics and statistics</p>
+    </header>
+    <div class="stack">
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-content">
+                    <div class="kpi-label">Patients Today</div>
+                    <div class="kpi-value">24</div>
+                    <div class="kpi-change kpi-positive">+3 from yesterday</div>
                 </div>
-                <span style="color: #999;">2 hours ago</span>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #eee;">
-                <div>
-                    <strong>Doctor appointment scheduled</strong>
-                    <p style="color: #666; margin: 0;">Dr. Smith - Cardiology</p>
+            <div class="kpi-card">
+                <div class="kpi-content">
+                    <div class="kpi-label">Revenue Today</div>
+                    <div class="kpi-value">$4,320</div>
+                    <div class="kpi-change kpi-positive">+12% from yesterday</div>
                 </div>
-                <span style="color: #999;">4 hours ago</span>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem;">
-                <div>
-                    <strong>New staff member added</strong>
-                    <p style="color: #666; margin: 0;">Jane Nurse - ICU Department</p>
+            <div class="kpi-card">
+                <div class="kpi-content">
+                    <div class="kpi-label">Appointments Scheduled</div>
+                    <div class="kpi-value">18</div>
+                    <div class="kpi-change kpi-positive">+2 from yesterday</div>
                 </div>
-                <span style="color: #999;">1 day ago</span>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-content">
+                    <div class="kpi-label">Low Stock Items</div>
+                    <div class="kpi-value">5</div>
+                    <div class="kpi-change kpi-negative">-1 from yesterday</div>
+                </div>
             </div>
         </div>
     </div>
+</section>
 
-    <!-- Logout Button -->
-    <div style="text-align: center; margin-top: 2rem;">
-        <a href="<?= base_url('auth/logout') ?>" class="btn" style="background: #e74c3c;">
-            🚪 Logout
-        </a>
-    </div>
+<div class="page-grid">
+    <!-- Pending Approvals/Tasks -->
+    <section class="panel">
+        <header class="panel-header">
+            <h2>Pending Approvals/Tasks</h2>
+            <p>Items that need your attention</p>
+        </header>
+        <div class="stack">
+            <article class="card">
+                <div class="row between">
+                    <h3>Appointment request</h3>
+                    <span class="badge high">high</span>
+                </div>
+                <p>Assigned to: <strong>Alice Smith</strong></p>
+                <p>Status: Pending</p>
+                <a href="#" class="link">Review</a>
+            </article>
+
+            <article class="card">
+                <div class="row between">
+                    <h3>Order supplies</h3>
+                    <span class="badge medium">medium</span>
+                </div>
+                <p>Assigned to: <strong>David Johnson</strong></p>
+                <p>Status: Pending</p>
+                <a href="#" class="link">Review</a>
+            </article>
+
+            <article class="card">
+                <div class="row between">
+                    <h3>Review payroll</h3>
+                    <span class="badge medium">medium</span>
+                </div>
+                <p>Assigned to: <strong>Elizabeth Brown</strong></p>
+                <p>Status: Pending</p>
+                <a href="#" class="link">Review</a>
+            </article>
+
+            <article class="card">
+                <div class="row between">
+                    <h3>System update</h3>
+                    <span class="badge low">low</span>
+                </div>
+                <p>Assigned to: <strong>Robert Wilson</strong></p>
+                <p>Status: Pending</p>
+                <a href="#" class="link">Review</a>
+            </article>
+        </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="panel">
+        <header class="panel-header">
+            <h2>Quick Actions</h2>
+        </header>
+        <div class="actions-grid">
+            <a class="action-tile" href="#"><span class="icon icon-add"></span><span>Add Patient</span></a>
+            <a class="action-tile" href="#"><span class="icon icon-schedule"></span><span>Schedule</span></a>
+            <a class="action-tile" href="#"><span class="icon icon-reports"></span><span>Reports</span></a>
+            <a class="action-tile" href="#"><span class="icon icon-settings"></span><span>Settings</span></a>
+        </div>
+    </section>
 </div>
+
+<div class="page-grid">
+    <!-- Recent Activities -->
+    <section class="panel">
+        <header class="panel-header">
+            <h2>Recent Activities</h2>
+        </header>
+        <ul class="list">
+            <li class="list-item info">
+                <span class="dot"></span>New patient registered - John Smith - 10 minutes ago
+            </li>
+            <li class="list-item success">
+                <span class="dot"></span>Appointment completed - Sarah Johnson - 25 minutes ago
+            </li>
+            <li class="list-item warn">
+                <span class="dot"></span>Lab results updated - Michael Brown - 1 hour ago
+            </li>
+        </ul>
+    </section>
+
+    <!-- System Status -->
+    <section class="panel">
+        <header class="panel-header">
+            <h2>System Status</h2>
+        </header>
+        <div class="status-list">
+            <div class="status-row">
+                <span><span class="dot ok"></span>Database</span>
+                <span>Online</span>
+            </div>
+            <div class="status-row">
+                <span><span class="dot ok"></span>Backup System</span>
+                <span>Active</span>
+            </div>
+            <div class="status-row">
+                <span>Server Load</span>
+                <span>42%</span>
+            </div>
+            <div class="status-row">
+                <span>Storage Used</span>
+                <span>68%</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Today's Summary -->
+    <section class="panel">
+        <header class="panel-header">
+            <h2>Today's Summary</h2>
+        </header>
+        <ul class="list">
+            <li class="list-item">
+                <span class="icon icon-patients"></span>Patients Seen: <strong>24</strong>
+            </li>
+            <li class="list-item">
+                <span class="icon icon-appointments"></span>Appointments: <strong>18</strong>
+            </li>
+            <li class="list-item">
+                <span class="icon icon-lab"></span>Lab Tests: <strong>12</strong>
+            </li>
+        </ul>
+    </section>
+</div>
+
 <?= $this->endSection() ?>

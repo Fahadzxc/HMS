@@ -15,3 +15,9 @@ $routes->get('login', 'Auth::login');
 $routes->post('login', 'Auth::processLogin');
 $routes->get('dashboard', 'Auth::dashboard');
 $routes->get('auth/logout', 'Auth::logout');
+
+// Admin Routes
+$routes->get('admin/dashboard', 'Admin\Dashboard::index');
+$routes->get('patients', 'Admin\Patients::index');
+$routes->get('appointments', 'Admin\Appointments::index');
+$routes->get('billing', 'Admin\Billing::index');

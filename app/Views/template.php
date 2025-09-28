@@ -1807,6 +1807,505 @@
     </style>
 </head>
 <body>
+<?php 
+    $roleFromSession = session()->get('role');
+    $segment = strtolower((string)($roleFromSession ?: service('uri')->getSegment(1)));
+    $currentPath = strtolower(service('uri')->getPath());
+    
+    // Show sidebar for admin pages, not on login/logout/auth pages
+    $validRoles = ['admin','doctor','nurse','laboratory','pharmacy'];
+    $isAdminPage = strpos($currentPath, 'admin') !== false || strpos($currentPath, 'patients') !== false || strpos($currentPath, 'appointments') !== false || strpos($currentPath, 'billing') !== false || strpos($currentPath, 'laboratory') !== false || strpos($currentPath, 'pharmacy') !== false || strpos($currentPath, 'reports') !== false || strpos($currentPath, 'users') !== false || strpos($currentPath, 'settings') !== false;
+    $isDashboardPage = strpos($currentPath, 'dashboard') !== false;
+    $isAuthPage = strpos($currentPath, 'login') !== false || strpos($currentPath, 'logout') !== false || strpos($currentPath, 'auth') !== false;
+    
+    $useSidebar = in_array($segment, $validRoles, true) && ($isDashboardPage || $isAdminPage) && !$isAuthPage;
+?>
+
+<?php if ($useSidebar): ?>
+    <style>
+        /* Admin Dashboard Layout */
+        .layout {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: #0f2747;
+            color: #eaf2ff;
+            border-radius: 12px;
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .brand {
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .menu {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .menu a {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: #c9d7ee;
+            padding: 0.65rem 0.75rem;
+            border-radius: 8px;
+        }
+
+        .menu a:hover,
+        .menu a.active {
+            background: #16345d;
+            color: #fff;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Dashboard Components */
+        .page-grid {
+            display: grid;
+            grid-template-columns: 2fr 1.3fr;
+            gap: 1rem;
+        }
+
+        .panel {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .panel-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        .panel-header h2 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .panel-header p {
+            margin: 0.25rem 0 0;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .stack {
+            display: grid;
+            gap: 0.75rem;
+            padding: 1rem;
+        }
+
+        .card {
+            padding: 1rem;
+            border: 1px solid #eef2f7;
+            border-radius: 10px;
+            background: #f8fafc;
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+        }
+
+        .row.between {
+            justify-content: space-between;
+        }
+
+        /* Badges */
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 999px;
+            text-transform: capitalize;
+        }
+
+        .badge.high {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .badge.medium {
+            background: #fef3c7;
+            color: #a16207;
+        }
+
+        .badge.low {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        /* Action Grid */
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .action-tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            background: #f8fafc;
+            border: 1px solid #eef2f7;
+            border-radius: 12px;
+            padding: 1rem;
+            text-decoration: none;
+            color: #1a365d;
+        }
+
+        /* Lists */
+        .list {
+            list-style: none;
+            margin: 0;
+            padding: 1rem;
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .list-item {
+            padding: 0.75rem;
+            border: 1px solid #eef2f7;
+            border-radius: 10px;
+            background: #fff;
+        }
+
+        .list-item.info .dot {
+            background: #60a5fa;
+        }
+
+        .list-item.success .dot {
+            background: #22c55e;
+        }
+
+        .list-item.warn .dot {
+            background: #f59e0b;
+        }
+
+        .list-item .dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            margin-right: 0.5rem;
+        }
+
+        /* Status List */
+        .status-list {
+            padding: 1rem;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.6rem 0;
+            border-bottom: 1px dashed #eef2f7;
+        }
+
+        .status-row:last-child {
+            border-bottom: 0;
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .kpi-card {
+            padding: 1.5rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .kpi-content {
+            text-align: center;
+        }
+
+        .kpi-label {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .kpi-change {
+            font-size: 0.8rem;
+        }
+
+        .kpi-positive {
+            color: #22c55e;
+        }
+
+        .kpi-negative {
+            color: #ef4444;
+        }
+
+        .kpi-warning {
+            color: #f59e0b;
+        }
+
+        /* Panel Spacing */
+        .panel-spaced {
+            margin-top: 1rem;
+        }
+
+        /* Search Input */
+        .search-input {
+            padding: 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            width: 280px;
+        }
+
+        /* Primary Button */
+        .btn-primary {
+            padding: 0.6rem 1rem;
+            background: #3b82f6;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        /* Table Styles */
+        .table-header {
+            background: #f8fafc;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 0;
+        }
+
+        .table-row {
+            margin-bottom: 0.5rem;
+        }
+
+        .table-row:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Table Columns */
+        .col-id {
+            flex: 1;
+        }
+
+        .col-name {
+            flex: 2;
+        }
+
+        .col-age {
+            flex: 1.5;
+        }
+
+        .col-contact {
+            flex: 2;
+        }
+
+        .col-status {
+            flex: 1;
+        }
+
+        .col-doctor {
+            flex: 1.5;
+        }
+
+        .col-visit {
+            flex: 1;
+        }
+
+        .col-actions {
+            flex: 1;
+        }
+
+        .col-datetime {
+            flex: 2;
+        }
+
+        .col-type {
+            flex: 1.5;
+        }
+
+        .appointment-id {
+            font-weight: 600;
+        }
+
+        .col-amount {
+            flex: 1.5;
+        }
+
+        .col-date {
+            flex: 1.5;
+        }
+
+        .col-payment {
+            flex: 1.5;
+        }
+
+        .invoice-id {
+            font-weight: 600;
+        }
+
+        /* Secondary Button */
+        .btn-secondary {
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            color: #475569;
+            text-decoration: none;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-left: 0.5rem;
+        }
+
+
+        /* Patient Data */
+        .patient-id {
+            font-weight: 600;
+        }
+
+        .blood-type {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .phone {
+            margin: 0;
+        }
+
+        .email {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        /* Badge Variants */
+        .badge-gray {
+            background: #6b7280;
+            color: white;
+        }
+
+        .badge-blue {
+            background: #3b82f6;
+            color: white;
+        }
+
+        /* Action Links */
+        .action-link {
+            margin-right: 0.5rem;
+            text-decoration: none;
+            color: #3b82f6;
+        }
+
+        .action-delete {
+            color: #ef4444;
+        }
+
+        .dot.ok {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #22c55e;
+            margin-right: 0.4rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .page-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <?php
+        // Build role-specific menu definitions
+        $menus = [
+            'admin' => [
+                ['label' => 'Dashboard', 'url' => base_url('admin/dashboard')],
+                ['label' => 'Patients', 'url' => base_url('patients')],
+                ['label' => 'Appointments', 'url' => base_url('appointments')],
+                ['label' => 'Billing & Payments', 'url' => base_url('billing')],
+                ['label' => 'Laboratory', 'url' => base_url('laboratory')],
+                ['label' => 'Pharmacy & Inventory', 'url' => base_url('pharmacy')],
+                ['label' => 'Reports', 'url' => base_url('reports')],
+                ['label' => 'User Management', 'url' => base_url('users')],
+                ['label' => 'Settings', 'url' => base_url('settings')],
+                ['label' => 'Logout', 'url' => base_url('logout')],
+            ],
+            'doctor' => [
+                ['label' => 'Dashboard', 'url' => base_url('doctor/dashboard')],
+                ['label' => 'Patient Records', 'url' => base_url('doctor/patients')],
+                ['label' => 'Appointments', 'url' => base_url('doctor/appointments')],
+                ['label' => 'Prescriptions', 'url' => base_url('doctor/prescriptions')],
+                ['label' => 'Lab Requests', 'url' => base_url('doctor/labs')],
+                ['label' => 'Consultations', 'url' => base_url('doctor/consultations')],
+                ['label' => 'My Schedule', 'url' => base_url('doctor/schedule')],
+                ['label' => 'Medical Reports', 'url' => base_url('doctor/reports')],
+                ['label' => 'Settings', 'url' => base_url('settings')],
+                ['label' => 'Logout', 'url' => base_url('logout')],
+            ],
+        ];
+
+        $roleKey = in_array($segment, array_keys($menus), true) ? $segment : 'admin';
+        $brandLabel = $roleKey === 'doctor' ? 'Doctor Portal' : 'Administrator';
+        $topbarName = $roleKey === 'doctor' ? 'Doctor' : 'Admin';
+        $menuToRender = $menus[$roleKey];
+        $currentUrl = current_url();
+    ?>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="brand"><?= esc($brandLabel) ?></div>
+            <nav>
+                <ul class="menu">
+                    <?php foreach ($menuToRender as $item): ?>
+                        <?php $isActive = strpos($currentUrl, $item['url']) === 0; ?>
+                        <li><a class="<?= $isActive ? 'active' : '' ?>" href="<?= $item['url'] ?>"><?= esc($item['label']) ?></a></li>
+                    <?php endforeach; ?>
+                </ul>
+            </nav>
+        </aside>
+        <main class="content">
+            <header class="topbar">
+                <div class="page-title"><?= esc($pageTitle ?? 'Dashboard') ?></div>
+                <div class="profile"><span class="avatar"></span><span><?= esc($topbarName) ?></span></div>
+            </header>
+            <?= $this->renderSection('content') ?>
+        </main>
+    </div>
+<?php else: ?>
     <!-- Header -->
     <header class="header">
         <div class="container">
@@ -1831,6 +2330,7 @@
     <main class="main-content">
         <?= $this->renderSection('content') ?>
     </main>
+<?php endif; ?>
 
 
     <script>

@@ -1,138 +1,146 @@
 <?= $this->extend('template') ?>
 
 <?= $this->section('content') ?>
-<div class="container">
-    <!-- Welcome Section -->
-    <div class="card">
-        <div class="card-header">
-            <h1 class="card-title">👨‍⚕️ Doctor Dashboard</h1>
-            <p class="card-subtitle">Welcome back, Dr. <?= session()->get('name') ?>!</p>
+
+<section class="panel">
+    <header class="panel-header">
+        <h2>Dashboard</h2>
+        <p>Welcome back, Dr. Santos. Here's your overview for today.</p>
+    </header>
+    <div class="stack">
+        <div class="actions-grid">
+            <div class="action-tile"><span>Today's Appointments</span><strong>12</strong></div>
+            <div class="action-tile"><span>Total Patients</span><strong>1,247</strong></div>
+            <div class="action-tile"><span>Pending Reports</span><strong>8</strong></div>
+            <div class="action-tile"><span>Revenue This Month</span><strong>$24,580</strong></div>
         </div>
     </div>
+</section>
 
-    <!-- Doctor Statistics -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-number">25</div>
-            <div class="stat-label">Today's Appointments</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">8</div>
-            <div class="stat-label">Active Patients</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">3</div>
-            <div class="stat-label">Emergency Cases</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">12</div>
-            <div class="stat-label">Completed Today</div>
-        </div>
-    </div>
-
-    <!-- Doctor Actions -->
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">Doctor Actions</h2>
-            <p class="card-subtitle">Manage your daily medical practice</p>
-        </div>
-
-        <div class="quick-actions">
-            <a href="#" class="action-btn">
-                <div class="action-icon">📅</div>
-                <div class="action-text">View Schedule</div>
-            </a>
-            <a href="#" class="action-btn">
-                <div class="action-icon">👥</div>
-                <div class="action-text">My Patients</div>
-            </a>
-            <a href="#" class="action-btn">
-                <div class="action-icon">📋</div>
-                <div class="action-text">Medical Records</div>
-            </a>
-            <a href="#" class="action-btn">
-                <div class="action-icon">💊</div>
-                <div class="action-text">Prescriptions</div>
-            </a>
-        </div>
-    </div>
-
-    <!-- Today's Schedule -->
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">Today's Schedule</h2>
-            <p class="card-subtitle">Your upcoming appointments</p>
-        </div>
-
-        <div style="padding: 1rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #eee;">
-                <div>
-                    <strong>9:00 AM</strong> - John Smith
-                    <p style="color: #666; margin: 0;">Follow-up consultation</p>
+<div class="page-grid">
+    <section class="panel">
+        <header class="panel-header">
+            <h2>Today's Appointments</h2>
+            <p>March 15, 2024</p>
+        </header>
+        <div class="stack">
+            <article class="card">
+                <div class="row between">
+                    <div>
+                        <h3>Sarah Johnson</h3>
+                        <p>Regular Checkup</p>
+                    </div>
+                    <div class="row">
+                        <span>09:00 AM</span>
+                        <span class="badge low">completed</span>
+                    </div>
                 </div>
-                <span style="color: #27ae60;">Confirmed</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #eee;">
-                <div>
-                    <strong>10:30 AM</strong> - Maria Garcia
-                    <p style="color: #666; margin: 0;">Initial consultation</p>
+                <a class="link" href="#">View Details</a>
+            </article>
+            <article class="card">
+                <div class="row between">
+                    <div>
+                        <h3>Michael Chen</h3>
+                        <p>Follow-up</p>
+                    </div>
+                    <div class="row">
+                        <span>10:30 AM</span>
+                        <span class="badge medium">in progress</span>
+                    </div>
                 </div>
-                <span style="color: #f39c12;">Pending</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #eee;">
-                <div>
-                    <strong>2:00 PM</strong> - Robert Johnson
-                    <p style="color: #666; margin: 0;">Annual checkup</p>
+                <a class="link" href="#">View Details</a>
+            </article>
+            <article class="card">
+                <div class="row between">
+                    <div>
+                        <h3>Emma Williams</h3>
+                        <p>Consultation</p>
+                    </div>
+                    <div class="row">
+                        <span>11:45 AM</span>
+                        <span class="badge high">upcoming</span>
+                    </div>
                 </div>
-                <span style="color: #27ae60;">Confirmed</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem;">
-                <div>
-                    <strong>4:15 PM</strong> - Sarah Wilson
-                    <p style="color: #666; margin: 0;">Emergency consultation</p>
+                <a class="link" href="#">View Details</a>
+            </article>
+            <article class="card">
+                <div class="row between">
+                    <div>
+                        <h3>David Brown</h3>
+                        <p>Emergency</p>
+                    </div>
+                    <div class="row">
+                        <span>02:00 PM</span>
+                        <span class="badge high">upcoming</span>
+                    </div>
                 </div>
-                <span style="color: #e74c3c;">Emergency</span>
-            </div>
+                <a class="link" href="#">View Details</a>
+            </article>
+            <article class="card">
+                <div class="row between">
+                    <div>
+                        <h3>Lisa Anderson</h3>
+                        <p>Regular Checkup</p>
+                    </div>
+                    <div class="row">
+                        <span>03:30 PM</span>
+                        <span class="badge high">upcoming</span>
+                    </div>
+                </div>
+                <a class="link" href="#">View Details</a>
+            </article>
         </div>
-    </div>
+    </section>
 
-    <!-- Recent Patients -->
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">Recent Patients</h2>
-            <p class="card-subtitle">Your recently attended patients</p>
+    <section class="panel">
+        <header class="panel-header">
+            <h2>Quick Actions</h2>
+        </header>
+        <div class="actions-grid">
+            <a class="action-tile" href="#"><span class="icon"></span><span>New Appointment</span></a>
+            <a class="action-tile" href="#"><span class="icon"></span><span>Write Prescription</span></a>
+            <a class="action-tile" href="#"><span class="icon"></span><span>Lab Request</span></a>
+            <a class="action-tile" href="#"><span class="icon"></span><span>Patient Report</span></a>
         </div>
-
-        <div style="padding: 1rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #eee;">
-                <div>
-                    <strong>Emily Davis</strong>
-                    <p style="color: #666; margin: 0;">Blood pressure check</p>
-                </div>
-                <span style="color: #999;">1 hour ago</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid #eee;">
-                <div>
-                    <strong>Michael Brown</strong>
-                    <p style="color: #666; margin: 0;">Diabetes management</p>
-                </div>
-                <span style="color: #999;">3 hours ago</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem;">
-                <div>
-                    <strong>Lisa Anderson</strong>
-                    <p style="color: #666; margin: 0;">Post-surgery follow-up</p>
-                </div>
-                <span style="color: #999;">5 hours ago</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Action Buttons -->
-    <div style="text-align: center; margin-top: 2rem; display: flex; justify-content: center; gap: 1rem;">
-        <a href="#" class="btn btn-info">📝 Add Patient Note</a>
-        <a href="#" class="btn btn-success">💊 Write Prescription</a>
-        <a href="<?= base_url('auth/logout') ?>" class="btn btn-danger">🚪 Logout</a>
-    </div>
+    </section>
 </div>
+
+<div class="page-grid">
+    <section class="panel">
+        <header class="panel-header">
+            <h2>This Week's Consultations</h2>
+        </header>
+        <ul class="list">
+            <li class="list-item info"><span class="dot"></span>Regular Checkups <strong>28</strong></li>
+            <li class="list-item success"><span class="dot"></span>Follow-up Visits <strong>15</strong></li>
+            <li class="list-item warn"><span class="dot"></span>Emergency Cases <strong>6</strong></li>
+            <li class="list-item"><span class="dot"></span>Consultations <strong>22</strong></li>
+        </ul>
+    </section>
+    <section class="panel">
+        <header class="panel-header">
+            <h2>Common Patient Conditions</h2>
+        </header>
+        <ul class="list">
+            <li class="list-item"><span class="dot"></span>Cardiovascular <strong>32%</strong></li>
+            <li class="list-item"><span class="dot"></span>Respiratory <strong>24%</strong></li>
+            <li class="list-item"><span class="dot"></span>Digestive <strong>18%</strong></li>
+            <li class="list-item"><span class="dot"></span>Musculoskeletal <strong>15%</strong></li>
+            <li class="list-item"><span class="dot"></span>Neurological <strong>11%</strong></li>
+        </ul>
+    </section>
+</div>
+
+<section class="panel">
+    <header class="panel-header">
+        <h2>Recent Activity</h2>
+    </header>
+    <div class="status-list">
+        <div class="status-row"><span><span class="dot ok"></span>Completed checkup for Sarah Johnson</span><span>2 minutes ago</span></div>
+        <div class="status-row"><span><span class="dot ok"></span>Prescription sent to pharmacy</span><span>15 minutes ago</span></div>
+        <div class="status-row"><span><span class="dot ok"></span>Lab results received for Michael Chen</span><span>1 hour ago</span></div>
+        <div class="status-row"><span><span class="dot ok"></span>Emergency appointment scheduled</span><span>2 hours ago</span></div>
+    </div>
+</section>
+
 <?= $this->endSection() ?>
