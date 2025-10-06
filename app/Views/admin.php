@@ -1,7 +1,4 @@
-<?= $this->extend('template') ?>
-
-<?= $this->section('content') ?>
-
+<!-- Admin dashboard partial (inner content only) -->
 <!-- Dashboard KPI Cards -->
 <section class="panel">
     <header class="panel-header">
@@ -169,4 +166,4 @@
     </section>
 </div>
 
-<?= $this->endSection() ?>
+

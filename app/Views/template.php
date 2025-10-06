@@ -2254,9 +2254,9 @@
         $menus = [
             'admin' => [
                 ['label' => 'Dashboard', 'url' => base_url('admin/dashboard')],
-                ['label' => 'Patients', 'url' => base_url('patients')],
-                ['label' => 'Appointments', 'url' => base_url('appointments')],
-                ['label' => 'Billing & Payments', 'url' => base_url('billing')],
+                ['label' => 'Patients', 'url' => base_url('admin/patients')],
+                ['label' => 'Appointments', 'url' => base_url('admin/appointments')],
+                ['label' => 'Billing & Payments', 'url' => base_url('admin/billing')],
                 ['label' => 'Laboratory', 'url' => base_url('laboratory')],
                 ['label' => 'Pharmacy & Inventory', 'url' => base_url('pharmacy')],
                 ['label' => 'Reports', 'url' => base_url('reports')],

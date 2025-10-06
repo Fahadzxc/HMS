@@ -1,7 +1,4 @@
-<?= $this->extend('template') ?>
-
-<?= $this->section('content') ?>
-
+<!-- Doctor dashboard partial (inner content only) -->
 <section class="panel">
     <header class="panel-header">
         <h2>Dashboard</h2>
@@ -143,4 +140,4 @@
     </div>
 </section>
 
-<?= $this->endSection() ?>
+

@@ -94,19 +94,7 @@ class Auth extends BaseController
             'user_name' => session()->get('name')
         ];
 
-        // Show different dashboards based on user role
-        switch ($userRole) {
-            case 'admin':
-                return view('admin/dashboard', $data);
-            case 'doctor':
-                return view('doctor/dashboard', $data);
-            case 'nurse':
-                return view('nurse/dashboard', $data);
-            case 'staff':
-                return view('staff/dashboard', $data);
-            default:
-                // Redirect to login if role is not recognized
-                return redirect()->to('/login')->with('error', 'Invalid user role');
-        }
+        // Unified dashboard view; the view will include role-specific partials
+        return view('auth/dashboard', $data);
     }
 }

@@ -9,9 +9,10 @@ class Dashboard extends Controller
     {
         $data = [
             'pageTitle' => 'Dashboard',
+            'user_role' => 'admin',
         ];
 
-        return view('admin/dashboard', $data);
+        return view('auth/dashboard', $data);
     }
 }
 
