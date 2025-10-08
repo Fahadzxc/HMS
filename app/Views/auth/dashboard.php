@@ -15,6 +15,9 @@ switch ($user_role) {
     case 'doctor':
         echo view('doctor');
         break;
+    case 'nurse':
+        echo view('nurse');
+        break;
     default:
         echo '<section class="panel"><header class="panel-header"><h2>Dashboard</h2></header><p>Role not supported.</p></section>';
 }

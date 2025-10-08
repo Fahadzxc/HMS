@@ -98,3 +98,29 @@ in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
  9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
 10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
 11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-06 14:40:07 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "template.php"
+[Method: GET, Route: admin/billing]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 39.
+ 1 SYSTEMPATH\View\View.php(214): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('template.php')
+ 2 SYSTEMPATH\View\View.php(242): CodeIgniter\View\View->render('template', [], true)
+ 3 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/billing', [], true)
+ 4 APPPATH\Controllers\Admin\Billing.php(13): view('admin/billing', [...])
+ 5 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Billing->index()
+ 6 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Billing))
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-06 14:40:09 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "template.php"
+[Method: GET, Route: admin/dashboard]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 39.
+ 1 SYSTEMPATH\View\View.php(214): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('template.php')
+ 2 SYSTEMPATH\View\View.php(242): CodeIgniter\View\View->render('template', [], true)
+ 3 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('auth/dashboard', [], true)
+ 4 APPPATH\Controllers\Admin\Dashboard.php(15): view('auth/dashboard', [...])
+ 5 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Dashboard->index()
+ 6 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Dashboard))
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))

@@ -57,7 +57,18 @@ class Auth extends BaseController
                 // You can implement remember me functionality here
             }
 
-            return redirect()->to('/dashboard');
+            // Redirect to role-specific dashboard URL
+            $role = $user['role'];
+            switch ($role) {
+                case 'admin':
+                    return redirect()->to('/admin/dashboard');
+                case 'doctor':
+                    return redirect()->to('/doctor/dashboard');
+                case 'nurse':
+                    return redirect()->to('/nurse/dashboard');
+                default:
+                    return redirect()->to('/dashboard');
+            }
         } else {
             return redirect()->back()
                 ->withInput()

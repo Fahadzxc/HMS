@@ -62,16 +62,17 @@
     </header>
     
     <div class="stack">
-        <!-- Table Header -->
+        <!-- Table Header (matches patients table schema) -->
         <div class="card table-header">
             <div class="row between">
                 <div class="col-id">Patient ID</div>
-                <div class="col-name">Name</div>
-                <div class="col-age">Age/Gender</div>
+                <div class="col-name">Full Name</div>
+                <div class="col-age">Age</div>
+                <div class="col-age">Gender</div>
+                <div class="col-age">Civil Status</div>
                 <div class="col-contact">Contact</div>
-                <div class="col-status">Status</div>
-                <div class="col-doctor">Doctor</div>
-                <div class="col-visit">Last Visit</div>
+                <div class="col-name">Address</div>
+                <div class="col-name">Concern</div>
                 <div class="col-actions">Actions</div>
             </div>
         </div>
@@ -83,37 +84,32 @@
                     $pid = 'P' . str_pad((string) $p['id'], 3, '0', STR_PAD_LEFT);
                     $last = !empty($p['created_at']) ? date('n/j/Y', strtotime($p['created_at'])) : '—';
                 ?>
-                <div class="card table-row">
-                    <div class="row between">
+        <div class="card table-row">
+            <div class="row between">
                         <div class="col-id patient-id"><?= esc($pid) ?></div>
-                        <div class="col-name">
-                            <strong><?= esc($p['full_name']) ?></strong>
-                            <p class="blood-type">Address: <?= esc($p['address']) ?></p>
-                        </div>
-                        <div class="col-age"><?= esc($p['age']) ?> years, <?= esc($p['gender']) ?></div>
-                        <div class="col-contact">
-                            <p class="phone"><?= esc($p['contact']) ?></p>
-                            <p class="email">Concern: <?= esc($p['concern']) ?></p>
-                        </div>
-                        <div class="col-status"><span class="badge badge-gray">—</span></div>
-                        <div class="col-doctor">—</div>
-                        <div class="col-visit"><?= esc($last) ?></div>
-                        <div class="col-actions">
-                            <a href="#" class="action-link">View</a>
-                            <a href="#" class="action-link">Edit</a>
-                            <a href="#" class="action-link action-delete">Delete</a>
-                        </div>
-                    </div>
+                        <div class="col-name"><strong><?= esc($p['full_name']) ?></strong></div>
+                        <div class="col-age"><?= esc($p['age']) ?></div>
+                        <div class="col-age"><?= esc($p['gender']) ?></div>
+                        <div class="col-age"><?= esc($p['civil_status']) ?></div>
+                        <div class="col-contact"><p class="phone"><?= esc($p['contact']) ?></p></div>
+                        <div class="col-name"><?= esc($p['address']) ?></div>
+                        <div class="col-name"><?= esc($p['concern']) ?></div>
+                <div class="col-actions">
+                    <a href="#" class="action-link">View</a>
+                    <a href="#" class="action-link">Edit</a>
+                    <a href="#" class="action-link action-delete">Delete</a>
                 </div>
+            </div>
+        </div>
             <?php endforeach; ?>
         <?php else: ?>
-            <div class="card table-row">
-                <div class="row between">
+        <div class="card table-row">
+            <div class="row between">
                     <div class="col-name">No patients found.</div>
                 </div>
             </div>
         <?php endif; ?>
-    </div>
+        </div>
 </section>
 
 <!-- Add Patient Modal -->
@@ -186,28 +182,10 @@
                 <button type="submit" class="btn-primary">Save Patient</button>
             </footer>
         </form>
-    </div>
-    
-    <style>
-        .modal{position:fixed;inset:0;z-index:1000}
-        .modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.35)}
-        .modal-dialog{position:relative;margin:64px auto;background:#fff;border-radius:8px;max-width:860px;box-shadow:0 10px 30px rgba(0,0,0,.2)}
-        .modal-header{padding:20px;border-bottom:1px solid var(--border,#e5e7eb);display:flex;align-items:center;justify-content:space-between}
-        .modal-body{padding:20px}
-        .modal-footer{display:flex;justify-content:flex-end;gap:12px;margin-top:16px}
-        .icon-button{border:none;background:transparent;font-size:22px;cursor:pointer;line-height:1}
-        .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-        .form-field label{display:block;margin-bottom:6px;font-weight:600}
-        .form-field input,.form-field select,.form-field textarea{width:100%;padding:10px 12px;border:1px solid var(--border,#e5e7eb);border-radius:6px;background:#fff}
-        .form-field--full{grid-column:1/-1}
-        .btn-secondary{background:#e5e7eb;color:#111;padding:10px 14px;border-radius:6px;border:1px solid #d1d5db}
-        .btn-primary{display:inline-flex;align-items:center;gap:8px}
-        .req{color:#ef4444}
-        .error{color:#b91c1c;font-size:12px;margin-top:6px}
-        @media (max-width: 780px){.modal-dialog{margin:24px;}.form-grid{grid-template-columns:1fr}}
-    </style>
-</div>
+            </div>
+        </div>
 
+<?= $this->section('scripts') ?>
 <script>
     (function(){
         const openBtn = document.getElementById('btnOpenAddPatient');
@@ -262,5 +240,6 @@
         });
     })();
 </script>
+<?= $this->endSection() ?>
 
 <?= $this->endSection() ?>
