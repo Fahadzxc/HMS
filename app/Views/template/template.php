@@ -2255,6 +2255,100 @@
             margin-right: 0.4rem;
         }
 
+        /* Patient Info Layout */
+        .patient-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .patient-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0f2fe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .patient-details {
+            flex: 1;
+        }
+
+        .patient-details strong {
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Age/Gender styling */
+        .col-age div:first-child {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .col-age div:last-child {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        /* Badge Styles */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .badge-green {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-red {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        .badge-blue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-gray {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        /* Action Icons */
+        .col-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .action-link svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .action-link:hover {
+            opacity: 0.7;
+        }
+
+        /* Form Helper Text */
+        .form-help {
+            display: block;
+            margin-top: 0.25rem;
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-style: italic;
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .page-grid {

@@ -13,10 +13,11 @@ class PatientModel extends Model
     protected $protectFields    = true;
     protected $allowedFields    = [
         'full_name',
-        'age',
+        'date_of_birth',
         'gender',
-        'civil_status',
+        'blood_type',
         'contact',
+        'email',
         'address',
         'concern',
         'created_at',

@@ -66,13 +66,11 @@
         <div class="card table-header">
             <div class="row between">
                 <div class="col-id">Patient ID</div>
-                <div class="col-name">Full Name</div>
-                <div class="col-age">Age</div>
-                <div class="col-age">Gender</div>
-                <div class="col-age">Civil Status</div>
-                <div class="col-contact">Contact</div>
-                <div class="col-name">Address</div>
-                <div class="col-name">Concern</div>
+                <div class="col-name">Name</div>
+                <div class="col-age">AGE/GENDER</div>
+                <div class="col-contact">CONTACT</div>
+                <div class="col-status">Status</div>
+                <div class="col-doctor">DOCTOR</div>
                 <div class="col-actions">Actions</div>
             </div>
         </div>
@@ -83,17 +81,69 @@
                 <?php
                     $pid = 'P' . str_pad((string) $p['id'], 3, '0', STR_PAD_LEFT);
                     $last = !empty($p['created_at']) ? date('n/j/Y', strtotime($p['created_at'])) : '—';
+                    
+                    // Calculate age from date of birth
+                    $age = '—';
+                    if (!empty($p['date_of_birth']) && $p['date_of_birth'] !== '0000-00-00' && $p['date_of_birth'] !== '') {
+                        try {
+                            // Handle different date formats
+                            $dateStr = $p['date_of_birth'];
+                            if (strpos($dateStr, '/') !== false) {
+                                // Format: MM/DD/YYYY
+                                $parts = explode('/', $dateStr);
+                                if (count($parts) === 3) {
+                                    $dateStr = $parts[2] . '-' . $parts[0] . '-' . $parts[1]; // Convert to YYYY-MM-DD
+                                }
+                            }
+                            
+                            $birthDate = new DateTime($dateStr);
+                            $today = new DateTime();
+                            $ageDiff = $today->diff($birthDate);
+                            $age = $ageDiff->y;
+                            
+                            // If less than 1 year old, show months
+                            if ($age == 0 && $ageDiff->m > 0) {
+                                $age = $ageDiff->m . ' months';
+                            } else if ($age == 0 && $ageDiff->m == 0 && $ageDiff->d > 0) {
+                                $age = $ageDiff->d . ' days';
+                            }
+                        } catch (Exception $e) {
+                            $age = '—';
+                        }
+                    }
+                    
+                    // Get blood type or default to O+
+                    $bloodType = !empty($p['blood_type']) ? $p['blood_type'] : 'O+';
                 ?>
         <div class="card table-row">
             <div class="row between">
                         <div class="col-id patient-id"><?= esc($pid) ?></div>
-                        <div class="col-name"><strong><?= esc($p['full_name']) ?></strong></div>
-                        <div class="col-age"><?= esc($p['age']) ?></div>
-                        <div class="col-age"><?= esc($p['gender']) ?></div>
-                        <div class="col-age"><?= esc($p['civil_status']) ?></div>
-                        <div class="col-contact"><p class="phone"><?= esc($p['contact']) ?></p></div>
-                        <div class="col-name"><?= esc($p['address']) ?></div>
-                        <div class="col-name"><?= esc($p['concern']) ?></div>
+                        <div class="col-name">
+                            <div class="patient-info">
+                                <div class="patient-avatar">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="#3B82F6"/>
+                                        <path d="M12 14C7.58172 14 4 17.5817 4 22H20C20 17.5817 16.4183 14 12 14Z" fill="#3B82F6"/>
+                                    </svg>
+                                </div>
+                                <div class="patient-details">
+                                    <strong><?= esc($p['full_name']) ?></strong>
+                                    <p class="blood-type">Blood: <?= esc($bloodType) ?></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-age">
+                            <div><?= esc($age) ?><?= (is_numeric($age) && $age > 0) ? ' years' : '' ?></div>
+                            <div><?= esc($p['gender']) ?></div>
+                        </div>
+                        <div class="col-contact">
+                            <p class="phone"><?= esc($p['contact']) ?></p>
+                            <p class="email"><?= esc($p['email'] ?? 'patient@email.com') ?></p>
+                        </div>
+                        <div class="col-status">
+                            <span class="badge badge-green">Active</span>
+                        </div>
+                        <div class="col-doctor">—</div>
                 <div class="col-actions">
                     <a href="#" class="action-link">View</a>
                     <a href="#" class="action-link">Edit</a>
@@ -129,9 +179,9 @@
                     <div class="error" data-error-for="full_name"></div>
                 </div>
                 <div class="form-field">
-                    <label>Age <span class="req">*</span></label>
-                    <input type="number" name="age" min="0" max="150" required>
-                    <div class="error" data-error-for="age"></div>
+                    <label>Date of Birth <span class="req">*</span></label>
+                    <input type="text" name="date_of_birth" id="date_of_birth" placeholder="mm/dd/yyyy" maxlength="10" required>
+                    <div class="error" data-error-for="date_of_birth"></div>
                 </div>
                 <div class="form-field">
                     <label>Gender <span class="req">*</span></label>
@@ -143,20 +193,30 @@
                     <div class="error" data-error-for="gender"></div>
                 </div>
                 <div class="form-field">
-                    <label>Civil Status <span class="req">*</span></label>
-                    <select name="civil_status" required>
-                        <option value="">Select Status</option>
-                        <option>Single</option>
-                        <option>Married</option>
-                        <option>Widowed</option>
-                        <option>Separated</option>
+                    <label>Blood Type</label>
+                    <select name="blood_type">
+                        <option value="">Select Blood Type</option>
+                        <option>A+</option>
+                        <option>A-</option>
+                        <option>B+</option>
+                        <option>B-</option>
+                        <option>AB+</option>
+                        <option>AB-</option>
+                        <option>O+</option>
+                        <option>O-</option>
                     </select>
-                    <div class="error" data-error-for="civil_status"></div>
+                    <div class="error" data-error-for="blood_type"></div>
                 </div>
                 <div class="form-field">
                     <label>Contact Number <span class="req">*</span></label>
-                    <input type="text" name="contact" required>
+                    <input type="text" name="contact" placeholder="09XX XXX XXXX" required>
+                    <small class="form-help">Philippine mobile number (09XX XXX XXXX)</small>
                     <div class="error" data-error-for="contact"></div>
+                </div>
+                <div class="form-field">
+                    <label>Email Address</label>
+                    <input type="email" name="email">
+                    <div class="error" data-error-for="email"></div>
                 </div>
                 <div class="form-field">
                     <label>Address <span class="req">*</span></label>
@@ -238,6 +298,148 @@
                 submitBtn.disabled = false;
             }
         });
+
+        // Simple date formatting with validation
+        const dateInput = document.getElementById('date_of_birth');
+        if (dateInput) {
+            dateInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                
+                // Limit to 8 digits
+                if (value.length > 8) {
+                    value = value.substring(0, 8);
+                }
+                
+                // Format as MM/DD/YYYY
+                if (value.length >= 2) {
+                    value = value.substring(0, 2) + '/' + value.substring(2);
+                }
+                if (value.length >= 5) {
+                    value = value.substring(0, 5) + '/' + value.substring(5);
+                }
+                
+                e.target.value = value;
+                
+                // Validate as user types
+                validateDateInput(e.target);
+            });
+            
+            function validateDateInput(input) {
+                const value = input.value;
+                const errorDiv = input.parentNode.querySelector('.error');
+                
+                if (value.length === 10) { // Complete date entered
+                    const parts = value.split('/');
+                    if (parts.length === 3) {
+                        const month = parseInt(parts[0]);
+                        const day = parseInt(parts[1]);
+                        const year = parseInt(parts[2]);
+                        const currentYear = new Date().getFullYear();
+                        
+                        let errorMessage = '';
+                        
+                        if (month < 1 || month > 12) {
+                            errorMessage = 'Month must be between 01 and 12';
+                        } else if (day < 1 || day > 31) {
+                            errorMessage = 'Day must be between 01 and 31';
+                        } else if (year > currentYear || year < 1900) {
+                            errorMessage = 'Year must be between 1900 and ' + currentYear;
+                        } else if (!isValidDate(month, day, year)) {
+                            errorMessage = 'Invalid date. Please check month and day.';
+                        } else if (isFutureDate(month, day, year)) {
+                            errorMessage = 'Date of birth cannot be in the future';
+                        }
+                        
+                        if (errorMessage) {
+                            if (errorDiv) {
+                                errorDiv.textContent = errorMessage;
+                            }
+                            input.style.borderColor = '#ef4444';
+                        } else {
+                            if (errorDiv) {
+                                errorDiv.textContent = '';
+                            }
+                            input.style.borderColor = '#d1d5db';
+                        }
+                    }
+                } else {
+                    if (errorDiv) {
+                        errorDiv.textContent = '';
+                    }
+                    input.style.borderColor = '#d1d5db';
+                }
+            }
+            
+            function isValidDate(month, day, year) {
+                const date = new Date(year, month - 1, day);
+                return date.getFullYear() === year && 
+                       date.getMonth() === month - 1 && 
+                       date.getDate() === day;
+            }
+            
+            function isFutureDate(month, day, year) {
+                const inputDate = new Date(year, month - 1, day);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Reset time to start of day
+                inputDate.setHours(0, 0, 0, 0); // Reset time to start of day
+                return inputDate > today;
+            }
+            
+            dateInput.addEventListener('keydown', function(e) {
+                // Allow backspace, delete, tab, escape, enter, arrow keys
+                if ([8, 9, 27, 13, 46, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
+                    // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                    (e.keyCode === 65 && e.ctrlKey === true) ||
+                    (e.keyCode === 67 && e.ctrlKey === true) ||
+                    (e.keyCode === 86 && e.ctrlKey === true) ||
+                    (e.keyCode === 88 && e.ctrlKey === true)) {
+                    return;
+                }
+                // Only allow numbers
+                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        // Philippine phone number formatting
+        const contactInput = document.querySelector('input[name="contact"]');
+        if (contactInput) {
+            contactInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                
+                // Limit to 11 digits (Philippine mobile)
+                if (value.length > 11) {
+                    value = value.substring(0, 11);
+                }
+                
+                // Format as 09XX XXX XXXX
+                if (value.length >= 4) {
+                    value = value.substring(0, 4) + ' ' + value.substring(4);
+                }
+                if (value.length >= 8) {
+                    value = value.substring(0, 8) + ' ' + value.substring(8);
+                }
+                
+                e.target.value = value;
+            });
+
+            contactInput.addEventListener('keydown', function(e) {
+                // Allow backspace, delete, tab, escape, enter, arrow keys
+                if ([8, 9, 27, 13, 46, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
+                    // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                    (e.keyCode === 65 && e.ctrlKey === true) ||
+                    (e.keyCode === 67 && e.ctrlKey === true) ||
+                    (e.keyCode === 86 && e.ctrlKey === true) ||
+                    (e.keyCode === 88 && e.ctrlKey === true)) {
+                    return;
+                }
+                // Only allow numbers
+                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                    e.preventDefault();
+                }
+            });
+        }
     })();
 </script>
 <?= $this->endSection() ?>

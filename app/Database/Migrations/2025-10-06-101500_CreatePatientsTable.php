@@ -20,21 +20,27 @@ class CreatePatientsTable extends Migration
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
             ],
-            'age' => [
-                'type'       => 'INT',
-                'constraint' => 3,
+            'date_of_birth' => [
+                'type' => 'DATE',
+                'null' => true,
             ],
             'gender' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 10,
             ],
-            'civil_status' => [
+            'blood_type' => [
                 'type'       => 'VARCHAR',
-                'constraint' => 20,
+                'constraint' => 5,
+                'null' => true,
             ],
             'contact' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 50,
+            ],
+            'email' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 255,
+                'null' => true,
             ],
             'address' => [
                 'type'       => 'VARCHAR',
