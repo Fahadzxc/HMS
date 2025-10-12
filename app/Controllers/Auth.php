@@ -79,7 +79,7 @@ class Auth extends BaseController
     public function logout()
     {
         session()->destroy();
-        return redirect()->to('/auth/login')->with('success', 'You have been logged out successfully.');
+        return redirect()->to('/login')->with('success', 'You have been logged out successfully.');
     }
 
     public function forgotPassword()

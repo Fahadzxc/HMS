@@ -1,84 +1,24 @@
+<?= $this->extend('template') ?>
+
+<?= $this->section('content') ?>
+
 <section class="panel">
     <header class="panel-header">
-        <h2>Nurse Dashboard</h2>
-        <p>Quick overview of today's assigned tasks and patients</p>
+        <h2>Patient Monitoring</h2>
+        <p>Monitor and update patient information</p>
     </header>
     <div class="stack">
-        <div class="kpi-grid">
-            <div class="kpi-card">
-                <div class="kpi-content">
-                    <div class="kpi-label">Assigned Patients</div>
-                    <div class="kpi-value">0</div>
-                    <div class="kpi-change kpi-positive">&nbsp;</div>
-                </div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-content">
-                    <div class="kpi-label">Pending Medications</div>
-                    <div class="kpi-value">0</div>
-                    <div class="kpi-change kpi-positive">&nbsp;</div>
-                </div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-content">
-                    <div class="kpi-label">Vital Checks Due</div>
-                    <div class="kpi-value">0</div>
-                    <div class="kpi-change kpi-positive">&nbsp;</div>
-                </div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-content">
-                    <div class="kpi-label">Discharges Today</div>
-                    <div class="kpi-value">0</div>
-                    <div class="kpi-change kpi-positive">&nbsp;</div>
-                </div>
-            </div>
+        <div class="row between">
+            <input type="text" placeholder="Search patients..." class="search-input">
+            <a href="#" class="btn-primary" onclick="showAssignPatientModal()">+ Assign Patient</a>
         </div>
     </div>
 </section>
 
-<div class="page-grid">
-    <section class="panel">
-        <header class="panel-header">
-            <h2>Today's Tasks</h2>
-            <p>Your assigned tasks for today</p>
-        </header>
-        <div class="stack">
-            <div class="card">
-                <p>No tasks assigned yet. Check back later or contact your supervisor.</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="panel">
-        <header class="panel-header">
-            <h2>Quick Actions</h2>
-        </header>
-        <div class="actions-grid">
-            <a class="action-tile" href="#" onclick="showVitalSignsModal()">
-                <span class="icon icon-vitals"></span>
-                <span>Update Vitals</span>
-            </a>
-            <a class="action-tile" href="#" onclick="showTreatmentModal()">
-                <span class="icon icon-treatment"></span>
-                <span>Update Treatment</span>
-            </a>
-            <a class="action-tile" href="#" onclick="showScheduleModal()">
-                <span class="icon icon-schedule"></span>
-                <span>My Schedule</span>
-            </a>
-            <a class="action-tile" href="#" onclick="showAssignPatientModal()">
-                <span class="icon icon-patients"></span>
-                <span>Assign Patient</span>
-            </a>
-        </div>
-    </section>
-</div>
-
 <section class="panel panel-spaced">
     <header class="panel-header">
-        <h2>Patients Under Care</h2>
-        <p>Patients currently assigned to you</p>
+        <h2>Assigned Patients</h2>
+        <p>Patients currently under your care</p>
     </header>
     <div class="stack">
         <div class="card">
@@ -89,16 +29,28 @@
 
 <section class="panel panel-spaced">
     <header class="panel-header">
-        <h2>My Schedule</h2>
-        <p>Your current work schedule</p>
+        <h2>Patient Monitoring Tools</h2>
+        <p>Quick access to patient monitoring functions</p>
     </header>
     <div class="stack">
-        <div class="card">
-            <p>No schedule assigned yet. Contact your supervisor to set up your work schedule.</p>
+        <div class="actions-grid">
+            <a class="action-tile" href="#" onclick="showVitalSignsModal()">
+                <span class="icon icon-vitals"></span>
+                <span>Update Vitals</span>
+            </a>
+            <a class="action-tile" href="#" onclick="showTreatmentModal()">
+                <span class="icon icon-treatment"></span>
+                <span>Update Treatment</span>
+            </a>
+            <a class="action-tile" href="#" onclick="showAssignPatientModal()">
+                <span class="icon icon-patients"></span>
+                <span>Assign Patient</span>
+            </a>
         </div>
     </div>
 </section>
 
+<!-- Include the same modals as in dashboard -->
 <!-- Vital Signs Modal -->
 <div id="vitalSignsModal" class="modal" aria-hidden="true" style="display:none;">
     <div class="modal-backdrop" id="vitalModalBackdrop"></div>
@@ -194,59 +146,6 @@
     </div>
 </div>
 
-<!-- Schedule Modal -->
-<div id="scheduleModal" class="modal" aria-hidden="true" style="display:none;">
-    <div class="modal-backdrop" id="scheduleModalBackdrop"></div>
-    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="scheduleTitle">
-        <header class="panel-header modal-header">
-            <h2 id="scheduleTitle">My Schedule</h2>
-            <button type="button" class="close" onclick="closeScheduleModal()">&times;</button>
-        </header>
-        <form id="scheduleForm" class="modal-body" action="<?= base_url('nurse/updateSchedule') ?>" method="post">
-            <?= csrf_field() ?>
-            <div class="form-grid">
-                <div class="form-field">
-                    <label>Date <span class="req">*</span></label>
-                    <input type="date" name="date" required>
-                    <div class="error" data-error-for="date"></div>
-                </div>
-                <div class="form-field">
-                    <label>Shift Start <span class="req">*</span></label>
-                    <input type="time" name="shift_start" required>
-                    <div class="error" data-error-for="shift_start"></div>
-                </div>
-                <div class="form-field">
-                    <label>Shift End <span class="req">*</span></label>
-                    <input type="time" name="shift_end" required>
-                    <div class="error" data-error-for="shift_end"></div>
-                </div>
-                <div class="form-field">
-                    <label>Department <span class="req">*</span></label>
-                    <select name="department" required>
-                        <option value="">Select Department</option>
-                        <option value="emergency">Emergency</option>
-                        <option value="icu">ICU</option>
-                        <option value="surgery">Surgery</option>
-                        <option value="pediatrics">Pediatrics</option>
-                        <option value="cardiology">Cardiology</option>
-                        <option value="orthopedics">Orthopedics</option>
-                    </select>
-                    <div class="error" data-error-for="department"></div>
-                </div>
-                <div class="form-field form-field--full">
-                    <label>Notes</label>
-                    <textarea name="notes" rows="3"></textarea>
-                    <div class="error" data-error-for="notes"></div>
-                </div>
-            </div>
-            <footer class="modal-footer">
-                <button type="button" class="btn-secondary" onclick="closeScheduleModal()">Cancel</button>
-                <button type="submit" class="btn-primary">Update Schedule</button>
-            </footer>
-        </form>
-    </div>
-</div>
-
 <!-- Assign Patient Modal -->
 <div id="assignPatientModal" class="modal" aria-hidden="true" style="display:none;">
     <div class="modal-backdrop" id="assignPatientModalBackdrop"></div>
@@ -308,21 +207,6 @@ function closeTreatmentModal() {
     form.reset();
 }
 
-// Schedule Modal
-function showScheduleModal() {
-    const modal = document.getElementById('scheduleModal');
-    modal.style.display = 'block';
-    modal.setAttribute('aria-hidden', 'false');
-}
-
-function closeScheduleModal() {
-    const modal = document.getElementById('scheduleModal');
-    const form = document.getElementById('scheduleForm');
-    modal.style.display = 'none';
-    modal.setAttribute('aria-hidden', 'true');
-    form.reset();
-}
-
 // Assign Patient Modal
 function showAssignPatientModal() {
     const modal = document.getElementById('assignPatientModal');
@@ -352,12 +236,6 @@ document.addEventListener('DOMContentLoaded', function() {
         treatmentBackdrop.addEventListener('click', closeTreatmentModal);
     }
     
-    // Schedule Modal
-    const scheduleBackdrop = document.getElementById('scheduleModalBackdrop');
-    if (scheduleBackdrop) {
-        scheduleBackdrop.addEventListener('click', closeScheduleModal);
-    }
-    
     // Assign Patient Modal
     const assignBackdrop = document.getElementById('assignPatientModalBackdrop');
     if (assignBackdrop) {
@@ -366,3 +244,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<?= $this->endSection() ?>

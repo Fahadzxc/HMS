@@ -20,11 +20,23 @@ $routes->get('auth/logout', 'Auth::logout');
 
 // Role dashboards (optional short URLs)
 $routes->get('doctor/dashboard', 'Auth::dashboard');
-$routes->get('nurse/dashboard', 'Auth::dashboard');
+$routes->get('nurse/dashboard', 'Nurse::dashboard');
+
+// Nurse Routes
+$routes->get('nurse/patients', 'Nurse::patients');
+$routes->get('nurse/tasks', 'Nurse::tasks');
+$routes->get('nurse/schedule', 'Nurse::schedule');
+$routes->get('nurse/appointments', 'Nurse::appointments');
+$routes->post('nurse/updateVitals', 'Nurse::updateVitals');
+$routes->post('nurse/updateTreatment', 'Nurse::updateTreatment');
+$routes->post('nurse/assignPatient', 'Nurse::assignPatient');
+$routes->post('nurse/updateSchedule', 'Nurse::updateSchedule');
+$routes->post('nurse/requestScheduleChange', 'Nurse::requestScheduleChange');
+$routes->post('nurse/addAppointment', 'Nurse::addAppointment');
+$routes->post('nurse/updateAppointment', 'Nurse::updateAppointment');
+$routes->post('nurse/deleteAppointment', 'Nurse::deleteAppointment');
 
 // Temporary role pages (avoid 404s until dedicated controllers exist)
-$routes->get('nurse/patients', 'Auth::dashboard');
-$routes->get('nurse/tasks', 'Auth::dashboard');
 $routes->get('doctor/patients', 'Auth::dashboard');
 $routes->get('doctor/appointments', 'Auth::dashboard');
 
@@ -34,3 +46,7 @@ $routes->get('admin/patients', 'Admin\\Patients::index');
 $routes->post('admin/patients/create', 'Admin\\Patients::create');
 $routes->get('admin/appointments', 'Admin\\Appointments::index');
 $routes->get('admin/billing', 'Admin\\Billing::index');
+$routes->get('admin/users', 'Admin\\Users::index');
+$routes->post('admin/users/create', 'Admin\\Users::create');
+$routes->post('admin/users/update', 'Admin\\Users::update');
+$routes->post('admin/users/delete', 'Admin\\Users::delete');

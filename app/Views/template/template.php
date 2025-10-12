@@ -1815,10 +1815,12 @@
     // Show sidebar for admin pages, not on login/logout/auth pages
     $validRoles = ['admin','doctor','nurse','laboratory','pharmacy'];
     $isAdminPage = strpos($currentPath, 'admin') !== false || strpos($currentPath, 'patients') !== false || strpos($currentPath, 'appointments') !== false || strpos($currentPath, 'billing') !== false || strpos($currentPath, 'laboratory') !== false || strpos($currentPath, 'pharmacy') !== false || strpos($currentPath, 'reports') !== false || strpos($currentPath, 'users') !== false || strpos($currentPath, 'settings') !== false;
+    $isNursePage = strpos($currentPath, 'nurse') !== false;
+    $isDoctorPage = strpos($currentPath, 'doctor') !== false;
     $isDashboardPage = strpos($currentPath, 'dashboard') !== false;
     $isAuthPage = strpos($currentPath, 'login') !== false || strpos($currentPath, 'logout') !== false || strpos($currentPath, 'auth') !== false;
     
-    $useSidebar = in_array($segment, $validRoles, true) && ($isDashboardPage || $isAdminPage) && !$isAuthPage;
+    $useSidebar = in_array($segment, $validRoles, true) && ($isDashboardPage || $isAdminPage || $isNursePage || $isDoctorPage) && !$isAuthPage;
 ?>
 
 <?php if ($useSidebar): ?>

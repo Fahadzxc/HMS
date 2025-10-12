@@ -24,8 +24,8 @@
             <div class="kpi-card">
                 <div class="kpi-content">
                     <div class="kpi-label">Appointments Scheduled</div>
-                    <div class="kpi-value">18</div>
-                    <div class="kpi-change kpi-positive">+2 from yesterday</div>
+                    <div class="kpi-value">0</div>
+                    <div class="kpi-change kpi-positive">&nbsp;</div>
                 </div>
             </div>
             <div class="kpi-card">
@@ -113,9 +113,6 @@
             <li class="list-item info">
                 <span class="dot"></span>New patient registered - John Smith - 10 minutes ago
             </li>
-            <li class="list-item success">
-                <span class="dot"></span>Appointment completed - Sarah Johnson - 25 minutes ago
-            </li>
             <li class="list-item warn">
                 <span class="dot"></span>Lab results updated - Michael Brown - 1 hour ago
             </li>
@@ -157,7 +154,7 @@
                 <span class="icon icon-patients"></span>Patients Seen: <strong>24</strong>
             </li>
             <li class="list-item">
-                <span class="icon icon-appointments"></span>Appointments: <strong>18</strong>
+                <span class="icon icon-appointments"></span>Appointments: <strong>0</strong>
             </li>
             <li class="list-item">
                 <span class="icon icon-lab"></span>Lab Tests: <strong>12</strong>
