@@ -1,0 +1,567 @@
+ERROR - 2025-10-15 11:31:54 --> mysqli_sql_exception: Duplicate entry 'admin@hms.com' for key 'email' in D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `us...', 0)
+#1 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `us...')
+#2 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `us...')
+#3 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1841): CodeIgniter\Database\BaseConnection->query('INSERT INTO `us...', NULL, false)
+#4 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(2230): CodeIgniter\Database\BaseBuilder->batchExecute('_insertBatch', 100)
+#5 D:\JUL\xampp\htdocs\HMS\app\Database\Seeds\UserSeeder.php(50): CodeIgniter\Database\BaseBuilder->insertBatch(Array)
+#6 D:\JUL\xampp\htdocs\HMS\system\Database\Seeder.php(149): App\Database\Seeds\UserSeeder->run()
+#7 D:\JUL\xampp\htdocs\HMS\system\Commands\Database\Seed.php(79): CodeIgniter\Database\Seeder->call('App\\Database\\Se...')
+#8 D:\JUL\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run(Array)
+#9 D:\JUL\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', Array)
+#10 D:\JUL\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 D:\JUL\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 D:\JUL\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+ERROR - 2025-10-15 11:37:52 --> mysqli_sql_exception: Duplicate entry 'admin@hms.com' for key 'email' in D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `us...', 0)
+#1 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `us...')
+#2 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `us...')
+#3 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1841): CodeIgniter\Database\BaseConnection->query('INSERT INTO `us...', NULL, false)
+#4 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(2230): CodeIgniter\Database\BaseBuilder->batchExecute('_insertBatch', 100)
+#5 D:\JUL\xampp\htdocs\HMS\app\Database\Seeds\UserSeeder.php(50): CodeIgniter\Database\BaseBuilder->insertBatch(Array)
+#6 D:\JUL\xampp\htdocs\HMS\system\Database\Seeder.php(149): App\Database\Seeds\UserSeeder->run()
+#7 D:\JUL\xampp\htdocs\HMS\system\Commands\Database\Seed.php(79): CodeIgniter\Database\Seeder->call('App\\Database\\Se...')
+#8 D:\JUL\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run(Array)
+#9 D:\JUL\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', Array)
+#10 D:\JUL\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 D:\JUL\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 D:\JUL\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+ERROR - 2025-10-15 11:38:31 --> mysqli_sql_exception: Duplicate entry 'admin@hms.com' for key 'email' in D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `us...', 0)
+#1 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `us...')
+#2 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `us...')
+#3 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1841): CodeIgniter\Database\BaseConnection->query('INSERT INTO `us...', NULL, false)
+#4 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(2230): CodeIgniter\Database\BaseBuilder->batchExecute('_insertBatch', 100)
+#5 D:\JUL\xampp\htdocs\HMS\app\Database\Seeds\UserSeeder.php(50): CodeIgniter\Database\BaseBuilder->insertBatch(Array)
+#6 D:\JUL\xampp\htdocs\HMS\system\Database\Seeder.php(149): App\Database\Seeds\UserSeeder->run()
+#7 D:\JUL\xampp\htdocs\HMS\system\Commands\Database\Seed.php(79): CodeIgniter\Database\Seeder->call('App\\Database\\Se...')
+#8 D:\JUL\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run(Array)
+#9 D:\JUL\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', Array)
+#10 D:\JUL\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 D:\JUL\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 D:\JUL\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+ERROR - 2025-10-15 11:38:44 --> mysqli_sql_exception: Duplicate entry 'admin@hms.com' for key 'email' in D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `us...', 0)
+#1 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `us...')
+#2 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `us...')
+#3 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1841): CodeIgniter\Database\BaseConnection->query('INSERT INTO `us...', NULL, false)
+#4 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(2230): CodeIgniter\Database\BaseBuilder->batchExecute('_insertBatch', 100)
+#5 D:\JUL\xampp\htdocs\HMS\app\Database\Seeds\UserSeeder.php(50): CodeIgniter\Database\BaseBuilder->insertBatch(Array)
+#6 D:\JUL\xampp\htdocs\HMS\system\Database\Seeder.php(149): App\Database\Seeds\UserSeeder->run()
+#7 D:\JUL\xampp\htdocs\HMS\system\Commands\Database\Seed.php(79): CodeIgniter\Database\Seeder->call('App\\Database\\Se...')
+#8 D:\JUL\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run(Array)
+#9 D:\JUL\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', Array)
+#10 D:\JUL\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 D:\JUL\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 D:\JUL\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+ERROR - 2025-10-15 11:39:32 --> mysqli_sql_exception: Duplicate entry 'admin@hms.com' for key 'email' in D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `us...', 0)
+#1 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `us...')
+#2 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `us...')
+#3 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1841): CodeIgniter\Database\BaseConnection->query('INSERT INTO `us...', NULL, false)
+#4 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(2230): CodeIgniter\Database\BaseBuilder->batchExecute('_insertBatch', 100)
+#5 D:\JUL\xampp\htdocs\HMS\app\Database\Seeds\UserSeeder.php(50): CodeIgniter\Database\BaseBuilder->insertBatch(Array)
+#6 D:\JUL\xampp\htdocs\HMS\system\Database\Seeder.php(149): App\Database\Seeds\UserSeeder->run()
+#7 D:\JUL\xampp\htdocs\HMS\system\Commands\Database\Seed.php(79): CodeIgniter\Database\Seeder->call('App\\Database\\Se...')
+#8 D:\JUL\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run(Array)
+#9 D:\JUL\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', Array)
+#10 D:\JUL\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 D:\JUL\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 D:\JUL\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+ERROR - 2025-10-15 11:39:51 --> mysqli_sql_exception: Duplicate entry 'admin@hms.com' for key 'email' in D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `us...', 0)
+#1 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `us...')
+#2 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `us...')
+#3 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1841): CodeIgniter\Database\BaseConnection->query('INSERT INTO `us...', NULL, false)
+#4 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(2230): CodeIgniter\Database\BaseBuilder->batchExecute('_insertBatch', 100)
+#5 D:\JUL\xampp\htdocs\HMS\app\Database\Seeds\UserSeeder.php(50): CodeIgniter\Database\BaseBuilder->insertBatch(Array)
+#6 D:\JUL\xampp\htdocs\HMS\system\Database\Seeder.php(149): App\Database\Seeds\UserSeeder->run()
+#7 D:\JUL\xampp\htdocs\HMS\system\Commands\Database\Seed.php(79): CodeIgniter\Database\Seeder->call('App\\Database\\Se...')
+#8 D:\JUL\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run(Array)
+#9 D:\JUL\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', Array)
+#10 D:\JUL\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 D:\JUL\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 D:\JUL\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+ERROR - 2025-10-15 11:42:26 --> mysqli_sql_exception: Duplicate entry 'admin@hms.com' for key 'email' in D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `us...', 0)
+#1 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `us...')
+#2 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `us...')
+#3 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1841): CodeIgniter\Database\BaseConnection->query('INSERT INTO `us...', NULL, false)
+#4 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(2230): CodeIgniter\Database\BaseBuilder->batchExecute('_insertBatch', 100)
+#5 D:\JUL\xampp\htdocs\HMS\app\Database\Seeds\UserSeeder.php(50): CodeIgniter\Database\BaseBuilder->insertBatch(Array)
+#6 D:\JUL\xampp\htdocs\HMS\system\Database\Seeder.php(149): App\Database\Seeds\UserSeeder->run()
+#7 D:\JUL\xampp\htdocs\HMS\system\Commands\Database\Seed.php(79): CodeIgniter\Database\Seeder->call('App\\Database\\Se...')
+#8 D:\JUL\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run(Array)
+#9 D:\JUL\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', Array)
+#10 D:\JUL\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 D:\JUL\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 D:\JUL\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2025-10-15 12:34:10 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: doctor/patients]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('doctor/patients', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('doctor/patients', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('doctor/patients')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('doctor/patients')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('doctor/patients', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:34:12 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: doctor/dashboard]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('doctor/dashboard', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('doctor/dashboard', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('doctor/dashboard')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('doctor/dashboard')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('doctor/dashboard', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:34:13 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: doctor/appointments]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('doctor/appointments', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('doctor/appointments', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('doctor/appointments')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('doctor/appointments')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('doctor/appointments', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:34:14 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: login]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('login', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('login', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('login')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('login')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('login', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:34:14 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: about]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('about', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('about', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('about')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('about')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('about', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:34:15 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: contact]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('contact', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('contact', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('contact')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('contact')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('contact', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:34:15 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: home]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('home', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('home', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('home')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('home')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('home', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:34:16 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: nurse/appointments]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('nurse/appointments', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('nurse/appointments', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('nurse/appointments')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('nurse/appointments')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('nurse/appointments', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:34:30 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: /]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:43:38 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: /]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:43:39 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: /]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:43:39 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: /]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:43:39 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: /]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:43:40 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: /]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:43:40 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: /]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:43:40 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: /]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:43:40 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: /]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:43:40 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: /]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:43:40 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: /]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:43:41 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: /]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:43:59 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: /]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:43:59 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: /]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:44:00 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: /]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:44:00 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: /]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 12:45:10 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: /]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 21:58:44 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: CLI, Route: routes]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Commands\Utilities\Routes\FilterFinder.php(65): CodeIgniter\Filters\Filters->initialize('/')
+ 6 SYSTEMPATH\Commands\Utilities\Routes\FilterCollector.php(78): CodeIgniter\Commands\Utilities\Routes\FilterFinder->find('/')
+ 7 SYSTEMPATH\Commands\Utilities\Routes.php(113): CodeIgniter\Commands\Utilities\Routes\FilterCollector->get('GET', '/')
+ 8 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Commands\Utilities\Routes->run([])
+ 9 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('routes', [])
+10 SYSTEMPATH\Boot.php(388): CodeIgniter\CLI\Console->run()
+11 SYSTEMPATH\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+12 FCPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+CRITICAL - 2025-10-15 21:59:37 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: CLI, Route: routes]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('')
+ 5 SYSTEMPATH\Commands\Utilities\Routes\FilterFinder.php(65): CodeIgniter\Filters\Filters->initialize('/')
+ 6 SYSTEMPATH\Commands\Utilities\Routes\FilterCollector.php(78): CodeIgniter\Commands\Utilities\Routes\FilterFinder->find('/')
+ 7 SYSTEMPATH\Commands\Utilities\Routes.php(113): CodeIgniter\Commands\Utilities\Routes\FilterCollector->get('GET', '/')
+ 8 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Commands\Utilities\Routes->run([])
+ 9 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('routes', [])
+10 SYSTEMPATH\Boot.php(388): CodeIgniter\CLI\Console->run()
+11 SYSTEMPATH\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+12 FCPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+ERROR - 2025-10-15 22:04:36 --> mysqli_sql_exception: Duplicate entry 'admin@hms.com' for key 'email' in D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `us...', 0)
+#1 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `us...')
+#2 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `us...')
+#3 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1841): CodeIgniter\Database\BaseConnection->query('INSERT INTO `us...', NULL, false)
+#4 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(2230): CodeIgniter\Database\BaseBuilder->batchExecute('_insertBatch', 100)
+#5 D:\JUL\xampp\htdocs\HMS\app\Database\Seeds\UserSeeder.php(59): CodeIgniter\Database\BaseBuilder->insertBatch(Array)
+#6 D:\JUL\xampp\htdocs\HMS\system\Database\Seeder.php(149): App\Database\Seeds\UserSeeder->run()
+#7 D:\JUL\xampp\htdocs\HMS\system\Commands\Database\Seed.php(79): CodeIgniter\Database\Seeder->call('App\\Database\\Se...')
+#8 D:\JUL\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run(Array)
+#9 D:\JUL\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', Array)
+#10 D:\JUL\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 D:\JUL\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 D:\JUL\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+ERROR - 2025-10-15 22:09:23 --> mysqli_sql_exception: Duplicate entry 'admin@hms.com' for key 'email' in D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `us...', 0)
+#1 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `us...')
+#2 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `us...')
+#3 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1841): CodeIgniter\Database\BaseConnection->query('INSERT INTO `us...', NULL, false)
+#4 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(2230): CodeIgniter\Database\BaseBuilder->batchExecute('_insertBatch', 100)
+#5 D:\JUL\xampp\htdocs\HMS\app\Database\Seeds\UserSeeder.php(86): CodeIgniter\Database\BaseBuilder->insertBatch(Array)
+#6 D:\JUL\xampp\htdocs\HMS\system\Database\Seeder.php(149): App\Database\Seeds\UserSeeder->run()
+#7 D:\JUL\xampp\htdocs\HMS\system\Commands\Database\Seed.php(79): CodeIgniter\Database\Seeder->call('App\\Database\\Se...')
+#8 D:\JUL\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run(Array)
+#9 D:\JUL\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', Array)
+#10 D:\JUL\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 D:\JUL\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 D:\JUL\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+ERROR - 2025-10-15 22:09:57 --> mysqli_sql_exception: Duplicate entry 'admin@hms.com' for key 'email' in D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `us...', 0)
+#1 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `us...')
+#2 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `us...')
+#3 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1841): CodeIgniter\Database\BaseConnection->query('INSERT INTO `us...', NULL, false)
+#4 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(2230): CodeIgniter\Database\BaseBuilder->batchExecute('_insertBatch', 100)
+#5 D:\JUL\xampp\htdocs\HMS\app\Database\Seeds\UserSeeder.php(86): CodeIgniter\Database\BaseBuilder->insertBatch(Array)
+#6 D:\JUL\xampp\htdocs\HMS\system\Database\Seeder.php(149): App\Database\Seeds\UserSeeder->run()
+#7 D:\JUL\xampp\htdocs\HMS\system\Commands\Database\Seed.php(79): CodeIgniter\Database\Seeder->call('App\\Database\\Se...')
+#8 D:\JUL\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run(Array)
+#9 D:\JUL\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', Array)
+#10 D:\JUL\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 D:\JUL\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 D:\JUL\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2025-10-15 23:07:46 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: home]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('home', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('home', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('home')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('home')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('home', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 23:07:47 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: home]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('home', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('home', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('home')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('home')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('home', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 23:07:51 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: home]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('home', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('home', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('home')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('home')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('home', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-15 23:07:58 --> TypeError: trim(): Argument #1 ($string) must be of type string, array given
+[Method: GET, Route: contact]
+in SYSTEMPATH\Filters\Filters.php on line 918.
+ 1 SYSTEMPATH\Filters\Filters.php(918): trim([...], '/ ')
+ 2 SYSTEMPATH\Filters\Filters.php(881): CodeIgniter\Filters\Filters->checkPseudoRegex('contact', [...])
+ 3 SYSTEMPATH\Filters\Filters.php(791): CodeIgniter\Filters\Filters->pathApplies('contact', [...])
+ 4 SYSTEMPATH\Filters\Filters.php(474): CodeIgniter\Filters\Filters->processFilters('contact')
+ 5 SYSTEMPATH\Filters\Filters.php(218): CodeIgniter\Filters\Filters->initialize('contact')
+ 6 SYSTEMPATH\CodeIgniter.php(479): CodeIgniter\Filters\Filters->run('contact', 'before')
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))

@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CreateUsersTable extends Migration
+class CreateReceptionistsTable extends Migration
 {
     public function up()
     {
@@ -15,28 +15,25 @@ class CreateUsersTable extends Migration
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            'name' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 100,
+            'user_id' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'unsigned'   => true,
             ],
-            'email' => [
+            'employee_id' => [
                 'type'       => 'VARCHAR',
-                'constraint' => 100,
+                'constraint' => 20,
                 'unique'     => true,
             ],
-            'password' => [
+            'shift' => [
+                'type'       => 'ENUM',
+                'constraint' => ['morning', 'afternoon', 'night'],
+                'default'    => 'morning',
+            ],
+            'department' => [
                 'type'       => 'VARCHAR',
-                'constraint' => 255,
-            ],
-            'role' => [
-                'type'       => 'ENUM',
-                'constraint' => ['admin', 'staff', 'doctor', 'nurse', 'receptionist', 'lab', 'pharmacist', 'accountant', 'it'],
-                'default'    => 'staff',
-            ],
-            'status' => [
-                'type'       => 'ENUM',
-                'constraint' => ['active', 'inactive'],
-                'default'    => 'active',
+                'constraint' => 100,
+                'default'    => 'Reception',
             ],
             'created_at' => [
                 'type' => 'DATETIME',
@@ -49,11 +46,12 @@ class CreateUsersTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
-        $this->forge->createTable('users');
+        $this->forge->addForeignKey('user_id', 'users', 'id', 'CASCADE', 'CASCADE');
+        $this->forge->createTable('receptionists');
     }
 
     public function down()
     {
-        $this->forge->dropTable('users');
+        $this->forge->dropTable('receptionists');
     }
 }

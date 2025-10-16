@@ -19,7 +19,7 @@ class UserSeeder extends Seeder
                 'updated_at' => date('Y-m-d H:i:s')
             ],
             [
-                'name' => 'John Doctor',
+                'name' => 'Dr. John Santos',
                 'email' => 'doctor@hms.com',
                 'password' => password_hash('doctor123', PASSWORD_DEFAULT),
                 'role' => 'doctor',
@@ -37,10 +37,46 @@ class UserSeeder extends Seeder
                 'updated_at' => date('Y-m-d H:i:s')
             ],
             [
-                'name' => 'Staff Member',
-                'email' => 'staff@hms.com',
-                'password' => password_hash('staff123', PASSWORD_DEFAULT),
-                'role' => 'staff',
+                'name' => 'Maria Receptionist',
+                'email' => 'reception@hms.com',
+                'password' => password_hash('reception123', PASSWORD_DEFAULT),
+                'role' => 'receptionist',
+                'status' => 'active',
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Lab Technician',
+                'email' => 'lab@hms.com',
+                'password' => password_hash('lab123', PASSWORD_DEFAULT),
+                'role' => 'lab',
+                'status' => 'active',
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Pharmacy Manager',
+                'email' => 'pharmacy@hms.com',
+                'password' => password_hash('pharmacy123', PASSWORD_DEFAULT),
+                'role' => 'pharmacist',
+                'status' => 'active',
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'Accountant',
+                'email' => 'accounts@hms.com',
+                'password' => password_hash('accounts123', PASSWORD_DEFAULT),
+                'role' => 'accountant',
+                'status' => 'active',
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ],
+            [
+                'name' => 'IT Administrator',
+                'email' => 'it@hms.com',
+                'password' => password_hash('it123', PASSWORD_DEFAULT),
+                'role' => 'it',
                 'status' => 'active',
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s')

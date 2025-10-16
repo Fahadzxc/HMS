@@ -30,13 +30,10 @@ class Nurse extends Controller
 
     public function patients()
     {
-        // Set session role for template
-        session()->set('role', 'nurse');
-        
         $data = [
             'title' => 'Patient Monitoring - HMS',
             'user_role' => 'nurse',
-            'user_name' => 'Nurse User'
+            'user_name' => session()->get('name')
         ];
 
         return view('nurse/patients', $data);
@@ -44,13 +41,10 @@ class Nurse extends Controller
 
     public function tasks()
     {
-        // Set session role for template
-        session()->set('role', 'nurse');
-        
         $data = [
             'title' => 'Task Management - HMS',
             'user_role' => 'nurse',
-            'user_name' => 'Nurse User'
+            'user_name' => session()->get('name')
         ];
 
         return view('nurse/tasks', $data);
@@ -58,13 +52,10 @@ class Nurse extends Controller
 
     public function schedule()
     {
-        // Set session role for template
-        session()->set('role', 'nurse');
-
         $data = [
             'title' => 'Nurse Schedule - HMS',
             'user_role' => 'nurse',
-            'user_name' => 'Nurse User'
+            'user_name' => session()->get('name')
         ];
 
         return view('nurse/schedule', $data);
@@ -72,9 +63,6 @@ class Nurse extends Controller
 
     public function appointments()
     {
-        // Set session role for template
-        session()->set('role', 'nurse');
-
         // Load patients from database (same as admin)
         $patientModel = new \App\Models\PatientModel();
         $patients = $patientModel->orderBy('id', 'DESC')->findAll();
@@ -82,7 +70,7 @@ class Nurse extends Controller
         $data = [
             'title' => 'Patient Appointments - HMS',
             'user_role' => 'nurse',
-            'user_name' => 'Nurse User',
+            'user_name' => session()->get('name'),
             'patients' => $patients
         ];
 

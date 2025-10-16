@@ -1,0 +1,1 @@
+__ci_last_regenerate|i:1760528063;_ci_previous_url|s:26:"http://localhost/HMS/login";_ci_old_input|a:2:{s:3:"get";a:0:{}s:4:"post";a:3:{s:14:"csrf_test_name";s:32:"bb60f4e401ab59da9ee90d7350b65d86";s:5:"email";s:17:"nurse@example.com";s:8:"password";s:8:"nurse123";}}__ci_vars|a:2:{s:13:"_ci_old_input";s:3:"old";s:5:"error";s:3:"old";}error|s:25:"Invalid email or password";

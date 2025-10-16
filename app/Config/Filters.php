@@ -34,6 +34,7 @@ class Filters extends BaseFilters
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
+        'role'          => \App\Filters\RoleFilter::class,
     ];
 
     /**
@@ -106,5 +107,19 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        // Temporarily disabled role filter to fix application
+        // 'role' => [
+        //     'before' => [
+        //         'admin/*'      => ['admin'],
+        //         'doctor/*'     => ['doctor'],
+        //         'nurse/*'      => ['nurse'],
+        //         'reception/*'  => ['receptionist'],
+        //         'lab/*'        => ['lab'],
+        //         'pharmacy/*'   => ['pharmacist'],
+        //         'accounts/*'   => ['accountant'],
+        //         'it/*'         => ['admin','it'],
+        //     ],
+        // ],
+    ];
 }

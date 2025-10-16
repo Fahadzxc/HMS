@@ -52,6 +52,9 @@ class Auth extends BaseController
             
             session()->set($sessionData);
             
+            // Debug: Log the session data
+            log_message('debug', 'Login successful for user: ' . $user['email'] . ' with role: ' . $user['role']);
+            
             // Set remember me cookie if checked
             if ($remember) {
                 // You can implement remember me functionality here
@@ -66,6 +69,16 @@ class Auth extends BaseController
                     return redirect()->to('/doctor/dashboard');
                 case 'nurse':
                     return redirect()->to('/nurse/dashboard');
+                case 'receptionist':
+                    return redirect()->to('/reception/dashboard');
+                case 'lab':
+                    return redirect()->to('/lab/dashboard');
+                case 'pharmacist':
+                    return redirect()->to('/pharmacy/dashboard');
+                case 'accountant':
+                    return redirect()->to('/accounts/dashboard');
+                case 'it':
+                    return redirect()->to('/it/dashboard');
                 default:
                     return redirect()->to('/dashboard');
             }
@@ -81,6 +94,7 @@ class Auth extends BaseController
         session()->destroy();
         return redirect()->to('/login')->with('success', 'You have been logged out successfully.');
     }
+
 
     public function forgotPassword()
     {

@@ -1813,14 +1813,19 @@
     $currentPath = strtolower(service('uri')->getPath());
     
     // Show sidebar for admin pages, not on login/logout/auth pages
-    $validRoles = ['admin','doctor','nurse','laboratory','pharmacy'];
+    $validRoles = ['admin','doctor','nurse','receptionist','lab','pharmacist','accountant','it'];
     $isAdminPage = strpos($currentPath, 'admin') !== false || strpos($currentPath, 'patients') !== false || strpos($currentPath, 'appointments') !== false || strpos($currentPath, 'billing') !== false || strpos($currentPath, 'laboratory') !== false || strpos($currentPath, 'pharmacy') !== false || strpos($currentPath, 'reports') !== false || strpos($currentPath, 'users') !== false || strpos($currentPath, 'settings') !== false;
     $isNursePage = strpos($currentPath, 'nurse') !== false;
     $isDoctorPage = strpos($currentPath, 'doctor') !== false;
+    $isReceptionPage = strpos($currentPath, 'reception') !== false;
+    $isLabPage = strpos($currentPath, 'lab') !== false;
+    $isPharmacyPage = strpos($currentPath, 'pharmacy') !== false;
+    $isAccountsPage = strpos($currentPath, 'accounts') !== false;
+    $isItPage = strpos($currentPath, 'it') !== false;
     $isDashboardPage = strpos($currentPath, 'dashboard') !== false;
     $isAuthPage = strpos($currentPath, 'login') !== false || strpos($currentPath, 'logout') !== false || strpos($currentPath, 'auth') !== false;
     
-    $useSidebar = in_array($segment, $validRoles, true) && ($isDashboardPage || $isAdminPage || $isNursePage || $isDoctorPage) && !$isAuthPage;
+    $useSidebar = in_array($segment, $validRoles, true) && ($isDashboardPage || $isAdminPage || $isNursePage || $isDoctorPage || $isReceptionPage || $isLabPage || $isPharmacyPage || $isAccountsPage || $isItPage) && !$isAuthPage;
 ?>
 
 <?php if ($useSidebar): ?>
