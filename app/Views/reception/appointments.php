@@ -4,37 +4,37 @@
 
 <section class="panel">
     <header class="panel-header">
-        <h2>Patient Appointments</h2>
-        <p>View and manage patient appointments assigned to you</p>
+        <h2>Appointments Management</h2>
+        <p>Manage patient appointments and check-ins</p>
     </header>
     <div class="stack">
+        <?php
+        $appointmentsList = isset($appointments) && is_array($appointments) ? $appointments : [];
+        $totalAppointments = count($appointmentsList);
+        $todayAppointments = 0;
+        $pendingCheckIns = 0;
+        $today = date('Y-m-d');
+        
+        foreach ($appointmentsList as $apt) {
+            if (!empty($apt['appointment_date']) && $apt['appointment_date'] === $today) {
+                $todayAppointments++;
+                if ($apt['status'] === 'scheduled') {
+                    $pendingCheckIns++;
+                }
+            }
+        }
+        ?>
         <div class="kpi-grid">
             <div class="kpi-card">
                 <div class="kpi-content">
-                    <div class="kpi-label">My Appointments Today</div>
-                    <div class="kpi-value"><?= count($appointments ?? []) ?></div>
-                    <div class="kpi-change kpi-positive">&nbsp;</div>
+                    <div class="kpi-label">Today's Appointments</div>
+                    <div class="kpi-value"><?= $todayAppointments ?></div>
                 </div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-content">
-                    <div class="kpi-label">Confirmed</div>
-                    <div class="kpi-value"><?= count(array_filter($upcoming_appointments ?? [], function($apt) { return $apt['status'] === 'confirmed'; })) ?></div>
-                    <div class="kpi-change kpi-positive">&nbsp;</div>
-                </div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-content">
-                    <div class="kpi-label">Pending</div>
-                    <div class="kpi-value"><?= count(array_filter($upcoming_appointments ?? [], function($apt) { return $apt['status'] === 'scheduled'; })) ?></div>
-                    <div class="kpi-change kpi-negative">&nbsp;</div>
-                </div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-content">
-                    <div class="kpi-label">This Week</div>
-                    <div class="kpi-value"><?= count($upcoming_appointments ?? []) ?></div>
-                    <div class="kpi-change kpi-positive">&nbsp;</div>
+                    <div class="kpi-label">Pending Check-ins</div>
+                    <div class="kpi-value"><?= $pendingCheckIns ?></div>
                 </div>
             </div>
         </div>
@@ -43,17 +43,71 @@
 
 <section class="panel panel-spaced">
     <header class="panel-header">
-        <h2>Patient List & Appointments</h2>
+        <h2>Today's Appointments</h2>
         <div class="row between">
-            <input type="text" placeholder="Search patients..." class="search-input">
-            <a href="#" class="btn-primary" onclick="showAddAppointmentModal()">+ Add Appointment</a>
+            <input type="text" placeholder="Search appointments..." class="search-input">
+            <a href="#" id="btnOpenAddAppointment" class="btn-primary">+ New Appointment</a>
         </div>
     </header>
     
     <div class="stack">
-        <!-- Empty state until appointments are created -->
-        <div class="empty-state">
-            <p>No appointments yet. Click "+ Add Appointment" to schedule a patient appointment.</p>
+        <div class="card table-header">
+            <div class="row between">
+                <span>Patient appointments for <?= date('F j, Y') ?></span>
+                <span><?= count($appointmentsList) ?> appointments</span>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($appointmentsList)): ?>
+                        <?php foreach ($appointmentsList as $appointment): ?>
+                            <tr>
+                                <td><?= date('g:i A', strtotime($appointment['appointment_time'])) ?></td>
+                                <td><?= htmlspecialchars($appointment['patient_name'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($appointment['doctor_name'] ?? 'N/A') ?></td>
+                                <td>
+                                    <span class="badge badge-<?= $appointment['appointment_type'] === 'emergency' ? 'danger' : 'primary' ?>">
+                                        <?= ucfirst($appointment['appointment_type']) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-<?= 
+                                        $appointment['status'] === 'confirmed' ? 'success' : 
+                                        ($appointment['status'] === 'scheduled' ? 'warning' : 'secondary') 
+                                    ?>">
+                                        <?= ucfirst($appointment['status']) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <?php if ($appointment['status'] === 'scheduled'): ?>
+                                        <button class="btn-sm btn-success" onclick="checkInPatient(<?= $appointment['id'] ?>)">
+                                            Check In
+                                        </button>
+                                    <?php else: ?>
+                                        <span class="text-muted">Checked In</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No appointments scheduled for today</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </section>
@@ -106,9 +160,15 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <button class="btn-xs btn-primary" onclick="updateAppointment(<?= $appointment['id'] ?>)">
-                                        Update
-                                    </button>
+                                    <?php if ($appointment['status'] === 'scheduled' && $appointment['appointment_date'] === date('Y-m-d')): ?>
+                                        <button class="btn-xs btn-success" onclick="checkInPatient(<?= $appointment['id'] ?>)">
+                                            Check In
+                                        </button>
+                                    <?php else: ?>
+                                        <button class="btn-xs btn-primary" onclick="editAppointment(<?= $appointment['id'] ?>)">
+                                            Edit
+                                        </button>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -131,7 +191,7 @@
             <h2 id="addAppointmentTitle">Add New Appointment</h2>
             <button type="button" class="close" onclick="closeAddAppointmentModal()">&times;</button>
         </header>
-        <form id="addAppointmentForm" class="modal-body" action="<?= base_url('nurse/addAppointment') ?>" method="post">
+        <form id="addAppointmentForm" class="modal-body" action="<?= base_url('reception/createAppointment') ?>" method="post">
             <?= csrf_field() ?>
             <div class="form-grid">
                 <div class="form-field">
@@ -177,19 +237,18 @@
                     <select name="appointment_type" required>
                         <option value="">Select Type</option>
                         <option value="consultation">Consultation</option>
-                        <option value="follow_up">Follow-up</option>
+                        <option value="follow-up">Follow-up</option>
                         <option value="emergency">Emergency</option>
-                        <option value="routine_checkup">Routine Checkup</option>
+                        <option value="routine">Routine Checkup</option>
                         <option value="vaccination">Vaccination</option>
                         <option value="lab_test">Lab Test</option>
                         <option value="xray">X-Ray</option>
-                        <option value="surgery">Surgery</option>
                     </select>
                     <div class="error" data-error-for="appointment_type"></div>
                 </div>
                 <div class="form-field">
                     <label>Appointment Date <span class="req">*</span></label>
-                    <input type="date" name="appointment_date" required>
+                    <input type="date" name="appointment_date" required min="<?= date('Y-m-d') ?>">
                     <div class="error" data-error-for="appointment_date"></div>
                 </div>
                 <div class="form-field">
@@ -200,10 +259,8 @@
                 <div class="form-field">
                     <label>Status <span class="req">*</span></label>
                     <select name="status" required>
-                        <option value="">Select Status</option>
-                        <option value="pending">Pending</option>
+                        <option value="scheduled">Scheduled</option>
                         <option value="confirmed">Confirmed</option>
-                        <option value="cancelled">Cancelled</option>
                     </select>
                     <div class="error" data-error-for="status"></div>
                 </div>
@@ -216,94 +273,6 @@
             <footer class="modal-footer">
                 <button type="button" class="btn-secondary" onclick="closeAddAppointmentModal()">Cancel</button>
                 <button type="submit" class="btn-primary">Add Appointment</button>
-            </footer>
-        </form>
-    </div>
-</div>
-
-<!-- Update Appointment Modal -->
-<div id="updateAppointmentModal" class="modal" aria-hidden="true" style="display:none;">
-    <div class="modal-backdrop" id="updateAppointmentModalBackdrop"></div>
-    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="updateAppointmentTitle">
-        <header class="panel-header modal-header">
-            <h2 id="updateAppointmentTitle">Update Appointment</h2>
-            <button type="button" class="close" onclick="closeUpdateAppointmentModal()">&times;</button>
-        </header>
-        <form id="updateAppointmentForm" class="modal-body" action="<?= base_url('nurse/updateAppointment') ?>" method="post">
-            <?= csrf_field() ?>
-            <input type="hidden" name="appointment_id" id="update_appointment_id">
-            <div class="form-grid">
-                <div class="form-field">
-                    <label>Patient ID <span class="req">*</span></label>
-                    <input type="text" name="patient_id" id="update_patient_id" required>
-                    <div class="error" data-error-for="patient_id"></div>
-                </div>
-                <div class="form-field">
-                    <label>Patient Name <span class="req">*</span></label>
-                    <input type="text" name="patient_name" id="update_patient_name" required>
-                    <div class="error" data-error-for="patient_name"></div>
-                </div>
-                <div class="form-field">
-                    <label>Contact Number <span class="req">*</span></label>
-                    <input type="tel" name="contact" id="update_contact" required>
-                    <div class="error" data-error-for="contact"></div>
-                </div>
-                <div class="form-field">
-                    <label>Select Doctor <span class="req">*</span></label>
-                    <select name="doctor_id" id="update_doctor_id" required>
-                        <option value="">Choose a doctor...</option>
-                        <?php if (isset($doctors) && is_array($doctors)): ?>
-                            <?php foreach ($doctors as $doctor): ?>
-                                <option value="<?= $doctor['id'] ?>"><?= htmlspecialchars($doctor['name']) ?></option>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </select>
-                    <div class="error" data-error-for="doctor_id"></div>
-                </div>
-                <div class="form-field">
-                    <label>Appointment Type <span class="req">*</span></label>
-                    <select name="appointment_type" id="update_appointment_type" required>
-                        <option value="">Select Type</option>
-                        <option value="consultation">Consultation</option>
-                        <option value="follow_up">Follow-up</option>
-                        <option value="emergency">Emergency</option>
-                        <option value="routine_checkup">Routine Checkup</option>
-                        <option value="vaccination">Vaccination</option>
-                        <option value="lab_test">Lab Test</option>
-                        <option value="xray">X-Ray</option>
-                        <option value="surgery">Surgery</option>
-                    </select>
-                    <div class="error" data-error-for="appointment_type"></div>
-                </div>
-                <div class="form-field">
-                    <label>Appointment Date <span class="req">*</span></label>
-                    <input type="date" name="appointment_date" id="update_appointment_date" required>
-                    <div class="error" data-error-for="appointment_date"></div>
-                </div>
-                <div class="form-field">
-                    <label>Appointment Time <span class="req">*</span></label>
-                    <input type="time" name="appointment_time" id="update_appointment_time" required>
-                    <div class="error" data-error-for="appointment_time"></div>
-                </div>
-                <div class="form-field">
-                    <label>Status <span class="req">*</span></label>
-                    <select name="status" id="update_status" required>
-                        <option value="">Select Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
-                    <div class="error" data-error-for="status"></div>
-                </div>
-                <div class="form-field form-field--full">
-                    <label>Notes</label>
-                    <textarea name="notes" id="update_notes" rows="3" placeholder="Additional notes or instructions..."></textarea>
-                    <div class="error" data-error-for="notes"></div>
-                </div>
-            </div>
-            <footer class="modal-footer">
-                <button type="button" class="btn-secondary" onclick="closeUpdateAppointmentModal()">Cancel</button>
-                <button type="submit" class="btn-primary">Update Appointment</button>
             </footer>
         </form>
     </div>
@@ -325,26 +294,6 @@ function closeAddAppointmentModal() {
     form.reset();
 }
 
-// Update Appointment Modal
-function showUpdateAppointmentModal(patientId) {
-    const modal = document.getElementById('updateAppointmentModal');
-    modal.style.display = 'block';
-    modal.setAttribute('aria-hidden', 'false');
-    
-    // Pre-fill form with patient data (you can fetch this from database)
-    document.getElementById('update_appointment_id').value = patientId;
-    document.getElementById('update_patient_id').value = patientId;
-    // Add more pre-filling logic here
-}
-
-function closeUpdateAppointmentModal() {
-    const modal = document.getElementById('updateAppointmentModal');
-    const form = document.getElementById('updateAppointmentForm');
-    modal.style.display = 'none';
-    modal.setAttribute('aria-hidden', 'true');
-    form.reset();
-}
-
 // Load Patient Details when patient is selected
 function loadPatientDetails() {
     const select = document.getElementById('patient_select');
@@ -359,15 +308,58 @@ function loadPatientDetails() {
     }
 }
 
-// View Patient Details
-function viewPatientDetails(patientId) {
-    alert('Viewing patient details for: ' + patientId);
-    // Implement patient details view
-}
+// Event listeners
+document.getElementById('btnOpenAddAppointment').addEventListener('click', function(e) {
+    e.preventDefault();
+    showAddAppointmentModal();
+});
 
-// Update Appointment
-function updateAppointment(patientId) {
-    showUpdateAppointmentModal(patientId);
+// Add appointment form submission
+document.getElementById('addAppointmentForm').addEventListener('submit', function(e) {
+    // Let the form submit normally for now to debug
+    console.log('Form is being submitted...');
+    
+    // Validate required fields
+    const patientId = document.querySelector('select[name="patient_id"]').value;
+    const doctorId = document.querySelector('select[name="doctor_id"]').value;
+    const appointmentDate = document.querySelector('input[name="appointment_date"]').value;
+    const appointmentTime = document.querySelector('input[name="appointment_time"]').value;
+    const appointmentType = document.querySelector('select[name="appointment_type"]').value;
+    
+    if (!patientId || !doctorId || !appointmentDate || !appointmentTime || !appointmentType) {
+        e.preventDefault();
+        alert('Please fill in all required fields');
+        return false;
+    }
+    
+    console.log('All fields filled, submitting form...');
+    // Form will submit normally
+});
+
+// Check in patient function
+function checkInPatient(appointmentId) {
+    if (confirm('Check in this patient?')) {
+        const formData = new FormData();
+        formData.append('appointment_id', appointmentId);
+        
+        fetch('<?= base_url('reception/checkInPatient') ?>', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Patient checked in successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + (data.message || 'Failed to check in patient'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while checking in the patient');
+        });
+    }
 }
 
 // Add backdrop click handlers
@@ -377,13 +369,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (addAppointmentBackdrop) {
         addAppointmentBackdrop.addEventListener('click', closeAddAppointmentModal);
     }
-    
-    // Update Appointment Modal
-    const updateAppointmentBackdrop = document.getElementById('updateAppointmentModalBackdrop');
-    if (updateAppointmentBackdrop) {
-        updateAppointmentBackdrop.addEventListener('click', closeUpdateAppointmentModal);
-    }
 });
+
+// Edit appointment function
+function editAppointment(id) {
+    alert('Edit appointment functionality - ID: ' + id);
+    // Implement edit functionality
+}
 </script>
 
 <style>

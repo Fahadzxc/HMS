@@ -39,10 +39,11 @@ $routes->post('nurse/updateSchedule', 'Nurse::updateSchedule');
 $routes->post('nurse/requestScheduleChange', 'Nurse::requestScheduleChange');
 $routes->post('nurse/addAppointment', 'Nurse::addAppointment');
 $routes->post('nurse/updateAppointment', 'Nurse::updateAppointment');
-$routes->post('nurse/deleteAppointment', 'Nurse::deleteAppointment');
+$routes->get('nurse/checkDoctorAvailability', 'Nurse::checkDoctorAvailability');
 
 // Reception Routes
 $routes->get('reception/patients', 'Reception::patients');
+$routes->post('reception/createPatient', 'Reception::createPatient');
 $routes->get('reception/appointments', 'Reception::appointments');
 $routes->get('reception/checkin', 'Reception::checkin');
 $routes->get('reception/billing', 'Reception::billing');
@@ -77,17 +78,29 @@ $routes->get('it/security', 'It::security');
 $routes->get('it/tickets', 'It::tickets');
 
 
-// Temporary role pages (avoid 404s until dedicated controllers exist)
+// Doctor Routes
+$routes->get('doctor/schedule', 'Doctor::schedule');
+$routes->post('doctor/updateSchedule', 'Doctor::updateSchedule');
+$routes->get('doctor/getAvailableSlots', 'Doctor::getAvailableSlots');
+$routes->get('doctor/appointments', 'Doctor::appointments');
 $routes->get('doctor/patients', 'Auth::dashboard');
-$routes->get('doctor/appointments', 'Auth::dashboard');
 
 // Admin Routes (expanded, no group)
 $routes->get('admin/dashboard', 'Admin\\Dashboard::index');
 $routes->get('admin/patients', 'Admin\\Patients::index');
 $routes->post('admin/patients/create', 'Admin\\Patients::create');
 $routes->get('admin/appointments', 'Admin\\Appointments::index');
+$routes->post('admin/appointments/create', 'Admin\\Appointments::create');
+$routes->post('admin/appointments/update/(:num)', 'Admin\\Appointments::update/$1');
+$routes->post('admin/appointments/delete/(:num)', 'Admin\\Appointments::delete/$1');
+$routes->get('admin/appointments/get/(:num)', 'Admin\\Appointments::getAppointment/$1');
+$routes->get('admin/appointments/checkAvailability', 'Admin\\Appointments::checkAvailability');
 $routes->get('admin/billing', 'Admin\\Billing::index');
 $routes->get('admin/users', 'Admin\\Users::index');
 $routes->post('admin/users/create', 'Admin\\Users::create');
 $routes->post('admin/users/update', 'Admin\\Users::update');
 $routes->post('admin/users/delete', 'Admin\\Users::delete');
+
+// Reception Appointment Routes
+$routes->post('reception/createAppointment', 'Reception::createAppointment');
+$routes->post('reception/checkInPatient', 'Reception::checkInPatient');

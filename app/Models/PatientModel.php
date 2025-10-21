@@ -20,6 +20,11 @@ class PatientModel extends Model
         'email',
         'address',
         'concern',
+        'patient_type',
+        'admission_date',
+        'discharge_date',
+        'room_number',
+        'status',
         'created_at',
     ];
 }
