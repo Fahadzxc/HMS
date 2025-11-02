@@ -14,7 +14,8 @@ class AppointmentModel extends Model
     protected $protectFields = true;
     protected $allowedFields = [
         'patient_id',
-        'doctor_id', 
+        'doctor_id',
+        'room_id',
         'appointment_date',
         'appointment_time',
         'appointment_type',
@@ -69,9 +70,10 @@ class AppointmentModel extends Model
     public function getAppointmentsWithDetails($limit = null, $offset = null)
     {
         $builder = $this->db->table($this->table);
-        $builder->select('appointments.*, patients.full_name as patient_name, users.name as doctor_name');
+        $builder->select('appointments.*, patients.full_name as patient_name, users.name as doctor_name, rooms.room_number');
         $builder->join('patients', 'patients.id = appointments.patient_id', 'left');
         $builder->join('users', 'users.id = appointments.doctor_id', 'left');
+        $builder->join('rooms', 'rooms.id = appointments.room_id', 'left');
         $builder->orderBy('appointments.appointment_date', 'ASC');
         $builder->orderBy('appointments.appointment_time', 'ASC');
         
@@ -86,9 +88,10 @@ class AppointmentModel extends Model
     public function getAppointmentsByDate($date)
     {
         $builder = $this->db->table($this->table);
-        $builder->select('appointments.*, patients.full_name as patient_name, users.name as doctor_name');
+        $builder->select('appointments.*, patients.full_name as patient_name, users.name as doctor_name, rooms.room_number');
         $builder->join('patients', 'patients.id = appointments.patient_id', 'left');
         $builder->join('users', 'users.id = appointments.doctor_id', 'left');
+        $builder->join('rooms', 'rooms.id = appointments.room_id', 'left');
         $builder->where('appointment_date', $date);
         $builder->where('appointments.status !=', 'cancelled');
         $builder->orderBy('appointment_time', 'ASC');
@@ -168,9 +171,10 @@ class AppointmentModel extends Model
     public function getUpcomingAppointments($limit = 10)
     {
         $builder = $this->db->table($this->table);
-        $builder->select('appointments.*, patients.full_name as patient_name, users.name as doctor_name');
+        $builder->select('appointments.*, patients.full_name as patient_name, users.name as doctor_name, rooms.room_number');
         $builder->join('patients', 'patients.id = appointments.patient_id', 'left');
         $builder->join('users', 'users.id = appointments.doctor_id', 'left');
+        $builder->join('rooms', 'rooms.id = appointments.room_id', 'left');
         $builder->where('appointment_date >=', date('Y-m-d'));
         $builder->where('appointments.status !=', 'cancelled');
         $builder->orderBy('appointment_date', 'ASC');

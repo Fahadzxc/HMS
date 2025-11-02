@@ -65,6 +65,7 @@
                         <th>Time</th>
                         <th>Patient</th>
                         <th>Doctor</th>
+                        <th>Room</th>
                         <th>Type</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -77,6 +78,7 @@
                                 <td><?= date('g:i A', strtotime($appointment['appointment_time'])) ?></td>
                                 <td><?= htmlspecialchars($appointment['patient_name'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($appointment['doctor_name'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($appointment['room_number'] ?? '—') ?></td>
                                 <td>
                                     <span class="badge badge-<?= $appointment['appointment_type'] === 'emergency' ? 'danger' : 'primary' ?>">
                                         <?= ucfirst($appointment['appointment_type']) ?>
@@ -231,6 +233,17 @@
                         <?php endif; ?>
                     </select>
                     <div class="error" data-error-for="doctor_id"></div>
+                    <small class="form-help">
+                        <strong>Available Doctors:</strong>
+                        <?php if (isset($doctors) && is_array($doctors)): ?>
+                            <?php foreach ($doctors as $doctor): ?>
+                                <a href="#" class="doctor-schedule-link" data-doctor-id="<?= $doctor['id'] ?>" style="margin-right: 10px; color: #3B82F6; text-decoration: underline;">
+                                    <?= htmlspecialchars($doctor['name']) ?>
+                                </a>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                        <br><em>Click on a doctor's name to view their schedule</em>
+                    </small>
                 </div>
                 <div class="form-field">
                     <label>Appointment Type <span class="req">*</span></label>
@@ -248,8 +261,11 @@
                 </div>
                 <div class="form-field">
                     <label>Appointment Date <span class="req">*</span></label>
-                    <input type="date" name="appointment_date" required min="<?= date('Y-m-d') ?>">
+                    <input type="date" name="appointment_date" id="appointment_date" required min="<?= date('Y-m-d') ?>">
                     <div class="error" data-error-for="appointment_date"></div>
+                    <div id="date_availability_warning" style="display: none; color: #e53e3e; font-size: 0.875rem; margin-top: 0.25rem;">
+                        <i class="fas fa-exclamation-triangle"></i> Selected doctor is not available on this date.
+                    </div>
                 </div>
                 <div class="form-field">
                     <label>Appointment Time <span class="req">*</span></label>
@@ -263,6 +279,26 @@
                         <option value="confirmed">Confirmed</option>
                     </select>
                     <div class="error" data-error-for="status"></div>
+                </div>
+                <div class="form-field">
+                    <label>Select Room</label>
+                    <select name="room_id" id="room_select">
+                        <option value="">Choose a room...</option>
+                        <?php if (isset($rooms) && is_array($rooms)): ?>
+                            <?php foreach ($rooms as $room): ?>
+                                <option value="<?= $room['id'] ?>" 
+                                        data-type="<?= $room['room_type'] ?>"
+                                        data-floor="<?= $room['floor'] ?>"
+                                        data-capacity="<?= $room['capacity'] ?>"
+                                        data-occupancy="<?= $room['current_occupancy'] ?>">
+                                    <?= esc($room['room_number']) ?> - <?= esc($room['specialization']) ?> 
+                                    (Floor <?= $room['floor'] ?>, <?= $room['capacity'] - $room['current_occupancy'] ?> available)
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                    <div class="error" data-error-for="room_id"></div>
+                    <small class="form-help">Optional: Select a specific room for the appointment</small>
                 </div>
                 <div class="form-field form-field--full">
                     <label>Notes</label>
@@ -332,7 +368,14 @@ document.getElementById('addAppointmentForm').addEventListener('submit', functio
         return false;
     }
     
-    console.log('All fields filled, submitting form...');
+    // Check if selected date is unavailable for the doctor
+    if (appointmentDate && isDateUnavailable(appointmentDate, currentDoctorUnavailableDays)) {
+        e.preventDefault();
+        alert('The selected doctor is not available on this date. Please choose a different date or doctor.');
+        return false;
+    }
+    
+    console.log('All fields filled and date is available, submitting form...');
     // Form will submit normally
 });
 
@@ -419,6 +462,270 @@ function editAppointment(id) {
 .badge-warning { background-color: #fef5e7; color: #744210; }
 .badge-info { background-color: #bee3f8; color: #2a4365; }
 .badge-secondary { background-color: #e2e8f0; color: #4a5568; }
+
+/* Doctor Schedule Modal Styles */
+.doctor-schedule-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.doctor-schedule-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.schedule-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.schedule-day {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 15px;
+}
+
+.schedule-day h4 {
+    margin: 0 0 10px 0;
+    color: #2d3748;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.schedule-slot {
+    background-color: #f8fafc;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    border-left: 4px solid #48bb78;
+}
+
+.schedule-slot.unavailable {
+    background-color: #fed7d7;
+    border-left-color: #f56565;
+}
+
+.no-schedule {
+    color: #a0aec0;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #a0aec0;
+}
+
+.close-modal:hover {
+    color: #2d3748;
+}
 </style>
+
+<!-- Doctor Schedule Modal -->
+<div id="doctorScheduleModal" class="doctor-schedule-modal">
+    <div class="doctor-schedule-content">
+        <div class="modal-header">
+            <h2 id="doctorScheduleTitle">Doctor Schedule</h2>
+            <button class="close-modal" onclick="closeDoctorScheduleModal()">&times;</button>
+        </div>
+        <div id="doctorScheduleContent">
+            <div class="no-schedule">Loading schedule...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Doctor Schedule Modal Functions
+function showDoctorSchedule(doctorId) {
+    const modal = document.getElementById('doctorScheduleModal');
+    const content = document.getElementById('doctorScheduleContent');
+    const title = document.getElementById('doctorScheduleTitle');
+    
+    modal.style.display = 'block';
+    content.innerHTML = '<div class="no-schedule">Loading schedule...</div>';
+    title.textContent = 'Doctor Schedule';
+    
+    // Fetch doctor schedule
+    fetch(`<?= site_url('reception/getDoctorSchedule') ?>/${doctorId}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Doctor schedule data:', data); // Debug log
+            if (data.status === 'success') {
+                title.textContent = `${data.doctor.name}'s Schedule`;
+                displaySchedule(data.schedule);
+            } else {
+                content.innerHTML = `<div class="no-schedule">Error: ${data.message}</div>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            content.innerHTML = '<div class="no-schedule">Failed to load schedule</div>';
+        });
+}
+
+function displaySchedule(schedule) {
+    const content = document.getElementById('doctorScheduleContent');
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const dayNames = {
+        'monday': 'Monday',
+        'tuesday': 'Tuesday', 
+        'wednesday': 'Wednesday',
+        'thursday': 'Thursday',
+        'friday': 'Friday',
+        'saturday': 'Saturday',
+        'sunday': 'Sunday'
+    };
+    
+    let html = '<div class="schedule-grid">';
+    
+    days.forEach(day => {
+        html += `<div class="schedule-day">`;
+        html += `<h4>${dayNames[day]}</h4>`;
+        
+        if (schedule[day] && schedule[day].length > 0) {
+            schedule[day].forEach(slot => {
+                const availableClass = slot.is_available ? '' : ' unavailable';
+                const statusText = slot.is_available ? 'Available' : 'Not Available';
+                html += `<div class="schedule-slot${availableClass}">`;
+                html += `<strong>${slot.start_time} - ${slot.end_time}</strong><br>`;
+                html += `<small style="color: ${slot.is_available ? '#22543d' : '#e53e3e'}; font-weight: 600;">${statusText}</small>`;
+                if (slot.notes) {
+                    html += `<br><em style="color: #4a5568;">${slot.notes}</em>`;
+                }
+                html += `</div>`;
+            });
+        } else {
+            html += '<div class="no-schedule">No schedule set</div>';
+        }
+        
+        html += `</div>`;
+    });
+    
+    html += '</div>';
+    content.innerHTML = html;
+}
+
+function closeDoctorScheduleModal() {
+    document.getElementById('doctorScheduleModal').style.display = 'none';
+}
+
+// Doctor availability tracking
+let currentDoctorUnavailableDays = [];
+
+// Check if a date falls on an unavailable day
+function isDateUnavailable(dateString, unavailableDays) {
+    if (!dateString || unavailableDays.length === 0) return false;
+    
+    const date = new Date(dateString);
+    const dayOfWeek = date.getDay(); // 0=Sunday, 1=Monday, etc.
+    
+    return unavailableDays.includes(dayOfWeek);
+}
+
+// Update date availability warning
+function updateDateAvailabilityWarning() {
+    const dateInput = document.getElementById('appointment_date');
+    const warning = document.getElementById('date_availability_warning');
+    
+    if (!dateInput || !warning) return;
+    
+    const selectedDate = dateInput.value;
+    if (selectedDate && isDateUnavailable(selectedDate, currentDoctorUnavailableDays)) {
+        warning.style.display = 'block';
+        dateInput.style.borderColor = '#e53e3e';
+    } else {
+        warning.style.display = 'none';
+        dateInput.style.borderColor = '';
+    }
+}
+
+// Load doctor unavailable dates
+function loadDoctorAvailability(doctorId) {
+    if (!doctorId) {
+        currentDoctorUnavailableDays = [];
+        updateDateAvailabilityWarning();
+        return;
+    }
+    
+    fetch(`<?= site_url('reception/getDoctorUnavailableDates') ?>/${doctorId}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Doctor unavailable days:', data);
+            if (data.status === 'success') {
+                currentDoctorUnavailableDays = data.unavailable_days || [];
+                updateDateAvailabilityWarning();
+            } else {
+                console.error('Error loading doctor availability:', data.message);
+                currentDoctorUnavailableDays = [];
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            currentDoctorUnavailableDays = [];
+        });
+}
+
+// Add click event listeners to doctor links
+document.addEventListener('DOMContentLoaded', function() {
+    const doctorLinks = document.querySelectorAll('.doctor-schedule-link');
+    doctorLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const doctorId = this.getAttribute('data-doctor-id');
+            showDoctorSchedule(doctorId);
+        });
+    });
+    
+    // Doctor selection change handler
+    const doctorSelect = document.querySelector('select[name="doctor_id"]');
+    if (doctorSelect) {
+        doctorSelect.addEventListener('change', function() {
+            const doctorId = this.value;
+            loadDoctorAvailability(doctorId);
+        });
+    }
+    
+    // Date selection change handler
+    const dateInput = document.getElementById('appointment_date');
+    if (dateInput) {
+        dateInput.addEventListener('change', updateDateAvailabilityWarning);
+    }
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('doctorScheduleModal');
+        if (event.target === modal) {
+            closeDoctorScheduleModal();
+        }
+    });
+});
+</script>
 
 <?= $this->endSection() ?>

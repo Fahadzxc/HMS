@@ -152,7 +152,7 @@
             <h2 id="addPatientTitle">Add New Patient</h2>
             <button id="btnCloseModal" class="icon-button" aria-label="Close">×</button>
         </header>
-        <form id="addPatientForm" class="modal-body" method="post" action="<?= site_url('reception/createPatient') ?>">
+        <form id="addPatientForm" class="modal-body" method="post" action="<?= site_url('reception/patients/store') ?>">
             <?= csrf_field() ?>
             <div class="form-grid">
                 <div class="form-field">
@@ -222,34 +222,6 @@
                     </select>
                     <div class="error" data-error-for="patient_type"></div>
                 </div>
-                <div class="form-field" id="inpatient-fields" style="display: none;">
-                    <label>Inpatient Room</label>
-                    <select name="room_number">
-                        <option value="">Select Inpatient Room</option>
-                        <?php if (isset($inpatient_rooms)): ?>
-                            <?php foreach ($inpatient_rooms as $room): ?>
-                                <option value="<?= $room['room_number'] ?>">
-                                    <?= $room['room_number'] ?> (Floor <?= $room['floor'] ?>) - Capacity: <?= $room['capacity'] ?>
-                                </option>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </select>
-                    <div class="error" data-error-for="room_number"></div>
-                </div>
-                <div class="form-field" id="outpatient-fields" style="display: none;">
-                    <label>Doctor Room</label>
-                    <select name="doctor_room">
-                        <option value="">Select Doctor Room</option>
-                        <?php if (isset($outpatient_rooms)): ?>
-                            <?php foreach ($outpatient_rooms as $room): ?>
-                                <option value="<?= $room['room_number'] ?>">
-                                    <?= $room['room_number'] ?> - <?= $room['specialization'] ?> (Floor <?= $room['floor'] ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </select>
-                    <div class="error" data-error-for="doctor_room"></div>
-                </div>
                 <div class="form-field form-field--full">
                     <label>Medical Concern <span class="req">*</span></label>
                     <textarea name="concern" rows="4" required></textarea>
@@ -307,7 +279,8 @@
                     alert('Patient registered successfully');
                     location.reload();
                 } else {
-                    alert('Failed to register patient');
+                    console.error('Server response:', data);
+                    alert('Failed to register patient: ' + (data.message || 'Unknown error'));
                     submitBtn.disabled = false;
                 }
             } catch (err){
@@ -341,27 +314,9 @@
             });
         }
 
-        // Patient type handling
-        const patientTypeSelect = document.querySelector('select[name="patient_type"]');
-        const inpatientFields = document.getElementById('inpatient-fields');
-        const outpatientFields = document.getElementById('outpatient-fields');
-        
-        if (patientTypeSelect && inpatientFields && outpatientFields) {
-            patientTypeSelect.addEventListener('change', function(e) {
-                // Hide both fields first
-                inpatientFields.style.display = 'none';
-                outpatientFields.style.display = 'none';
-                
-                // Show appropriate field based on selection
-                if (e.target.value === 'inpatient') {
-                    inpatientFields.style.display = 'block';
-                } else if (e.target.value === 'outpatient') {
-                    outpatientFields.style.display = 'block';
-                }
-            });
-        }
+        // Patient type handling - removed room selection logic
     })();
 </script>
 <?= $this->endSection() ?>
-
 <?= $this->endSection() ?>
+

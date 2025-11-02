@@ -42,22 +42,15 @@ class Reception extends Controller
         }
 
         return [
-            'first_name'        => 'required|min_length[2]|max_length[100]',
-            'middle_name'       => 'permit_empty|max_length[100]',
-            'last_name'         => 'required|min_length[2]|max_length[100]',
+            'full_name'         => 'required|min_length[2]|max_length[200]',
             'gender'            => 'required|in_list[Male,Female,Other]',
-            'date_of_birth'     => 'required|valid_date[Y-m-d]',
+            'date_of_birth'     => 'required',
             'contact'           => 'required|regex_match[/^09[0-9]{9}$/]|' . $uniqueContactRule,
             'email'             => $uniqueEmailRule,
-            'address_city'      => 'required|max_length[100]',
-            'address_barangay'  => 'required|max_length[100]',
-            'address_street'    => 'required|max_length[150]',
+            'address'           => 'required|max_length[100]',
             'blood_type'        => 'permit_empty|in_list[' . implode(',', $this->bloodTypes) . ']',
-            'allergies'         => 'permit_empty|max_length[500]',
-            'emergency_name'    => 'required|min_length[2]|max_length[100]',
-            'emergency_contact' => 'required|regex_match[/^09[0-9]{9}$/]',
-            'relationship'      => 'required|max_length[50]',
-            'status'            => 'permit_empty|in_list[active,inactive]',
+            'patient_type'      => 'required|in_list[outpatient,inpatient]',
+            'concern'           => 'required|max_length[500]',
         ];
     }
 
@@ -65,21 +58,22 @@ class Reception extends Controller
     {
         $data = $this->request->getPost();
 
-        $data['first_name']        = trim((string) ($data['first_name'] ?? ''));
-        $data['middle_name']       = trim((string) ($data['middle_name'] ?? ''));
-        $data['last_name']         = trim((string) ($data['last_name'] ?? ''));
+        // Parse full name into components
+        $fullName = trim((string) ($data['full_name'] ?? ''));
+        $nameParts = explode(' ', $fullName);
+        $data['first_name'] = $nameParts[0] ?? '';
+        $data['middle_name'] = isset($nameParts[1]) && count($nameParts) > 2 ? $nameParts[1] : '';
+        $data['last_name'] = count($nameParts) > 1 ? end($nameParts) : '';
+        
+        $data['full_name']         = $fullName;
         $data['gender']            = (string) ($data['gender'] ?? '');
         $data['date_of_birth']     = (string) ($data['date_of_birth'] ?? '');
         $data['contact']           = preg_replace('/\D/', '', (string) ($data['contact'] ?? ''));
         $data['email']             = trim((string) ($data['email'] ?? ''));
-        $data['address_city']      = trim((string) ($data['address_city'] ?? ''));
-        $data['address_barangay']  = trim((string) ($data['address_barangay'] ?? ''));
-        $data['address_street']    = trim((string) ($data['address_street'] ?? ''));
+        $data['address']           = trim((string) ($data['address'] ?? ''));
         $data['blood_type']        = (string) ($data['blood_type'] ?? '');
-        $data['allergies']         = trim((string) ($data['allergies'] ?? ''));
-        $data['emergency_name']    = trim((string) ($data['emergency_name'] ?? ''));
-        $data['emergency_contact'] = preg_replace('/\D/', '', (string) ($data['emergency_contact'] ?? ''));
-        $data['relationship']      = trim((string) ($data['relationship'] ?? ''));
+        $data['patient_type']      = (string) ($data['patient_type'] ?? '');
+        $data['concern']           = trim((string) ($data['concern'] ?? ''));
 
         $status         = strtolower((string) ($data['status'] ?? 'active'));
         $data['status'] = in_array($status, ['active', 'inactive'], true) ? $status : 'active';
@@ -99,7 +93,7 @@ class Reception extends Controller
             return null;
         }
 
-        $formats = ['Y-m-d', 'm/d/Y', 'm-d-Y', 'd/m/Y', 'd-m-Y'];
+        $formats = ['m/d/Y', 'Y-m-d', 'm-d-Y', 'd/m/Y', 'd-m-Y'];
 
         foreach ($formats as $format) {
             $date = DateTime::createFromFormat($format, $dob);
@@ -122,32 +116,28 @@ class Reception extends Controller
 
     private function extractPayload(array $data): array
     {
-        $dob = new DateTime($data['date_of_birth']);
-        $age = (int) $dob->diff(new DateTime())->y;
+        try {
+            $dob = new DateTime($data['date_of_birth']);
+            $age = (int) $dob->diff(new DateTime())->y;
+        } catch (Exception $e) {
+            log_message('error', 'Date parsing error: ' . $e->getMessage() . ' for date: ' . $data['date_of_birth']);
+            throw new \Exception('Invalid date format: ' . $data['date_of_birth']);
+        }
 
         return [
             'first_name'        => $data['first_name'],
             'middle_name'       => $data['middle_name'] !== '' ? $data['middle_name'] : null,
             'last_name'         => $data['last_name'],
-            'full_name'         => trim(implode(' ', array_filter([
-                $data['first_name'],
-                $data['middle_name'],
-                $data['last_name'],
-            ]))),
+            'full_name'         => $data['full_name'],
             'gender'            => $data['gender'],
             'date_of_birth'     => $dob->format('Y-m-d'),
             'age'               => $age,
             'contact'           => $data['contact'],
             'email'             => $data['email'] !== '' ? $data['email'] : null,
-            'address_city'      => $data['address_city'],
-            'address_barangay'  => $data['address_barangay'],
-            'address_street'    => $data['address_street'],
-            'address'           => $this->buildAddress($data),
+            'address'           => $data['address'],
             'blood_type'        => $data['blood_type'] !== '' ? $data['blood_type'] : null,
-            'allergies'         => $data['allergies'] !== '' ? $data['allergies'] : null,
-            'emergency_name'    => $data['emergency_name'],
-            'emergency_contact' => $data['emergency_contact'],
-            'relationship'      => $data['relationship'],
+            'patient_type'      => $data['patient_type'],
+            'concern'           => $data['concern'],
             'status'            => $data['status'],
         ];
     }
@@ -227,46 +217,56 @@ class Reception extends Controller
         return $this->response->setBody($html);
     }
 
-    public function appointments(): ResponseInterface|RedirectResponse
-    {
-        if (!$this->isReceptionist()) {
-            return redirect()->to('/login');
-        }
+	public function appointments(): ResponseInterface|RedirectResponse
+	{
+		if (!$this->isReceptionist()) {
+			return redirect()->to('/login');
+		}
 
-        $appointmentModel = new \App\Models\AppointmentModel();
-        $patientModel      = new \App\Models\PatientModel();
-        $userModel         = new \App\Models\UserModel();
+		$appointmentModel = new \App\Models\AppointmentModel();
+		$patientModel      = new \App\Models\PatientModel();
+		$userModel         = new \App\Models\UserModel();
+		$roomModel         = new \App\Models\RoomModel();
 
-        $todaysAppointments   = $appointmentModel->getAppointmentsByDate(date('Y-m-d'));
-        $upcomingAppointments = $appointmentModel->getUpcomingAppointments(50);
-        $patients             = $patientModel->orderBy('id', 'DESC')->findAll();
-        $doctors              = $userModel->getDoctors();
+		$todaysAppointments   = $appointmentModel->getAppointmentsByDate(date('Y-m-d'));
+		$upcomingAppointments = $appointmentModel->getUpcomingAppointments(50);
+		$patients             = $patientModel->orderBy('id', 'DESC')->findAll();
+		$doctors              = $userModel->getDoctors();
+		$rooms                = $roomModel->getAvailableRooms();
 
-        $data = [
-            'title'                 => 'Reception Appointments - HMS',
-            'user_role'             => 'receptionist',
-            'user_name'             => session()->get('name'),
-            'appointments'          => $todaysAppointments,
-            'upcoming_appointments' => $upcomingAppointments,
-            'patients'              => $patients,
-            'doctors'               => $doctors,
-        ];
+		$data = [
+			'title'                 => 'Reception Appointments - HMS',
+			'user_role'             => 'receptionist',
+			'user_name'             => session()->get('name'),
+			'appointments'          => $todaysAppointments,
+			'upcoming_appointments' => $upcomingAppointments,
+			'patients'              => $patients,
+			'doctors'               => $doctors,
+			'rooms'                 => $rooms,
+		];
 
-        $html = view('reception/appointments', $data);
+		$html = view('reception/appointments', $data);
 
-        return $this->response->setBody($html);
-    }
+		return $this->response->setBody($html);
+	}
 
     public function store(): ResponseInterface
     {
+        log_message('info', 'Store method called - Request method: ' . $this->request->getMethod());
+        log_message('info', 'Raw POST data: ' . json_encode($this->request->getPost()));
+        
         if (!$this->isReceptionist()) {
             return $this->unauthorizedResponse();
         }
 
+        $data = $this->sanitizePostData();
+        log_message('info', 'Sanitized data: ' . json_encode($data));
+        
         $validation = Services::validation();
         $rules = $this->validationRules();
 
-        if (!$validation->setRules($rules)->withRequest($this->request)->run()) {
+        if (!$validation->setRules($rules)->run($data)) {
+            log_message('error', 'Validation failed: ' . json_encode($validation->getErrors()));
             return $this->response->setStatusCode(ResponseInterface::HTTP_UNPROCESSABLE_ENTITY)
                 ->setJSON([
                     'status' => 'error',
@@ -274,25 +274,39 @@ class Reception extends Controller
                 ]);
         }
 
-        $payload = $this->extractPayload();
+        $payload = $this->extractPayload($data);
         $payload['patient_id'] = $this->generatePatientId();
 
         $model = new PatientModel();
 
         try {
+            // Log the payload for debugging
+            log_message('info', 'Patient payload: ' . json_encode($payload));
+            
             if (!$model->insert($payload)) {
+                $errors = $model->errors();
+                log_message('error', 'Model validation errors: ' . json_encode($errors));
                 return $this->response->setStatusCode(ResponseInterface::HTTP_BAD_REQUEST)
                     ->setJSON([
                         'status' => 'error',
-                        'errors' => $model->errors(),
+                        'errors' => $errors,
+                        'message' => 'Validation failed: ' . implode(', ', $errors)
                     ]);
             }
         } catch (DatabaseException $ex) {
+            log_message('error', 'Database exception: ' . $ex->getMessage());
             return $this->response->setStatusCode(ResponseInterface::HTTP_BAD_REQUEST)
                 ->setJSON([
                     'status'  => 'error',
-                    'message' => 'Unable to save patient record.',
+                    'message' => 'Unable to save patient record: ' . $ex->getMessage(),
                     'errors'  => ['database' => $ex->getMessage()],
+                ]);
+        } catch (\Exception $ex) {
+            log_message('error', 'General exception: ' . $ex->getMessage());
+            return $this->response->setStatusCode(ResponseInterface::HTTP_BAD_REQUEST)
+                ->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Unexpected error: ' . $ex->getMessage(),
                 ]);
         }
 
@@ -340,10 +354,12 @@ class Reception extends Controller
                 ]);
         }
 
+        $data = $this->sanitizePostData();
+        
         $validation = Services::validation();
         $rules = $this->validationRules($id);
 
-        if (!$validation->setRules($rules)->withRequest($this->request)->run()) {
+        if (!$validation->setRules($rules)->run($data)) {
             return $this->response->setStatusCode(ResponseInterface::HTTP_UNPROCESSABLE_ENTITY)
                 ->setJSON([
                     'status' => 'error',
@@ -351,7 +367,7 @@ class Reception extends Controller
                 ]);
         }
 
-        $payload = $this->extractPayload();
+        $payload = $this->extractPayload($data);
 
         try {
             if (!$model->update($id, $payload)) {
@@ -441,6 +457,7 @@ class Reception extends Controller
 		$data = [
 			'patient_id' => $this->request->getPost('patient_id'),
 			'doctor_id' => $this->request->getPost('doctor_id'),
+			'room_id' => $this->request->getPost('room_id') ?: null,
 			'appointment_date' => $this->request->getPost('appointment_date'),
 			'appointment_time' => $this->request->getPost('appointment_time'),
 			'appointment_type' => $this->request->getPost('appointment_type'),
@@ -582,6 +599,132 @@ class Reception extends Controller
 		];
 
 		return view('auth/dashboard', $data);
+	}
+
+	public function getDoctorSchedule($doctorId = null)
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'receptionist') {
+			return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
+		}
+
+		if (!$doctorId) {
+			return $this->response->setJSON(['status' => 'error', 'message' => 'Doctor ID is required']);
+		}
+
+		$scheduleModel = new \App\Models\DoctorScheduleModel();
+		$userModel = new \App\Models\UserModel();
+		
+		// Get doctor info
+		$doctor = $userModel->find($doctorId);
+		if (!$doctor || $doctor['role'] !== 'doctor') {
+			return $this->response->setJSON(['status' => 'error', 'message' => 'Doctor not found']);
+		}
+
+		// Get doctor's weekly schedule
+		$weeklySchedule = $scheduleModel->getDoctorWeeklySchedule($doctorId);
+		
+		// Format schedule by day
+		$scheduleByDay = [
+			'monday' => [],
+			'tuesday' => [],
+			'wednesday' => [],
+			'thursday' => [],
+			'friday' => [],
+			'saturday' => [],
+			'sunday' => []
+		];
+
+		foreach ($weeklySchedule as $schedule) {
+			$scheduleByDay[$schedule['day_of_week']][] = [
+				'start_time' => date('g:i A', strtotime($schedule['start_time'])),
+				'end_time' => date('g:i A', strtotime($schedule['end_time'])),
+				'is_available' => (bool) $schedule['is_available'], // Ensure boolean conversion
+				'notes' => $schedule['notes'] ?? ''
+			];
+		}
+
+		return $this->response->setJSON([
+			'status' => 'success',
+			'doctor' => [
+				'id' => $doctor['id'],
+				'name' => $doctor['name'],
+				'email' => $doctor['email']
+			],
+			'schedule' => $scheduleByDay
+		]);
+	}
+
+	public function getDoctorUnavailableDates($doctorId = null)
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'receptionist') {
+			return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
+		}
+
+		if (!$doctorId) {
+			return $this->response->setJSON(['status' => 'error', 'message' => 'Doctor ID is required']);
+		}
+
+		$scheduleModel = new \App\Models\DoctorScheduleModel();
+		$userModel = new \App\Models\UserModel();
+		
+		// Get doctor info
+		$doctor = $userModel->find($doctorId);
+		if (!$doctor || $doctor['role'] !== 'doctor') {
+			return $this->response->setJSON(['status' => 'error', 'message' => 'Doctor not found']);
+		}
+
+		// Get doctor's weekly schedule
+		$weeklySchedule = $scheduleModel->getDoctorWeeklySchedule($doctorId);
+		
+		// Get unavailable days of the week
+		$unavailableDays = [];
+		$availableDays = [];
+		
+		foreach ($weeklySchedule as $schedule) {
+			if (!(bool) $schedule['is_available']) {
+				$unavailableDays[] = $schedule['day_of_week'];
+			} else {
+				$availableDays[] = $schedule['day_of_week'];
+			}
+		}
+
+		// Convert day names to numbers (0=Sunday, 1=Monday, etc.)
+		$dayMapping = [
+			'sunday' => 0,
+			'monday' => 1,
+			'tuesday' => 2,
+			'wednesday' => 3,
+			'thursday' => 4,
+			'friday' => 5,
+			'saturday' => 6
+		];
+
+		$unavailableDayNumbers = [];
+		foreach ($unavailableDays as $day) {
+			if (isset($dayMapping[$day])) {
+				$unavailableDayNumbers[] = $dayMapping[$day];
+			}
+		}
+
+		// Also check for days with no schedule set
+		$allDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+		$scheduledDays = array_column($weeklySchedule, 'day_of_week');
+		$unscheduledDays = array_diff($allDays, $scheduledDays);
+		
+		foreach ($unscheduledDays as $day) {
+			if (isset($dayMapping[$day])) {
+				$unavailableDayNumbers[] = $dayMapping[$day];
+			}
+		}
+
+		return $this->response->setJSON([
+			'status' => 'success',
+			'doctor' => [
+				'id' => $doctor['id'],
+				'name' => $doctor['name']
+			],
+			'unavailable_days' => array_unique($unavailableDayNumbers)
+		]);
 	}
 }
 

@@ -10,7 +10,28 @@ class Patients extends Controller
     public function index()
     {
         $model = new PatientModel();
-        $patients = $model->orderBy('id', 'DESC')->findAll();
+        $appointmentModel = new \App\Models\AppointmentModel();
+        
+        // Get patients with their most recent doctor assignment from appointments
+        $db = \Config\Database::connect();
+        $builder = $db->table('patients p');
+        $builder->select('p.*, 
+                         u.name as assigned_doctor_name,
+                         a.appointment_date as last_appointment_date,
+                         a.status as appointment_status');
+        $builder->join('(SELECT patient_id, doctor_id, appointment_date, status, 
+                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                         FROM appointments 
+                         WHERE status != "cancelled") a', 'a.patient_id = p.id AND a.rn = 1', 'left');
+        $builder->join('users u', 'u.id = a.doctor_id', 'left');
+        $builder->orderBy('p.id', 'DESC');
+        
+        $patients = $builder->get()->getResultArray();
+        
+        // Debug: Log the first patient to see the data structure
+        if (!empty($patients)) {
+            log_message('info', 'First patient data: ' . json_encode($patients[0]));
+        }
 
         $data = [
             'pageTitle' => 'Patients',

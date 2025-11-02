@@ -66,6 +66,7 @@
                         <th>Time</th>
                         <th>Patient</th>
                         <th>Doctor</th>
+                        <th>Room</th>
                         <th>Type</th>
                         <th>Status</th>
                         <th>Notes</th>
@@ -80,6 +81,7 @@
                                 <td><?= date('g:i A', strtotime($appointment['appointment_time'])) ?></td>
                                 <td><?= htmlspecialchars($appointment['patient_name'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($appointment['doctor_name'] ?? 'N/A') ?></td>
+                                <td><?= htmlspecialchars($appointment['room_number'] ?? '—') ?></td>
                                 <td><?= ucfirst($appointment['appointment_type']) ?></td>
                                 <td>
                                     <span class="badge badge<?= 
@@ -95,7 +97,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="8" class="text-center text-muted">No appointments found</td>
+                            <td colspan="9" class="text-center text-muted">No appointments found</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

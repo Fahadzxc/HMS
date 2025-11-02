@@ -96,6 +96,10 @@ $routes->get('admin/patients', 'Admin\\Patients::index');
 $routes->post('admin/patients/create', 'Admin\\Patients::create');
 $routes->get('admin/doctors', 'Admin\\Doctors::index');
 $routes->get('admin/nurses', 'Admin\\Nurses::index');
+$routes->post('admin/nurses/createSchedule', 'Admin\\Nurses::createSchedule');
+$routes->get('admin/nurses/getSchedule/(:num)', 'Admin\\Nurses::getSchedule/$1');
+$routes->post('admin/nurses/deleteSchedule', 'Admin\\Nurses::deleteSchedule');
+$routes->get('admin/nurses/getAvailableNurses', 'Admin\\Nurses::getAvailableNurses');
 $routes->get('admin/lab', 'Admin\\Lab\\Dashboard::index');
 $routes->get('admin/lab/requests', 'Admin\\Lab\\Requests::index');
 $routes->get('admin/lab/results', 'Admin\\Lab\\Results::index');
@@ -136,3 +140,5 @@ $routes->post('admin/users/delete', 'Admin\\Users::delete');
 // Reception Appointment Routes
 $routes->post('reception/createAppointment', 'Reception::createAppointment');
 $routes->post('reception/checkInPatient', 'Reception::checkInPatient');
+$routes->get('reception/getDoctorSchedule/(:num)', 'Reception::getDoctorSchedule/$1');
+$routes->get('reception/getDoctorUnavailableDates/(:num)', 'Reception::getDoctorUnavailableDates/$1');

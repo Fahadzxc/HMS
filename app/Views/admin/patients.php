@@ -161,7 +161,16 @@
                                 <br><small class="text-muted"><?= ucfirst($p['patient_type']) ?></small>
                             <?php endif; ?>
                         </div>
-                        <div class="col-doctor">—</div>
+                        <div class="col-doctor">
+                            <?php if (!empty($p['assigned_doctor_name'])): ?>
+                                <strong><?= esc($p['assigned_doctor_name']) ?></strong>
+                                <?php if (!empty($p['last_appointment_date'])): ?>
+                                    <br><small class="text-muted">Last: <?= date('M j, Y', strtotime($p['last_appointment_date'])) ?></small>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <span class="text-muted">No appointments</span>
+                            <?php endif; ?>
+                        </div>
                 <div class="col-actions">
                     <a href="#" class="action-link">View</a>
                     <a href="#" class="action-link">Edit</a>
