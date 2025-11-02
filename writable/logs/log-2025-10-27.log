@@ -1,0 +1,516 @@
+ERROR - 2025-10-27 04:09:35 --> mysqli_sql_exception: Table 'hms.appointments' doesn't exist in D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appoint...', 0)
+#1 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appoint...')
+#2 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appoint...')
+#3 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appoint...', Array, false)
+#4 D:\JUL\xampp\htdocs\HMS\app\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+#5 D:\JUL\xampp\htdocs\HMS\app\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+#6 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+#7 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+#8 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#9 D:\JUL\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#10 D:\JUL\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#11 D:\JUL\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#12 {main}
+CRITICAL - 2025-10-27 04:09:36 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.appointments' doesn't exist
+[Method: GET, Route: admin/appointments]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 2 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 3 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-27 04:09:36 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.appointments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 4 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 5 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-27 04:09:36 --> [Caused by] mysqli_sql_exception: Table 'hms.appointments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 5 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 6 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 7 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 8 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 9 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-10-27 04:09:45 --> mysqli_sql_exception: Table 'hms.appointments' doesn't exist in D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appoint...', 0)
+#1 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appoint...')
+#2 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appoint...')
+#3 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appoint...', Array, false)
+#4 D:\JUL\xampp\htdocs\HMS\app\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+#5 D:\JUL\xampp\htdocs\HMS\app\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+#6 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+#7 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+#8 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#9 D:\JUL\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#10 D:\JUL\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#11 D:\JUL\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#12 {main}
+CRITICAL - 2025-10-27 04:09:45 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.appointments' doesn't exist
+[Method: GET, Route: admin/appointments]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 2 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 3 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-27 04:09:45 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.appointments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 4 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 5 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-27 04:09:45 --> [Caused by] mysqli_sql_exception: Table 'hms.appointments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 5 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 6 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 7 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 8 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 9 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-10-27 04:30:08 --> mysqli_sql_exception: Table 'hms.appointments' doesn't exist in D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appoint...', 0)
+#1 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appoint...')
+#2 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appoint...')
+#3 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appoint...', Array, false)
+#4 D:\JUL\xampp\htdocs\HMS\app\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+#5 D:\JUL\xampp\htdocs\HMS\app\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+#6 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+#7 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+#8 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#9 D:\JUL\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#10 D:\JUL\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#11 D:\JUL\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#12 {main}
+CRITICAL - 2025-10-27 04:30:09 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.appointments' doesn't exist
+[Method: GET, Route: admin/appointments]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 2 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 3 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-27 04:30:09 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.appointments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 4 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 5 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-27 04:30:09 --> [Caused by] mysqli_sql_exception: Table 'hms.appointments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 5 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 6 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 7 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 8 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 9 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-10-27 05:56:16 --> mysqli_sql_exception: Table 'hms.appointments' doesn't exist in D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appoint...', 0)
+#1 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appoint...')
+#2 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appoint...')
+#3 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appoint...', Array, false)
+#4 D:\JUL\xampp\htdocs\HMS\app\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+#5 D:\JUL\xampp\htdocs\HMS\app\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+#6 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+#7 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+#8 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#9 D:\JUL\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#10 D:\JUL\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#11 D:\JUL\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#12 {main}
+CRITICAL - 2025-10-27 05:56:16 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.appointments' doesn't exist
+[Method: GET, Route: admin/appointments]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 2 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 3 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-27 05:56:16 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.appointments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 4 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 5 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-27 05:56:16 --> [Caused by] mysqli_sql_exception: Table 'hms.appointments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 5 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 6 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 7 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 8 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 9 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-10-27 05:56:55 --> mysqli_sql_exception: Table 'hms.appointments' doesn't exist in D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appoint...', 0)
+#1 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appoint...')
+#2 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appoint...')
+#3 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appoint...', Array, false)
+#4 D:\JUL\xampp\htdocs\HMS\app\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+#5 D:\JUL\xampp\htdocs\HMS\app\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+#6 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+#7 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+#8 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#9 D:\JUL\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#10 D:\JUL\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#11 D:\JUL\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#12 {main}
+CRITICAL - 2025-10-27 05:56:55 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.appointments' doesn't exist
+[Method: GET, Route: admin/appointments]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 2 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 3 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-27 05:56:55 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.appointments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 4 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 5 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-27 05:56:55 --> [Caused by] mysqli_sql_exception: Table 'hms.appointments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 5 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 6 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 7 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 8 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 9 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-10-27 06:08:36 --> mysqli_sql_exception: Table 'hms.appointments' doesn't exist in D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 D:\JUL\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appoint...', 0)
+#1 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appoint...')
+#2 D:\JUL\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appoint...')
+#3 D:\JUL\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appoint...', Array, false)
+#4 D:\JUL\xampp\htdocs\HMS\app\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+#5 D:\JUL\xampp\htdocs\HMS\app\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+#6 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+#7 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+#8 D:\JUL\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#9 D:\JUL\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#10 D:\JUL\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#11 D:\JUL\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#12 {main}
+CRITICAL - 2025-10-27 06:08:36 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.appointments' doesn't exist
+[Method: GET, Route: admin/appointments]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 2 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 3 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-27 06:08:36 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.appointments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 4 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 5 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-10-27 06:08:36 --> [Caused by] mysqli_sql_exception: Table 'hms.appointments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+ORDER BY `appointments`.`appointment_date` ASC, `appointments`.`appointment_time` ASC', [], false)
+ 5 APPPATH\Models\AppointmentModel.php(82): CodeIgniter\Database\BaseBuilder->get()
+ 6 APPPATH\Controllers\Admin\Appointments.php(27): App\Models\AppointmentModel->getAppointmentsWithDetails()
+ 7 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Appointments->index()
+ 8 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Appointments))
+ 9 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))

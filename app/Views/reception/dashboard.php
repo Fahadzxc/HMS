@@ -5,6 +5,27 @@
         <p>Quick overview of today's patient flow and appointments</p>
     </header>
     <div class="stack">
+        <div class="card receptionist-card">
+            <div class="row between">
+                <div>
+                    <h3><?= esc($user_name ?? 'Logged-in User') ?></h3>
+                    <p><?= esc($user_email ?? '') ?></p>
+                </div>
+                <?php if (!empty($receptionistProfile)): ?>
+                <div class="receptionist-meta">
+                    <?php if (!empty($receptionistProfile['employee_id'])): ?>
+                        <div><strong>Employee ID:</strong> <?= esc($receptionistProfile['employee_id']) ?></div>
+                    <?php endif; ?>
+                    <?php if (!empty($receptionistProfile['department'])): ?>
+                        <div><strong>Department:</strong> <?= esc($receptionistProfile['department']) ?></div>
+                    <?php endif; ?>
+                    <?php if (!empty($receptionistProfile['shift'])): ?>
+                        <div><strong>Shift:</strong> <?= esc(ucfirst($receptionistProfile['shift'])) ?></div>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
         <div class="kpi-grid">
             <div class="kpi-card">
                 <div class="kpi-content">

@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
+use App\Models\ReceptionistModel;
 
 class Auth extends BaseController
 {
@@ -62,6 +63,10 @@ class Auth extends BaseController
 
             // Redirect to role-specific dashboard URL
             $role = $user['role'];
+
+            if ($role === 'receptionist') {
+                $this->ensureReceptionistProfile($user['id']);
+            }
             switch ($role) {
                 case 'admin':
                     return redirect()->to('/admin/dashboard');
@@ -121,5 +126,33 @@ class Auth extends BaseController
 
         // Unified dashboard view; the view will include role-specific partials
         return view('auth/dashboard', $data);
+    }
+
+    private function ensureReceptionistProfile(int $userId): void
+    {
+        $receptionistModel = new ReceptionistModel();
+        $existing = $receptionistModel->where('user_id', $userId)->first();
+
+        if ($existing) {
+            return;
+        }
+
+        $employeeId = $this->generateReceptionistEmployeeId($receptionistModel);
+
+        $receptionistModel->insert([
+            'user_id'    => $userId,
+            'employee_id'=> $employeeId,
+            'shift'      => 'morning',
+            'department' => 'Reception',
+        ]);
+    }
+
+    private function generateReceptionistEmployeeId(ReceptionistModel $model): string
+    {
+        do {
+            $id = 'RC-' . date('ym') . '-' . str_pad((string) random_int(0, 999), 3, '0', STR_PAD_LEFT);
+        } while ($model->where('employee_id', $id)->first());
+
+        return $id;
     }
 }

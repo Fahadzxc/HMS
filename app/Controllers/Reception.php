@@ -3,227 +3,410 @@
 namespace App\Controllers;
 
 use CodeIgniter\Controller;
+use CodeIgniter\Database\Exceptions\DatabaseException;
+use CodeIgniter\HTTP\RedirectResponse;
+use CodeIgniter\HTTP\ResponseInterface;
 use App\Models\PatientModel;
-use App\Models\RoomModel;
+use App\Models\ReceptionistModel;
+use Config\Services;
 use DateTime;
 
 class Reception extends Controller
 {
-	public function dashboard()
-	{
-		if (!session()->get('isLoggedIn') || session()->get('role') !== 'receptionist') {
-			return redirect()->to('/login');
-		}
+    private array $bloodTypes = [
+        'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'
+    ];
 
-		$data = [
-			'title' => 'Reception Dashboard - HMS',
-			'user_role' => 'receptionist',
-			'user_name' => session()->get('name'),
-		];
+    private function isReceptionist(): bool
+    {
+        return (bool) (session()->get('isLoggedIn') && session()->get('role') === 'receptionist');
+    }
 
-		return view('auth/dashboard', $data);
-	}
+    private function unauthorizedResponse(): ResponseInterface
+    {
+        return $this->response->setStatusCode(ResponseInterface::HTTP_UNAUTHORIZED)
+            ->setJSON([
+                'status'  => 'error',
+                'message' => 'Unauthorized access.',
+            ]);
+    }
 
-	public function patients()
-	{
-		if (!session()->get('isLoggedIn') || session()->get('role') !== 'receptionist') {
-			return redirect()->to('/login');
-		}
+    private function validationRules(?int $id = null): array
+    {
+        $uniqueContactRule = 'is_unique[patients.contact]';
+        $uniqueEmailRule   = 'permit_empty|valid_email|max_length[150]|is_unique[patients.email]';
 
-		$patientModel = new PatientModel();
-		$roomModel = new RoomModel();
-		$patients = $patientModel->findAll();
-		$inpatientRooms = $roomModel->getInpatientRooms();
-		$outpatientRooms = $roomModel->getOutpatientRooms();
+        if ($id !== null) {
+            $uniqueContactRule = 'is_unique[patients.contact,id,' . $id . ']';
+            $uniqueEmailRule   = 'permit_empty|valid_email|max_length[150]|is_unique[patients.email,id,' . $id . ']';
+        }
 
-		$data = [
-			'title' => 'Patient Registration - HMS',
-			'user_role' => 'receptionist',
-			'user_name' => session()->get('name'),
-			'patients' => $patients,
-			'inpatient_rooms' => $inpatientRooms,
-			'outpatient_rooms' => $outpatientRooms
-		];
+        return [
+            'first_name'        => 'required|min_length[2]|max_length[100]',
+            'middle_name'       => 'permit_empty|max_length[100]',
+            'last_name'         => 'required|min_length[2]|max_length[100]',
+            'gender'            => 'required|in_list[Male,Female,Other]',
+            'date_of_birth'     => 'required|valid_date[Y-m-d]',
+            'contact'           => 'required|regex_match[/^09[0-9]{9}$/]|' . $uniqueContactRule,
+            'email'             => $uniqueEmailRule,
+            'address_city'      => 'required|max_length[100]',
+            'address_barangay'  => 'required|max_length[100]',
+            'address_street'    => 'required|max_length[150]',
+            'blood_type'        => 'permit_empty|in_list[' . implode(',', $this->bloodTypes) . ']',
+            'allergies'         => 'permit_empty|max_length[500]',
+            'emergency_name'    => 'required|min_length[2]|max_length[100]',
+            'emergency_contact' => 'required|regex_match[/^09[0-9]{9}$/]',
+            'relationship'      => 'required|max_length[50]',
+            'status'            => 'permit_empty|in_list[active,inactive]',
+        ];
+    }
 
-		return view('reception/patients', $data);
-	}
+    private function sanitizePostData(): array
+    {
+        $data = $this->request->getPost();
 
-	public function createPatient()
-	{
-		if (!session()->get('isLoggedIn') || session()->get('role') !== 'receptionist') {
-			return redirect()->to('/login');
-		}
+        $data['first_name']        = trim((string) ($data['first_name'] ?? ''));
+        $data['middle_name']       = trim((string) ($data['middle_name'] ?? ''));
+        $data['last_name']         = trim((string) ($data['last_name'] ?? ''));
+        $data['gender']            = (string) ($data['gender'] ?? '');
+        $data['date_of_birth']     = (string) ($data['date_of_birth'] ?? '');
+        $data['contact']           = preg_replace('/\D/', '', (string) ($data['contact'] ?? ''));
+        $data['email']             = trim((string) ($data['email'] ?? ''));
+        $data['address_city']      = trim((string) ($data['address_city'] ?? ''));
+        $data['address_barangay']  = trim((string) ($data['address_barangay'] ?? ''));
+        $data['address_street']    = trim((string) ($data['address_street'] ?? ''));
+        $data['blood_type']        = (string) ($data['blood_type'] ?? '');
+        $data['allergies']         = trim((string) ($data['allergies'] ?? ''));
+        $data['emergency_name']    = trim((string) ($data['emergency_name'] ?? ''));
+        $data['emergency_contact'] = preg_replace('/\D/', '', (string) ($data['emergency_contact'] ?? ''));
+        $data['relationship']      = trim((string) ($data['relationship'] ?? ''));
 
-		// Get all POST data
-		$postData = $this->request->getPost();
-		log_message('info', 'Received POST data: ' . json_encode($postData));
+        $status         = strtolower((string) ($data['status'] ?? 'active'));
+        $data['status'] = in_array($status, ['active', 'inactive'], true) ? $status : 'active';
 
-		// Clean contact number (remove spaces)
-		$contact = str_replace(' ', '', $this->request->getPost('contact'));
-		
-		// Basic validation
-		if (empty($this->request->getPost('full_name'))) {
-			return $this->response->setJSON([
-				'status' => 'error',
-				'errors' => ['full_name' => 'Full name is required']
-			]);
-		}
+        $normalizedDob = $this->normalizeDob($data['date_of_birth']);
+        if ($normalizedDob !== null) {
+            $data['date_of_birth'] = $normalizedDob;
+        }
 
-		if (empty($this->request->getPost('gender'))) {
-			return $this->response->setJSON([
-				'status' => 'error',
-				'errors' => ['gender' => 'Gender is required']
-			]);
-		}
+        return $data;
+    }
 
-		if (empty($this->request->getPost('address'))) {
-			return $this->response->setJSON([
-				'status' => 'error',
-				'errors' => ['address' => 'Address is required']
-			]);
-		}
+    private function normalizeDob(?string $dob): ?string
+    {
+        $dob = trim((string) $dob);
+        if ($dob === '') {
+            return null;
+        }
 
-		if (empty($this->request->getPost('concern'))) {
-			return $this->response->setJSON([
-				'status' => 'error',
-				'errors' => ['concern' => 'Medical concern is required']
-			]);
-		}
+        $formats = ['Y-m-d', 'm/d/Y', 'm-d-Y', 'd/m/Y', 'd-m-Y'];
 
-		if (empty($this->request->getPost('patient_type'))) {
-			return $this->response->setJSON([
-				'status' => 'error',
-				'errors' => ['patient_type' => 'Patient type is required']
-			]);
-		}
+        foreach ($formats as $format) {
+            $date = DateTime::createFromFormat($format, $dob);
+            if ($date instanceof DateTime && $date->format($format) === $dob) {
+                return $date->format('Y-m-d');
+            }
+        }
 
-		// Validate room assignment based on patient type
-		$patientType = $this->request->getPost('patient_type');
-		if ($patientType === 'inpatient' && empty($this->request->getPost('room_number'))) {
-			return $this->response->setJSON([
-				'status' => 'error',
-				'errors' => ['room_number' => 'Inpatient room is required for inpatients']
-			]);
-		}
-		
-		if ($patientType === 'outpatient' && empty($this->request->getPost('doctor_room'))) {
-			return $this->response->setJSON([
-				'status' => 'error',
-				'errors' => ['doctor_room' => 'Doctor room is required for outpatients']
-			]);
-		}
+        return null;
+    }
 
-		// Validate contact separately
-		if (!preg_match('/^09[0-9]{9}$/', $contact)) {
-			return $this->response->setJSON([
-				'status' => 'error',
-				'errors' => ['contact' => 'Contact number must be 11 digits starting with 09']
-			]);
-		}
+    private function buildAddress(array $data): string
+    {
+        return trim(implode(', ', array_filter([
+            $data['address_street'] ?? '',
+            $data['address_barangay'] ?? '',
+            $data['address_city'] ?? '',
+        ])));
+    }
 
-		// Custom date validation
-		$dateOfBirth = $this->request->getPost('date_of_birth');
-		try {
-			// Handle MM/DD/YYYY format
-			if (strpos($dateOfBirth, '/') !== false) {
-				$parts = explode('/', $dateOfBirth);
-				if (count($parts) === 3) {
-					$dateOfBirth = $parts[2] . '-' . $parts[0] . '-' . $parts[1]; // Convert to YYYY-MM-DD
-				}
-			}
-			
-			$birthDate = new DateTime($dateOfBirth);
-			$today = new DateTime();
-			
-			if ($birthDate > $today) {
-				return $this->response->setJSON([
-					'status' => 'error',
-					'errors' => ['date_of_birth' => 'Date of birth cannot be in the future']
-				]);
-			}
-		} catch (Exception $e) {
-			return $this->response->setJSON([
-				'status' => 'error',
-				'errors' => ['date_of_birth' => 'Invalid date format']
-			]);
-		}
+    private function extractPayload(array $data): array
+    {
+        $dob = new DateTime($data['date_of_birth']);
+        $age = (int) $dob->diff(new DateTime())->y;
 
-		$patientModel = new PatientModel();
-		
-		$data = [
-			'full_name' => $this->request->getPost('full_name'),
-			'date_of_birth' => $dateOfBirth,
-			'gender' => $this->request->getPost('gender'),
-			'blood_type' => $this->request->getPost('blood_type') ?: 'O+',
-			'contact' => $contact,
-			'email' => $this->request->getPost('email') ?: '',
-			'address' => $this->request->getPost('address'),
-			'concern' => $this->request->getPost('concern'),
-			'patient_type' => $this->request->getPost('patient_type'),
-			'room_number' => $this->request->getPost('room_number') ?: $this->request->getPost('doctor_room'),
-			'status' => 'active',
-			'created_at' => date('Y-m-d H:i:s')
-		];
+        return [
+            'first_name'        => $data['first_name'],
+            'middle_name'       => $data['middle_name'] !== '' ? $data['middle_name'] : null,
+            'last_name'         => $data['last_name'],
+            'full_name'         => trim(implode(' ', array_filter([
+                $data['first_name'],
+                $data['middle_name'],
+                $data['last_name'],
+            ]))),
+            'gender'            => $data['gender'],
+            'date_of_birth'     => $dob->format('Y-m-d'),
+            'age'               => $age,
+            'contact'           => $data['contact'],
+            'email'             => $data['email'] !== '' ? $data['email'] : null,
+            'address_city'      => $data['address_city'],
+            'address_barangay'  => $data['address_barangay'],
+            'address_street'    => $data['address_street'],
+            'address'           => $this->buildAddress($data),
+            'blood_type'        => $data['blood_type'] !== '' ? $data['blood_type'] : null,
+            'allergies'         => $data['allergies'] !== '' ? $data['allergies'] : null,
+            'emergency_name'    => $data['emergency_name'],
+            'emergency_contact' => $data['emergency_contact'],
+            'relationship'      => $data['relationship'],
+            'status'            => $data['status'],
+        ];
+    }
 
-		// Set admission date for inpatients
-		if ($patientType === 'inpatient') {
-			$data['admission_date'] = date('Y-m-d');
-		}
+    private function generatePatientId(): string
+    {
+        $today = date('Y-m-d');
+        $model = new PatientModel();
 
-		// Debug: Log the data being inserted
-		log_message('info', 'Attempting to insert patient: ' . json_encode($data));
-		
-		if ($patientModel->insert($data)) {
-			return $this->response->setJSON([
-				'status' => 'success',
-				'message' => 'Patient registered successfully'
-			]);
-		} else {
-			// Get detailed error information
-			$errors = $patientModel->errors();
-			log_message('error', 'Patient insert failed: ' . json_encode($errors));
-			return $this->response->setJSON([
-				'status' => 'error',
-				'message' => 'Failed to register patient',
-				'errors' => $errors,
-				'debug_data' => $data
-			]);
-		}
-	}
+        $count = $model->where('DATE(created_at)', $today)->countAllResults();
 
-	public function appointments()
-	{
-		if (!session()->get('isLoggedIn') || session()->get('role') !== 'receptionist') {
-			return redirect()->to('/login');
-		}
+        return sprintf('PT-%s-%03d', date('Ymd'), $count + 1);
+    }
 
-		// Load models
-		$appointmentModel = new \App\Models\AppointmentModel();
-		$patientModel = new PatientModel();
-		$userModel = new \App\Models\UserModel();
+    public function dashboard()
+    {
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'receptionist') {
+            return redirect()->to('/login');
+        }
 
-		// Get today's appointments and upcoming appointments for reception desk
-		$todaysAppointments = $appointmentModel->getAppointmentsByDate(date('Y-m-d'));
-		$upcomingAppointments = $appointmentModel->getUpcomingAppointments(50);
-		
-		// Get patients and doctors for creating new appointments
-		$patients = $patientModel->findAll();
-		$doctors = $userModel->getDoctors();
+        $receptionistProfile = null;
+        $userId = session()->get('user_id');
+        if ($userId) {
+            $receptionistModel = new ReceptionistModel();
+            $receptionistProfile = $receptionistModel->where('user_id', $userId)->first();
+        }
 
-		$data = [
-			'title' => 'Appointments Management - HMS',
-			'user_role' => 'receptionist',
-			'user_name' => session()->get('name'),
-			'appointments' => $todaysAppointments,
-			'upcoming_appointments' => $upcomingAppointments,
-			'patients' => $patients,
-			'doctors' => $doctors
-		];
+        $data = [
+            'title'                => 'Reception Dashboard - HMS',
+            'user_role'            => 'receptionist',
+            'user_name'            => session()->get('name'),
+            'user_email'           => session()->get('email'),
+            'receptionistProfile'  => $receptionistProfile,
+        ];
 
-		return view('reception/appointments', $data);
-	}
+        return view('auth/dashboard', $data);
+    }
 
-	public function createAppointment()
+    public function patients(): ResponseInterface|RedirectResponse
+    {
+        if (!$this->isReceptionist()) {
+            return redirect()->to('/login');
+        }
+
+        $model = new PatientModel();
+        $search = trim((string) $this->request->getGet('search'));
+
+        $builder = $model->builder();
+        if ($search !== '') {
+            $builder
+                ->groupStart()
+                    ->like('patient_id', $search)
+                    ->orLike('first_name', $search)
+                    ->orLike('middle_name', $search)
+                    ->orLike('last_name', $search)
+                    ->orLike('contact', $search)
+                    ->orLike('email', $search)
+                ->groupEnd();
+        }
+
+        $patients = $builder
+            ->orderBy('created_at', 'DESC')
+            ->get()
+            ->getResultArray();
+
+        $data = [
+            'title'       => 'Patient Registration - HMS',
+            'user_role'   => 'receptionist',
+            'user_name'   => session()->get('name'),
+            'patients'    => $patients,
+            'search'      => $search,
+            'bloodTypes'  => $this->bloodTypes,
+        ];
+
+        $html = view('reception/patients', $data);
+
+        return $this->response->setBody($html);
+    }
+
+    public function appointments(): ResponseInterface|RedirectResponse
+    {
+        if (!$this->isReceptionist()) {
+            return redirect()->to('/login');
+        }
+
+        $appointmentModel = new \App\Models\AppointmentModel();
+        $patientModel      = new \App\Models\PatientModel();
+        $userModel         = new \App\Models\UserModel();
+
+        $todaysAppointments   = $appointmentModel->getAppointmentsByDate(date('Y-m-d'));
+        $upcomingAppointments = $appointmentModel->getUpcomingAppointments(50);
+        $patients             = $patientModel->orderBy('id', 'DESC')->findAll();
+        $doctors              = $userModel->getDoctors();
+
+        $data = [
+            'title'                 => 'Reception Appointments - HMS',
+            'user_role'             => 'receptionist',
+            'user_name'             => session()->get('name'),
+            'appointments'          => $todaysAppointments,
+            'upcoming_appointments' => $upcomingAppointments,
+            'patients'              => $patients,
+            'doctors'               => $doctors,
+        ];
+
+        $html = view('reception/appointments', $data);
+
+        return $this->response->setBody($html);
+    }
+
+    public function store(): ResponseInterface
+    {
+        if (!$this->isReceptionist()) {
+            return $this->unauthorizedResponse();
+        }
+
+        $validation = Services::validation();
+        $rules = $this->validationRules();
+
+        if (!$validation->setRules($rules)->withRequest($this->request)->run()) {
+            return $this->response->setStatusCode(ResponseInterface::HTTP_UNPROCESSABLE_ENTITY)
+                ->setJSON([
+                    'status' => 'error',
+                    'errors' => $validation->getErrors(),
+                ]);
+        }
+
+        $payload = $this->extractPayload();
+        $payload['patient_id'] = $this->generatePatientId();
+
+        $model = new PatientModel();
+
+        try {
+            if (!$model->insert($payload)) {
+                return $this->response->setStatusCode(ResponseInterface::HTTP_BAD_REQUEST)
+                    ->setJSON([
+                        'status' => 'error',
+                        'errors' => $model->errors(),
+                    ]);
+            }
+        } catch (DatabaseException $ex) {
+            return $this->response->setStatusCode(ResponseInterface::HTTP_BAD_REQUEST)
+                ->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Unable to save patient record.',
+                    'errors'  => ['database' => $ex->getMessage()],
+                ]);
+        }
+
+        return $this->response->setJSON([
+            'status'  => 'success',
+            'message' => 'Patient registered successfully.',
+        ]);
+    }
+
+    public function show(int $id): ResponseInterface
+    {
+        if (!$this->isReceptionist()) {
+            return $this->unauthorizedResponse();
+        }
+
+        $model = new PatientModel();
+        $patient = $model->find($id);
+
+        if (!$patient) {
+            return $this->response->setStatusCode(ResponseInterface::HTTP_NOT_FOUND)
+                ->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Patient not found.',
+                ]);
+        }
+
+        return $this->response->setJSON([
+            'status'  => 'success',
+            'patient' => $patient,
+        ]);
+    }
+
+    public function update(int $id): ResponseInterface
+    {
+        if (!$this->isReceptionist()) {
+            return $this->unauthorizedResponse();
+        }
+        $model = new PatientModel();
+        $existing = $model->find($id);
+        if (!$existing) {
+            return $this->response->setStatusCode(ResponseInterface::HTTP_NOT_FOUND)
+                ->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Patient not found.',
+                ]);
+        }
+
+        $validation = Services::validation();
+        $rules = $this->validationRules($id);
+
+        if (!$validation->setRules($rules)->withRequest($this->request)->run()) {
+            return $this->response->setStatusCode(ResponseInterface::HTTP_UNPROCESSABLE_ENTITY)
+                ->setJSON([
+                    'status' => 'error',
+                    'errors' => $validation->getErrors(),
+                ]);
+        }
+
+        $payload = $this->extractPayload();
+
+        try {
+            if (!$model->update($id, $payload)) {
+                return $this->response->setStatusCode(ResponseInterface::HTTP_BAD_REQUEST)
+                    ->setJSON([
+                        'status' => 'error',
+                        'errors' => $model->errors(),
+                    ]);
+            }
+        } catch (DatabaseException $ex) {
+            return $this->response->setStatusCode(ResponseInterface::HTTP_BAD_REQUEST)
+                ->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Unable to update patient record.',
+                    'errors'  => ['database' => $ex->getMessage()],
+                ]);
+        }
+
+        return $this->response->setJSON([
+            'status'  => 'success',
+            'message' => 'Patient updated successfully.',
+        ]);
+    }
+
+    public function delete(int $id): ResponseInterface
+    {
+        if (!$this->isReceptionist()) {
+            return $this->unauthorizedResponse();
+        }
+
+        $model = new PatientModel();
+        $patient = $model->find($id);
+        if (!$patient) {
+            return $this->response->setStatusCode(ResponseInterface::HTTP_NOT_FOUND)
+                ->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Patient not found.',
+                ]);
+        }
+
+        if (!$model->delete($id)) {
+            return $this->response->setStatusCode(ResponseInterface::HTTP_BAD_REQUEST)
+                ->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Unable to delete patient.',
+                ]);
+        }
+
+        return $this->response->setJSON([
+            'status'  => 'success',
+            'message' => 'Patient deleted successfully.',
+        ]);
+    }
+
+    public function createAppointment()
 	{
 		// Debug logging
 		$sessionData = [

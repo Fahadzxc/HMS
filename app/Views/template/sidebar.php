@@ -5,9 +5,11 @@ $menus = [
     'admin' => [
         ['label' => 'Dashboard', 'url' => base_url('admin/dashboard')],
         ['label' => 'Patients', 'url' => base_url('admin/patients')],
+        ['label' => 'Doctors', 'url' => base_url('admin/doctors')],
+        ['label' => 'Nurses', 'url' => base_url('admin/nurses')],
         ['label' => 'Appointments', 'url' => base_url('admin/appointments')],
         ['label' => 'Billing & Payments', 'url' => base_url('admin/billing')],
-        ['label' => 'Laboratory', 'url' => base_url('laboratory')],
+        ['label' => 'Laboratory', 'url' => base_url('admin/lab')],
         ['label' => 'Pharmacy & Inventory', 'url' => base_url('pharmacy')],
         ['label' => 'Reports', 'url' => base_url('reports')],
         ['label' => 'User Management', 'url' => base_url('admin/users')],

@@ -4,8 +4,8 @@
 
 <section class="panel">
     <header class="panel-header">
-        <h2>Appointments</h2>
-        <p>Manage patient appointments and scheduling</p>
+        <h2>Appointments Monitor</h2>
+        <p>View current appointments across the facility</p>
     </header>
     <div class="stack">
         <div class="kpi-grid">
@@ -46,7 +46,6 @@
         <h2>Appointment Schedule</h2>
         <div class="row between">
             <input type="text" placeholder="Search appointments..." class="search-input">
-            <a href="#" class="btn-primary">+ Schedule Appointment</a>
         </div>
     </header>
     
@@ -54,7 +53,7 @@
         <div class="card table-header">
             <div class="row between">
                 <span>All appointments</span>
-                <span><?= count($appointments ?? []) ?> appointments</span>
+                <span><?= count($appointments ?? []) ?> total</span>
             </div>
         </div>
 
@@ -69,7 +68,7 @@
                         <th>Doctor</th>
                         <th>Type</th>
                         <th>Status</th>
-                        <th>Actions</th>
+                        <th>Notes</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -83,22 +82,15 @@
                                 <td><?= htmlspecialchars($appointment['doctor_name'] ?? 'N/A') ?></td>
                                 <td><?= ucfirst($appointment['appointment_type']) ?></td>
                                 <td>
-                                    <span class="badge badge-<?= 
-                                        $appointment['status'] === 'confirmed' ? 'success' : 
-                                        ($appointment['status'] === 'scheduled' ? 'warning' : 
-                                        ($appointment['status'] === 'completed' ? 'info' : 'secondary'))
+                                    <span class="badge badge<?= 
+                                        $appointment['status'] === 'confirmed' ? '-success' : 
+                                        ($appointment['status'] === 'scheduled' ? '-warning' : 
+                                        ($appointment['status'] === 'completed' ? '-info' : '-secondary'))
                                     ?>">
                                         <?= ucfirst($appointment['status']) ?>
                                     </span>
                                 </td>
-                                <td>
-                                    <button class="btn-xs btn-primary" onclick="editAppointment(<?= $appointment['id'] ?>)">
-                                        Edit
-                                    </button>
-                                    <button class="btn-xs btn-danger" onclick="deleteAppointment(<?= $appointment['id'] ?>)">
-                                        Delete
-                                    </button>
-                                </td>
+                                <td><?= htmlspecialchars($appointment['notes'] ?? '—') ?></td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
@@ -113,12 +105,6 @@
 </section>
 
 <style>
-.btn-xs {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-    margin-right: 0.25rem;
-}
-
 .table-container {
     overflow-x: auto;
 }
@@ -154,19 +140,5 @@
 .badge-info { background-color: #bee3f8; color: #2a4365; }
 .badge-secondary { background-color: #e2e8f0; color: #4a5568; }
 </style>
-
-<script>
-function editAppointment(id) {
-    alert('Edit appointment functionality - ID: ' + id);
-    // Implement edit functionality
-}
-
-function deleteAppointment(id) {
-    if (confirm('Are you sure you want to delete this appointment?')) {
-        alert('Delete appointment functionality - ID: ' + id);
-        // Implement delete functionality
-    }
-}
-</script>
 
 <?= $this->endSection() ?>
