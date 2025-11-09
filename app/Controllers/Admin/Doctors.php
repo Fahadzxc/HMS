@@ -67,6 +67,6 @@ class Doctors extends Controller
             'doctors' => $doctors,
         ];
 
-        return view('admin/doctors/index', $data);
+        return view('admin/doctor', $data);
     }
 }

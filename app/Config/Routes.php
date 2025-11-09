@@ -29,17 +29,13 @@ $routes->get('it/dashboard', 'It::dashboard');
 
 // Nurse Routes
 $routes->get('nurse/patients', 'Nurse::patients');
-$routes->get('nurse/tasks', 'Nurse::tasks');
+$routes->get('nurse/treatment-updates', 'Nurse::treatmentUpdates');
 $routes->get('nurse/schedule', 'Nurse::schedule');
-$routes->get('nurse/appointments', 'Nurse::appointments');
 $routes->post('nurse/updateVitals', 'Nurse::updateVitals');
 $routes->post('nurse/updateTreatment', 'Nurse::updateTreatment');
 $routes->post('nurse/assignPatient', 'Nurse::assignPatient');
 $routes->post('nurse/updateSchedule', 'Nurse::updateSchedule');
 $routes->post('nurse/requestScheduleChange', 'Nurse::requestScheduleChange');
-$routes->post('nurse/addAppointment', 'Nurse::addAppointment');
-$routes->post('nurse/updateAppointment', 'Nurse::updateAppointment');
-$routes->get('nurse/checkDoctorAvailability', 'Nurse::checkDoctorAvailability');
 
 // Reception Routes
 $routes->get('reception/patients', 'Reception::patients');
@@ -88,7 +84,9 @@ $routes->get('doctor/schedule', 'Doctor::schedule');
 $routes->post('doctor/updateSchedule', 'Doctor::updateSchedule');
 $routes->get('doctor/getAvailableSlots', 'Doctor::getAvailableSlots');
 $routes->get('doctor/appointments', 'Doctor::appointments');
-$routes->get('doctor/patients', 'Auth::dashboard');
+$routes->get('doctor/patients', 'Doctor::patients');
+$routes->get('doctor/prescriptions', 'Doctor::prescriptions');
+$routes->post('doctor/prescriptions/create', 'Doctor::createPrescription');
 
 // Admin Routes (expanded, no group)
 $routes->get('admin/dashboard', 'Admin\\Dashboard::index');

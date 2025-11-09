@@ -31,7 +31,7 @@ class NurseScheduleModel extends Model
     protected $validationRules = [
         'nurse_id' => 'required|integer',
         'day_of_week' => 'required|in_list[monday,tuesday,wednesday,thursday,friday,saturday,sunday]',
-        'shift_type' => 'required|in_list[morning,afternoon,night,double]',
+        'shift_type' => 'required|in_list[morning,afternoon,night]',
         'start_time' => 'required',
         'end_time' => 'required',
         'is_active' => 'in_list[0,1]'

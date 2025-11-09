@@ -31,8 +31,7 @@ $menus = [
     'nurse' => [
         ['label' => 'Dashboard', 'url' => base_url('nurse/dashboard')],
         ['label' => 'Patients', 'url' => base_url('nurse/patients')],
-        ['label' => 'Appointments', 'url' => base_url('nurse/appointments')],
-        ['label' => 'Tasks', 'url' => base_url('nurse/tasks')],
+        ['label' => 'Treatment Updates', 'url' => base_url('nurse/treatment-updates')],
         ['label' => 'Schedule', 'url' => base_url('nurse/schedule')],
         ['label' => 'Settings', 'url' => base_url('settings')],
         ['label' => 'Logout', 'url' => base_url('auth/logout')],

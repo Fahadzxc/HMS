@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use CodeIgniter\Controller;
+use App\Models\PrescriptionModel;
 
 class Nurse extends Controller
 {
@@ -30,24 +31,93 @@ class Nurse extends Controller
 
     public function patients()
     {
+        $model = new \App\Models\PatientModel();
+        $appointmentModel = new \App\Models\AppointmentModel();
+        
+        // Get patients with their most recent doctor assignment from appointments
+        $db = \Config\Database::connect();
+        $builder = $db->table('patients p');
+        $builder->select('p.*, 
+                         u.name as assigned_doctor_name,
+                         a.appointment_date as last_appointment_date,
+                         a.status as appointment_status,
+                         p.room_number,
+                         r.room_number as appointment_room_number');
+        $builder->join('(SELECT patient_id, doctor_id, appointment_date, status, room_id, 
+                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                         FROM appointments 
+                         WHERE status != "cancelled") a', 'a.patient_id = p.id AND a.rn = 1', 'left');
+        $builder->join('users u', 'u.id = a.doctor_id', 'left');
+        $builder->join('rooms r', 'r.id = a.room_id', 'left');
+        $builder->orderBy('p.id', 'DESC');
+        
+        $patients = $builder->get()->getResultArray();
+
         $data = [
             'title' => 'Patient Monitoring - HMS',
             'user_role' => 'nurse',
-            'user_name' => session()->get('name')
+            'user_name' => session()->get('name'),
+            'patients' => $patients,
         ];
 
         return view('nurse/patients', $data);
     }
 
-    public function tasks()
+
+    public function treatmentUpdates()
     {
+        $model = new \App\Models\PatientModel();
+        
+        // Get patients with their most recent doctor assignment
+        $db = \Config\Database::connect();
+        $builder = $db->table('patients p');
+        $builder->select('p.*, 
+                         u.name as assigned_doctor_name,
+                         a.appointment_date as last_appointment_date,
+                         a.status as appointment_status,
+                         p.room_number,
+                         r.room_number as appointment_room_number');
+        $builder->join('(SELECT patient_id, doctor_id, appointment_date, status, room_id, 
+                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                         FROM appointments 
+                         WHERE status != "cancelled") a', 'a.patient_id = p.id AND a.rn = 1', 'left');
+        $builder->join('users u', 'u.id = a.doctor_id', 'left');
+        $builder->join('rooms r', 'r.id = a.room_id', 'left');
+        $builder->where('p.status', 'active');
+        $builder->orderBy('p.id', 'DESC');
+        
+        $patients = $builder->get()->getResultArray();
+
+        // Fetch prescriptions for these patients (latest first)
+        $prescriptionsByPatient = [];
+        if (!empty($patients)) {
+            $patientIds = array_column($patients, 'id');
+            $rxModel = new PrescriptionModel();
+            $rxRows = $rxModel->whereIn('patient_id', $patientIds)
+                              ->orderBy('created_at', 'DESC')
+                              ->findAll(200);
+            foreach ($rxRows as $rx) {
+                $rx['items'] = json_decode($rx['items_json'] ?? '[]', true) ?: [];
+                $pid = (int) $rx['patient_id'];
+                if (!isset($prescriptionsByPatient[$pid])) {
+                    $prescriptionsByPatient[$pid] = [];
+                }
+                // keep only recent few per patient
+                if (count($prescriptionsByPatient[$pid]) < 3) {
+                    $prescriptionsByPatient[$pid][] = $rx;
+                }
+            }
+        }
+
         $data = [
-            'title' => 'Task Management - HMS',
+            'title' => 'Treatment Updates - HMS',
             'user_role' => 'nurse',
-            'user_name' => session()->get('name')
+            'user_name' => session()->get('name'),
+            'patients' => $patients,
+            'prescriptionsByPatient' => $prescriptionsByPatient,
         ];
 
-        return view('nurse/tasks', $data);
+        return view('nurse/treatment_updates', $data);
     }
 
     public function schedule()
@@ -61,38 +131,6 @@ class Nurse extends Controller
         return view('nurse/schedule', $data);
     }
 
-    public function appointments()
-    {
-        // Check if user is logged in and is a nurse
-        if (!session()->get('isLoggedIn') || session()->get('role') !== 'nurse') {
-            return redirect()->to('/login');
-        }
-
-        // Load models
-        $appointmentModel = new \App\Models\AppointmentModel();
-        $patientModel = new \App\Models\PatientModel();
-        $userModel = new \App\Models\UserModel();
-
-        // Get today's appointments and upcoming appointments
-        $todaysAppointments = $appointmentModel->getAppointmentsByDate(date('Y-m-d'));
-        $upcomingAppointments = $appointmentModel->getUpcomingAppointments(50);
-        
-        // Get patients and doctors for dropdowns
-        $patients = $patientModel->orderBy('id', 'DESC')->findAll();
-        $doctors = $userModel->getDoctors();
-
-        $data = [
-            'title' => 'Patient Appointments - HMS',
-            'user_role' => 'nurse',
-            'user_name' => session()->get('name'),
-            'appointments' => $todaysAppointments,
-            'upcoming_appointments' => $upcomingAppointments,
-            'patients' => $patients,
-            'doctors' => $doctors
-        ];
-
-        return view('nurse/appointments', $data);
-    }
 
     // Patient Monitoring Functions
     public function updateVitals()
@@ -169,115 +207,4 @@ class Nurse extends Controller
         return redirect()->back()->with('error', 'Invalid request method.');
     }
 
-    // Appointment Functions
-    public function addAppointment()
-    {
-        // Check if user is logged in and is a nurse
-        if (!session()->get('isLoggedIn') || session()->get('role') !== 'nurse') {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
-        }
-
-        if ($this->request->getMethod() !== 'post') {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Invalid request method']);
-        }
-
-        $appointmentModel = new \App\Models\AppointmentModel();
-
-        $data = [
-            'patient_id' => $this->request->getPost('patient_id'),
-            'doctor_id' => $this->request->getPost('doctor_id'),
-            'appointment_date' => $this->request->getPost('appointment_date'),
-            'appointment_time' => $this->request->getPost('appointment_time'),
-            'appointment_type' => $this->request->getPost('appointment_type'),
-            'status' => $this->request->getPost('status') ?: 'scheduled',
-            'notes' => $this->request->getPost('notes'),
-            'created_by' => session()->get('user_id')
-        ];
-
-        // Check doctor availability
-        if (!$appointmentModel->isDoctorAvailable($data['doctor_id'], $data['appointment_date'], $data['appointment_time'])) {
-            return $this->response->setJSON([
-                'status' => 'error',
-                'message' => 'Doctor is not available at the selected date and time'
-            ]);
-        }
-
-        if ($appointmentModel->insert($data)) {
-            return $this->response->setJSON([
-                'status' => 'success',
-                'message' => 'Appointment created successfully'
-            ]);
-        } else {
-            return $this->response->setJSON([
-                'status' => 'error',
-                'message' => 'Failed to create appointment',
-                'errors' => $appointmentModel->errors()
-            ]);
-        }
-    }
-
-    public function updateAppointment()
-    {
-        // Check if user is logged in and is a nurse
-        if (!session()->get('isLoggedIn') || session()->get('role') !== 'nurse') {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
-        }
-
-        if ($this->request->getMethod() !== 'post') {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Invalid request method']);
-        }
-
-        $appointmentId = $this->request->getPost('appointment_id');
-        $appointmentModel = new \App\Models\AppointmentModel();
-        
-        $appointment = $appointmentModel->find($appointmentId);
-        if (!$appointment) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Appointment not found']);
-        }
-
-        $data = [
-            'status' => $this->request->getPost('status'),
-            'notes' => $this->request->getPost('notes')
-        ];
-
-        // Nurses can only update status and notes, not reschedule
-        if ($appointmentModel->update($appointmentId, $data)) {
-            return $this->response->setJSON([
-                'status' => 'success',
-                'message' => 'Appointment updated successfully'
-            ]);
-        } else {
-            return $this->response->setJSON([
-                'status' => 'error',
-                'message' => 'Failed to update appointment',
-                'errors' => $appointmentModel->errors()
-            ]);
-        }
-    }
-
-    public function checkDoctorAvailability()
-    {
-        // Check if user is logged in and is a nurse
-        if (!session()->get('isLoggedIn') || session()->get('role') !== 'nurse') {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
-        }
-
-        $appointmentModel = new \App\Models\AppointmentModel();
-        
-        $doctorId = $this->request->getGet('doctor_id');
-        $date = $this->request->getGet('date');
-        $time = $this->request->getGet('time');
-
-        if (!$doctorId || !$date || !$time) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Missing required parameters']);
-        }
-
-        $available = $appointmentModel->isDoctorAvailable($doctorId, $date, $time);
-
-        return $this->response->setJSON([
-            'status' => 'success',
-            'available' => $available,
-            'message' => $available ? 'Doctor is available' : 'Doctor is not available at this time'
-        ]);
-    }
 }

@@ -37,7 +37,7 @@ class Nurses extends Controller
             'nurses' => $nurses,
         ];
 
-        return view('admin/nurses/index', $data);
+        return view('admin/nurse', $data);
     }
 
     public function createSchedule()

@@ -144,11 +144,11 @@
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label>Shift Type</label>
-                                        <select name="<?= $day ?>_shift_type">
-                                            <option value="morning">Morning</option>
-                                            <option value="afternoon">Afternoon</option>
-                                            <option value="night">Night</option>
-                                            <option value="double">Double</option>
+                                        <select name="<?= $day ?>_shift_type" onchange="setShiftTimes('<?= $day ?>', this.value)">
+                                            <option value="">Select Shift</option>
+                                            <option value="morning">Morning (6:00 AM – 2:00 PM)</option>
+                                            <option value="afternoon">Afternoon (2:00 PM – 10:00 PM)</option>
+                                            <option value="night">Night (10:00 PM – 6:00 AM)</option>
                                         </select>
                                     </div>
                                     <div class="form-group">
@@ -302,7 +302,6 @@
 .shift-morning { background: #fef3c7; color: #92400e; }
 .shift-afternoon { background: #fed7aa; color: #9a3412; }
 .shift-night { background: #ddd6fe; color: #5b21b6; }
-.shift-double { background: #fecaca; color: #991b1b; }
 
 .shift-time {
     color: #4b5563;
@@ -570,6 +569,29 @@ function toggleDaySchedule(day) {
     const enabled = document.getElementById(`${day}_enabled`).checked;
     const scheduleDiv = document.getElementById(`${day}_schedule`);
     scheduleDiv.style.display = enabled ? 'block' : 'none';
+}
+
+function setShiftTimes(day, shiftType) {
+    const startTimeInput = document.querySelector(`[name="${day}_start_time"]`);
+    const endTimeInput = document.querySelector(`[name="${day}_end_time"]`);
+    
+    switch(shiftType) {
+        case 'morning':
+            startTimeInput.value = '06:00';
+            endTimeInput.value = '14:00';
+            break;
+        case 'afternoon':
+            startTimeInput.value = '14:00';
+            endTimeInput.value = '22:00';
+            break;
+        case 'night':
+            startTimeInput.value = '22:00';
+            endTimeInput.value = '06:00';
+            break;
+        default:
+            startTimeInput.value = '';
+            endTimeInput.value = '';
+    }
 }
 
 // Handle form submission

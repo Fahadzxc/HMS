@@ -4,8 +4,8 @@
 
 <section class="panel">
     <header class="panel-header">
-        <h2>Patients</h2>
-        <p>Manage patient records and information</p>
+        <h2>My Patients</h2>
+        <p>View and manage your patient records</p>
     </header>
     <div class="stack">
         <?php
@@ -63,14 +63,14 @@
     <div class="stack">
         <!-- Table Header (matches patients table schema) -->
         <div class="card table-header">
-            <div class="row patients-grid">
+            <div class="row between">
                 <div class="col-id">Patient ID</div>
                 <div class="col-name">Name</div>
                 <div class="col-age">AGE/GENDER</div>
                 <div class="col-contact">CONTACT</div>
                 <div class="col-status">Status</div>
-                <div class="col-room">ROOM</div>
                 <div class="col-doctor">DOCTOR</div>
+                <div class="col-actions">Actions</div>
             </div>
         </div>
 
@@ -115,7 +115,7 @@
                     $bloodType = !empty($p['blood_type']) ? $p['blood_type'] : 'O+';
                 ?>
         <div class="card table-row">
-            <div class="row patients-grid">
+            <div class="row between">
                         <div class="col-id patient-id"><?= esc($pid) ?></div>
                         <div class="col-name">
                             <div class="patient-info">
@@ -161,25 +161,6 @@
                                 <br><small class="text-muted"><?= ucfirst($p['patient_type']) ?></small>
                             <?php endif; ?>
                         </div>
-                        <div class="col-room">
-                            <?php 
-                                $displayRoom = !empty($p['appointment_room_number']) 
-                                    ? $p['appointment_room_number'] 
-                                    : (!empty($p['room_number']) ? $p['room_number'] : null);
-                            ?>
-                            <?php if (!empty($displayRoom)): ?>
-                                <div class="room-info">
-                                    <span class="room-number"><?= esc($displayRoom) ?></span>
-                                    <?php if (isset($p['patient_type']) && $p['patient_type'] === 'inpatient'): ?>
-                                        <br><small class="text-muted">Inpatient</small>
-                                    <?php else: ?>
-                                        <br><small class="text-muted">Outpatient</small>
-                                    <?php endif; ?>
-                                </div>
-                            <?php else: ?>
-                                <span class="text-muted">No room assigned</span>
-                            <?php endif; ?>
-                        </div>
                         <div class="col-doctor">
                             <?php if (!empty($p['assigned_doctor_name'])): ?>
                                 <strong><?= esc($p['assigned_doctor_name']) ?></strong>
@@ -190,13 +171,18 @@
                                 <span class="text-muted">No appointments</span>
                             <?php endif; ?>
                         </div>
+                <div class="col-actions">
+                    <a href="#" class="action-link">View</a>
+                    <a href="#" class="action-link">Edit</a>
+                    <a href="#" class="action-link action-delete">Delete</a>
+                </div>
             </div>
         </div>
             <?php endforeach; ?>
         <?php else: ?>
         <div class="card table-row">
             <div class="row between">
-                    <div class="col-name">No patients found.</div>
+                    <div class="col-name">No patients assigned yet.</div>
                 </div>
             </div>
         <?php endif; ?>
@@ -204,35 +190,19 @@
 </section>
 
 <style>
-/* Room column styling */
-.col-room {
-    flex: 0 0 100px;
-    text-align: center;
-}
-
-.room-info {
-    display: flex;
-    flex-direction: column;
+/* Grid layout to guarantee perfect alignment */
+.patients-grid {
+    display: grid;
+    grid-template-columns: 80px 1fr 150px 260px 140px 200px 150px; /* ID, Name, Age, Contact, Status, Doctor, Actions */
     align-items: center;
+    gap: 0;
 }
 
-.room-number {
-    color: #1e293b;
-    font-weight: 600;
-    background: #dbeafe;
-    padding: 0.125rem 0.375rem;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
-}
-
-.text-muted {
-    color: #64748b;
-    font-size: 0.75rem;
-}
-
-/* Adjust existing column widths to accommodate room column */
-.table-header .row > div, .table-row .row > div {
-    padding: 0.5rem 0.75rem;
+/* Prevent legacy flex widths from interfering */
+.patients-grid > div { 
+    flex: none; 
+    min-width: 0;
+    padding: 0.75rem 1rem;
 }
 
 /* Make header and rows align by column widths (override space-between) */
@@ -242,61 +212,96 @@
     gap: 0;
 }
 
-/* Grid layout to guarantee perfect alignment */
-.patients-grid {
-    display: grid;
-    grid-template-columns: 70px 300px 140px 240px 140px 110px 190px; /* ID, Name, Age, Contact, Status, Room, Doctor */
-    align-items: center;
-    column-gap: 10px;
-}
-
-/* Prevent legacy flex widths from interfering */
-.patients-grid > div { flex: none; min-width: 0; }
-
 .col-id {
-    flex: 0 0 70px;
+    text-align: left;
+    font-weight: 600;
 }
 
 .col-name {
-    flex: 0 0 260px;
+    text-align: left;
 }
 
 .col-age {
-    flex: 0 0 120px;
     text-align: center;
 }
 
 .col-contact {
-    flex: 0 0 260px;
+    text-align: left;
 }
 
 .col-status {
-    flex: 0 0 120px;
     text-align: center;
 }
 
 .col-doctor {
-    flex: 0 0 180px;
+    text-align: left;
 }
 
-/* removed actions column for nurse view */
+.col-actions {
+    text-align: right;
+}
+
+/* Clean spacing for patient info */
+.patient-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.patient-avatar {
+    flex-shrink: 0;
+}
+
+.patient-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.patient-details strong {
+    font-size: 0.95rem;
+    color: #1e293b;
+}
+
+.blood-type {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.phone, .email {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.phone {
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.email {
+    color: #64748b;
+}
 
 /* Responsive adjustments */
-@media (max-width: 1200px) {
-    .col-room { flex: 0 0 90px; }
-    .col-name { flex: 0 0 220px; }
-    .col-contact { flex: 0 0 200px; }
-    .room-number {
-        font-size: 0.75rem;
-        padding: 0.1rem 0.25rem;
+@media (max-width: 1400px) {
+    .patients-grid {
+        grid-template-columns: 70px 1fr 130px 240px 130px 180px 140px;
+    }
+    
+    .patients-grid > div {
+        padding: 0.65rem 0.85rem;
     }
 }
 
 @media (max-width: 768px) {
-    .col-room {
-        display: none;
+    .patients-grid {
+        display: flex;
+        flex-direction: column;
     }
 }
 </style>
 
 <?= $this->endSection() ?>
+

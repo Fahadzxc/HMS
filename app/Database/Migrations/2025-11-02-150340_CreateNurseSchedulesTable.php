@@ -26,7 +26,7 @@ class CreateNurseSchedulesTable extends Migration
             ],
             'shift_type' => [
                 'type' => 'ENUM',
-                'constraint' => ['morning', 'afternoon', 'night', 'double'],
+                'constraint' => ['morning', 'afternoon', 'night'],
             ],
             'start_time' => [
                 'type' => 'TIME',

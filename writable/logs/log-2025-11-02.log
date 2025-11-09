@@ -887,3 +887,215 @@ Stack trace:
 #11 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
 #12 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
 #13 {main}
+CRITICAL - 2025-11-02 15:17:50 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "admin/doctors/index.php"
+[Method: GET, Route: admin/doctors]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 39.
+ 1 SYSTEMPATH\View\View.php(214): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('admin/doctors/index.php')
+ 2 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/doctors/index', [], true)
+ 3 APPPATH\Controllers\Admin\Doctors.php(70): view('admin/doctors/index', [...])
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Doctors->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Doctors))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-02 16:21:21 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "doctor/patients.php"
+[Method: GET, Route: doctor/patients]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 39.
+ 1 SYSTEMPATH\View\View.php(214): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('doctor/patients.php')
+ 2 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('doctor/patients', [], true)
+ 3 APPPATH\Controllers\Doctor.php(58): view('doctor/patients', [...])
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Doctor->patients()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Doctor))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-02 16:36:46 --> mysqli_sql_exception: Table 'hms.prescriptions' doesn't exist in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT *\nFROM `...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *\nFROM `...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *\nFROM `...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *\nFROM `...', Array, false)
+#4 C:\xampp\htdocs\HMS\system\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\BaseModel.php(677): CodeIgniter\Model->doFindAll(100, 0)
+#6 C:\xampp\htdocs\HMS\app\Models\PrescriptionModel.php(42): CodeIgniter\BaseModel->findAll(100)
+#7 C:\xampp\htdocs\HMS\app\Controllers\Doctor.php(216): App\Models\PrescriptionModel->getDoctorPrescriptions(9)
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Doctor->prescriptions()
+#9 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Doctor))
+#10 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#12 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#13 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#14 {main}
+CRITICAL - 2025-11-02 16:36:46 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.prescriptions' doesn't exist
+[Method: GET, Route: doctor/prescriptions]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `prescriptions`
+WHERE `doctor_id` = :doctor_id:
+ORDER BY `created_at` DESC
+ LIMIT 100', [...], false)
+ 2 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(100, 0)
+ 4 APPPATH\Models\PrescriptionModel.php(42): CodeIgniter\BaseModel->findAll(100)
+ 5 APPPATH\Controllers\Doctor.php(216): App\Models\PrescriptionModel->getDoctorPrescriptions(9)
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Doctor->prescriptions()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Doctor))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-02 16:36:46 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.prescriptions' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `prescriptions`
+WHERE `doctor_id` = 9
+ORDER BY `created_at` DESC
+ LIMIT 100')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `prescriptions`
+WHERE `doctor_id` = 9
+ORDER BY `created_at` DESC
+ LIMIT 100')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `prescriptions`
+WHERE `doctor_id` = :doctor_id:
+ORDER BY `created_at` DESC
+ LIMIT 100', [...], false)
+ 4 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(100, 0)
+ 6 APPPATH\Models\PrescriptionModel.php(42): CodeIgniter\BaseModel->findAll(100)
+ 7 APPPATH\Controllers\Doctor.php(216): App\Models\PrescriptionModel->getDoctorPrescriptions(9)
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Doctor->prescriptions()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Doctor))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-02 16:36:46 --> [Caused by] mysqli_sql_exception: Table 'hms.prescriptions' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT *
+FROM `prescriptions`
+WHERE `doctor_id` = 9
+ORDER BY `created_at` DESC
+ LIMIT 100', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `prescriptions`
+WHERE `doctor_id` = 9
+ORDER BY `created_at` DESC
+ LIMIT 100')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `prescriptions`
+WHERE `doctor_id` = 9
+ORDER BY `created_at` DESC
+ LIMIT 100')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `prescriptions`
+WHERE `doctor_id` = :doctor_id:
+ORDER BY `created_at` DESC
+ LIMIT 100', [...], false)
+ 5 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(100, 0)
+ 7 APPPATH\Models\PrescriptionModel.php(42): CodeIgniter\BaseModel->findAll(100)
+ 8 APPPATH\Controllers\Doctor.php(216): App\Models\PrescriptionModel->getDoctorPrescriptions(9)
+ 9 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Doctor->prescriptions()
+10 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Doctor))
+11 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+13 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+14 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-02 16:36:57 --> mysqli_sql_exception: Table 'hms.prescriptions' doesn't exist in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT *\nFROM `...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *\nFROM `...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *\nFROM `...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *\nFROM `...', Array, false)
+#4 C:\xampp\htdocs\HMS\system\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\BaseModel.php(677): CodeIgniter\Model->doFindAll(100, 0)
+#6 C:\xampp\htdocs\HMS\app\Models\PrescriptionModel.php(42): CodeIgniter\BaseModel->findAll(100)
+#7 C:\xampp\htdocs\HMS\app\Controllers\Doctor.php(216): App\Models\PrescriptionModel->getDoctorPrescriptions(9)
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Doctor->prescriptions()
+#9 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Doctor))
+#10 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#12 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#13 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#14 {main}
+CRITICAL - 2025-11-02 16:36:57 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.prescriptions' doesn't exist
+[Method: GET, Route: doctor/prescriptions]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `prescriptions`
+WHERE `doctor_id` = :doctor_id:
+ORDER BY `created_at` DESC
+ LIMIT 100', [...], false)
+ 2 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(100, 0)
+ 4 APPPATH\Models\PrescriptionModel.php(42): CodeIgniter\BaseModel->findAll(100)
+ 5 APPPATH\Controllers\Doctor.php(216): App\Models\PrescriptionModel->getDoctorPrescriptions(9)
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Doctor->prescriptions()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Doctor))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-02 16:36:57 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.prescriptions' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `prescriptions`
+WHERE `doctor_id` = 9
+ORDER BY `created_at` DESC
+ LIMIT 100')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `prescriptions`
+WHERE `doctor_id` = 9
+ORDER BY `created_at` DESC
+ LIMIT 100')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `prescriptions`
+WHERE `doctor_id` = :doctor_id:
+ORDER BY `created_at` DESC
+ LIMIT 100', [...], false)
+ 4 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(100, 0)
+ 6 APPPATH\Models\PrescriptionModel.php(42): CodeIgniter\BaseModel->findAll(100)
+ 7 APPPATH\Controllers\Doctor.php(216): App\Models\PrescriptionModel->getDoctorPrescriptions(9)
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Doctor->prescriptions()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Doctor))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-02 16:36:57 --> [Caused by] mysqli_sql_exception: Table 'hms.prescriptions' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT *
+FROM `prescriptions`
+WHERE `doctor_id` = 9
+ORDER BY `created_at` DESC
+ LIMIT 100', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `prescriptions`
+WHERE `doctor_id` = 9
+ORDER BY `created_at` DESC
+ LIMIT 100')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `prescriptions`
+WHERE `doctor_id` = 9
+ORDER BY `created_at` DESC
+ LIMIT 100')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `prescriptions`
+WHERE `doctor_id` = :doctor_id:
+ORDER BY `created_at` DESC
+ LIMIT 100', [...], false)
+ 5 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(100, 0)
+ 7 APPPATH\Models\PrescriptionModel.php(42): CodeIgniter\BaseModel->findAll(100)
+ 8 APPPATH\Controllers\Doctor.php(216): App\Models\PrescriptionModel->getDoctorPrescriptions(9)
+ 9 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Doctor->prescriptions()
+10 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Doctor))
+11 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+13 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+14 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
