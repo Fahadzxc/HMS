@@ -30,12 +30,10 @@ $routes->get('it/dashboard', 'It::dashboard');
 // Nurse Routes
 $routes->get('nurse/patients', 'Nurse::patients');
 $routes->get('nurse/treatment-updates', 'Nurse::treatmentUpdates');
-$routes->get('nurse/schedule', 'Nurse::schedule');
 $routes->post('nurse/updateVitals', 'Nurse::updateVitals');
+$routes->post('nurse/saveVitalSigns', 'Nurse::updateVitals'); // New simple endpoint
 $routes->post('nurse/updateTreatment', 'Nurse::updateTreatment');
 $routes->post('nurse/assignPatient', 'Nurse::assignPatient');
-$routes->post('nurse/updateSchedule', 'Nurse::updateSchedule');
-$routes->post('nurse/requestScheduleChange', 'Nurse::requestScheduleChange');
 
 // Reception Routes
 $routes->get('reception/patients', 'Reception::patients');
@@ -85,6 +83,7 @@ $routes->post('doctor/updateSchedule', 'Doctor::updateSchedule');
 $routes->get('doctor/getAvailableSlots', 'Doctor::getAvailableSlots');
 $routes->get('doctor/appointments', 'Doctor::appointments');
 $routes->get('doctor/patients', 'Doctor::patients');
+$routes->get('doctor/patients/show/(:num)', 'Doctor::getPatientDetails/$1');
 $routes->get('doctor/prescriptions', 'Doctor::prescriptions');
 $routes->post('doctor/prescriptions/create', 'Doctor::createPrescription');
 

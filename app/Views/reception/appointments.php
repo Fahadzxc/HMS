@@ -543,9 +543,39 @@ function editAppointment(id) {
     color: #a0aec0;
 }
 
-.close-modal:hover {
-    color: #2d3748;
-}
+        .close-modal:hover {
+            color: #2d3748;
+        }
+
+        /* Fix modal to make save button always visible */
+        #addAppointmentModal .modal-dialog {
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #addAppointmentModal .modal-body {
+            overflow-y: auto;
+            flex: 1;
+            max-height: calc(90vh - 140px); /* Subtract header and footer height */
+            padding-bottom: 20px;
+        }
+
+        #addAppointmentModal .modal-footer {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            padding: 16px 20px;
+            margin-top: 0;
+            z-index: 10;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+        }
+
+        #addAppointmentModal .modal-header {
+            flex-shrink: 0;
+        }
 </style>
 
 <!-- Doctor Schedule Modal -->

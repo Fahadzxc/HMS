@@ -29,6 +29,12 @@ class CreateAppointmentsTable extends Migration
                 'constraint' => 11,
                 'unsigned'   => true,
             ],
+            'room_id' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'unsigned'   => true,
+                'null'       => true,
+            ],
             'appointment_date' => [
                 'type' => 'DATE',
             ],

@@ -95,6 +95,57 @@
                         </div>
                     <?php endif; ?>
                     
+                    <!-- Vital Signs Section -->
+                    <?php 
+                    $nurseName = $nurse['name'] ?? '';
+                    $vitalSigns = $vitalSignsByNurse[$nurseName] ?? [];
+                    ?>
+                    <?php if (!empty($vitalSigns)): ?>
+                        <div class="vital-signs-section">
+                            <div class="vital-signs-header">
+                                <h4>Recent Vital Signs Recorded</h4>
+                                <span class="vital-count-badge"><?= count($vitalSigns) ?> records</span>
+                            </div>
+                            <div class="vital-signs-table-wrapper">
+                                <table class="vital-signs-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Time</th>
+                                            <th>Patient</th>
+                                            <th>BP</th>
+                                            <th>HR</th>
+                                            <th>Temp</th>
+                                            <th>O2 Sat</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach (array_slice($vitalSigns, 0, 5) as $vital): ?>
+                                            <tr>
+                                                <td><strong><?= !empty($vital['created_at']) ? date('M j, Y', strtotime($vital['created_at'])) : '—' ?></strong></td>
+                                                <td><?= esc($vital['time'] ?? '—') ?></td>
+                                                <td><span class="patient-badge">P<?= str_pad((string)$vital['patient_id'], 3, '0', STR_PAD_LEFT) ?></span></td>
+                                                <td><?= esc($vital['blood_pressure'] ?? '—') ?></td>
+                                                <td><?= esc($vital['heart_rate'] ?? '—') ?></td>
+                                                <td><?= esc($vital['temperature'] ?? '—') ?></td>
+                                                <td><?= esc($vital['oxygen_saturation'] ?? '—') ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                                <?php if (count($vitalSigns) > 5): ?>
+                                    <div class="vital-signs-footer">
+                                        <p class="text-muted">Showing 5 of <?= count($vitalSigns) ?> records</p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <div class="no-vital-signs">
+                            <p class="text-muted">No vital signs recorded yet</p>
+                        </div>
+                    <?php endif; ?>
+                    
                     <div class="nurse-actions">
                         <button class="btn btn-primary" onclick="editSchedule(<?= $nurse['id'] ?>, '<?= esc($nurse['name']) ?>')">
                             <?= !empty($nurse['schedules']) ? 'Edit Schedule' : 'Create Schedule' ?>
@@ -127,6 +178,37 @@
         <div class="modal-body">
             <form id="scheduleForm">
                 <input type="hidden" id="nurseId" name="nurse_id">
+                
+                <!-- Quick Setup Section -->
+                <div class="quick-setup-section" style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #e2e8f0;">
+                    <h4 style="margin: 0 0 1rem 0; color: #1e293b;">Quick Setup</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: end;">
+                        <div class="form-group">
+                            <label>Shift Type for Whole Week</label>
+                            <select id="quickShiftType" onchange="updateQuickSetup()">
+                                <option value="">Select Shift Type</option>
+                                <option value="morning">Morning (6:00 AM – 2:00 PM)</option>
+                                <option value="afternoon">Afternoon (2:00 PM – 10:00 PM)</option>
+                                <option value="night">Night (10:00 PM – 6:00 AM)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="applyToAllWeek" onchange="applyToAllWeek()">
+                                Apply to all week (Mon-Sat)
+                            </label>
+                            <br>
+                            <label style="margin-top: 0.5rem; display: block;">
+                                <input type="checkbox" id="sundayRestDay" checked>
+                                Sunday as rest day
+                            </label>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="applyQuickSetup()" style="margin-top: 1rem;">
+                        Apply Quick Setup
+                    </button>
+                </div>
+                
                 <div class="schedule-form-grid">
                     <?php 
                     $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -321,6 +403,107 @@
 
 .no-schedule {
     padding: 1.5rem;
+    text-align: center;
+}
+
+/* Vital Signs Section - Same style as schedules-section */
+.vital-signs-section {
+    padding: 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.vital-signs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.vital-signs-header h4 {
+    margin: 0;
+    color: #374151;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.vital-count-badge {
+    background: #3b82f6;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.vital-signs-table-wrapper {
+    overflow: visible;
+}
+
+.vital-signs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.vital-signs-table thead {
+    background: #f8fafc;
+}
+
+.vital-signs-table th {
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    color: #475569;
+    border-bottom: 2px solid #e2e8f0;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.vital-signs-table td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+    color: #475569;
+    font-size: 0.8125rem;
+}
+
+.vital-signs-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.vital-signs-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.patient-badge {
+    display: inline-block;
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+.vital-signs-footer {
+    padding: 0.5rem 0.75rem;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+.vital-signs-footer p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.no-vital-signs {
+    padding: 1.5rem;
+    border-top: 1px solid #f1f5f9;
+    margin-top: 1rem;
     text-align: center;
 }
 
@@ -591,6 +774,89 @@ function setShiftTimes(day, shiftType) {
         default:
             startTimeInput.value = '';
             endTimeInput.value = '';
+    }
+}
+
+// Quick Setup Functions
+function updateQuickSetup() {
+    // Auto-check apply to all week when shift type is selected
+    const shiftType = document.getElementById('quickShiftType').value;
+    if (shiftType) {
+        document.getElementById('applyToAllWeek').checked = true;
+        
+        // If night shift, automatically set Sunday as rest day
+        if (shiftType === 'night') {
+            document.getElementById('sundayRestDay').checked = true;
+        }
+    }
+}
+
+function applyToAllWeek() {
+    const applyAll = document.getElementById('applyToAllWeek').checked;
+    const shiftType = document.getElementById('quickShiftType').value;
+    
+    if (applyAll && shiftType) {
+        const weekDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        
+        weekDays.forEach(day => {
+            // Enable the day
+            document.getElementById(`${day}_enabled`).checked = true;
+            toggleDaySchedule(day);
+            
+            // Set shift type and times
+            document.querySelector(`[name="${day}_shift_type"]`).value = shiftType;
+            setShiftTimes(day, shiftType);
+        });
+        
+        // Handle Sunday based on rest day checkbox
+        const sundayRest = document.getElementById('sundayRestDay').checked;
+        if (sundayRest) {
+            document.getElementById('sunday_enabled').checked = false;
+            toggleDaySchedule('sunday');
+        }
+    }
+}
+
+function applyQuickSetup() {
+    const shiftType = document.getElementById('quickShiftType').value;
+    const applyAll = document.getElementById('applyToAllWeek').checked;
+    const sundayRest = document.getElementById('sundayRestDay').checked;
+    
+    if (!shiftType) {
+        alert('Please select a shift type first.');
+        return;
+    }
+    
+    if (applyAll) {
+        const weekDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        
+        // Apply to all weekdays
+        weekDays.forEach(day => {
+            document.getElementById(`${day}_enabled`).checked = true;
+            toggleDaySchedule(day);
+            document.querySelector(`[name="${day}_shift_type"]`).value = shiftType;
+            setShiftTimes(day, shiftType);
+        });
+        
+        // Set Sunday as rest day
+        if (sundayRest) {
+            document.getElementById('sunday_enabled').checked = false;
+            toggleDaySchedule('sunday');
+            // Clear Sunday fields
+            document.querySelector(`[name="sunday_shift_type"]`).value = '';
+            document.querySelector(`[name="sunday_start_time"]`).value = '';
+            document.querySelector(`[name="sunday_end_time"]`).value = '';
+        } else {
+            // If not rest day, apply same shift
+            document.getElementById('sunday_enabled').checked = true;
+            toggleDaySchedule('sunday');
+            document.querySelector(`[name="sunday_shift_type"]`).value = shiftType;
+            setShiftTimes('sunday', shiftType);
+        }
+        
+        alert('Quick setup applied! Review and click "Save Schedule" to confirm.');
+    } else {
+        alert('Please check "Apply to all week" to use quick setup.');
     }
 }
 

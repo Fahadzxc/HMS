@@ -2362,6 +2362,213 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Patient View Modal Styles */
+        .patient-view-container {
+            padding: 1rem;
+        }
+
+        .patient-view-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 1.5rem;
+        }
+
+        .patient-avatar-large {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #e0f2fe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .patient-view-title h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.5rem;
+            color: #1e293b;
+        }
+
+        .patient-id-display {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .patient-view-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .patient-view-section {
+            background: #f8fafc;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .patient-view-section h4 {
+            margin: 0 0 1rem 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #cbd5e1;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #475569;
+            min-width: 140px;
+            font-size: 0.875rem;
+        }
+
+        .info-value {
+            color: #1e293b;
+            text-align: right;
+            flex: 1;
+            font-size: 0.875rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .btn-secondary {
+            padding: 0.625rem 1.25rem;
+            background: #e2e8f0;
+            color: #475569;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        /* Patient View Modal scrollbar styling */
+        #patientViewModal .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        #patientViewModal .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #patientViewModal .modal-body::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        #patientViewModal .modal-body::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        #patientViewModal .modal-body::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Vital Signs Display */
+        .patient-view-section-full {
+            grid-column: 1 / -1;
+        }
+
+        .vitals-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .vital-item-display {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            padding: 0.75rem;
+            background: white;
+            border-radius: 0.375rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .vital-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .vital-value {
+            font-size: 1rem;
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        .vitals-history-table {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .vitals-history-header {
+            display: grid;
+            grid-template-columns: 120px 1fr 1fr 1fr 1fr 150px;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: #f8fafc;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #475569;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .vitals-history-row {
+            display: grid;
+            grid-template-columns: 120px 1fr 1fr 1fr 1fr 150px;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.875rem;
+            color: #1e293b;
+        }
+
+        .vitals-history-row:last-child {
+            border-bottom: none;
+        }
+
+        .vitals-history-row:hover {
+            background: #f8fafc;
+        }
     </style>
     <?php // Sidebar/header/footer are now handled by partials in app/Views/template/*.php ?>
 

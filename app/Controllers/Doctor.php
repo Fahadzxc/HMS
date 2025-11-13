@@ -372,6 +372,67 @@ class Doctor extends Controller
             ['name' => 'Ibuprofen', 'strength' => '400mg', 'form' => 'tablet', 'default_dosage' => '1 tab', 'default_quantity' => 15],
         ]);
     }
+
+    public function getPatientDetails(int $id)
+    {
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'doctor') {
+            return $this->response->setStatusCode(401)
+                ->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
+        }
+
+        $model = new \App\Models\PatientModel();
+        $patient = $model->find($id);
+
+        if (!$patient) {
+            return $this->response->setStatusCode(404)
+                ->setJSON(['status' => 'error', 'message' => 'Patient not found']);
+        }
+
+        // Get latest vital signs and assigned nurse
+        $db = \Config\Database::connect();
+        $assignedNurse = null;
+        $latestVitals = null;
+        
+        if ($db->tableExists('treatment_updates')) {
+            // Get latest treatment update with vital signs
+            $builder = $db->table('treatment_updates');
+            $builder->where('patient_id', $id);
+            $builder->orderBy('created_at', 'DESC');
+            $builder->limit(1);
+            $latestUpdate = $builder->get()->getRowArray();
+            
+            if ($latestUpdate) {
+                $assignedNurse = $latestUpdate['nurse_name'];
+                $latestVitals = [
+                    'time' => $latestUpdate['time'] ?? null,
+                    'blood_pressure' => $latestUpdate['blood_pressure'] ?? null,
+                    'heart_rate' => $latestUpdate['heart_rate'] ?? null,
+                    'temperature' => $latestUpdate['temperature'] ?? null,
+                    'oxygen_saturation' => $latestUpdate['oxygen_saturation'] ?? null,
+                    'recorded_at' => $latestUpdate['created_at'] ?? null,
+                    'nurse_name' => $latestUpdate['nurse_name'] ?? null
+                ];
+            }
+            
+            // Get all recent vital signs (last 5 records)
+            $builder = $db->table('treatment_updates');
+            $builder->where('patient_id', $id);
+            $builder->where('(blood_pressure IS NOT NULL OR heart_rate IS NOT NULL OR temperature IS NOT NULL OR oxygen_saturation IS NOT NULL)');
+            $builder->orderBy('created_at', 'DESC');
+            $builder->limit(5);
+            $vitalSignsHistory = $builder->get()->getResultArray();
+        } else {
+            $vitalSignsHistory = [];
+        }
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'patient' => $patient,
+            'assigned_nurse' => $assignedNurse,
+            'latest_vitals' => $latestVitals,
+            'vital_signs_history' => $vitalSignsHistory
+        ]);
+    }
 }
 
 

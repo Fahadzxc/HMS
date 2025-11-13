@@ -1,0 +1,1441 @@
+DEBUG - 2025-11-10 16:02:48 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+ERROR - 2025-11-10 16:14:37 --> mysqli_sql_exception: Duplicate column name 'profile_picture' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE `do...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE `do...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE `do...')
+#3 C:\xampp\htdocs\HMS\system\Database\Forge.php(772): CodeIgniter\Database\BaseConnection->query('ALTER TABLE `do...')
+#4 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-10-30-080500_UpdateDoctorsTableForAdminModule.php(136): CodeIgniter\Database\Forge->addColumn('doctors', Array)
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\UpdateDoctorsTableForAdminModule->up()
+#6 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(182): CodeIgniter\Database\MigrationRunner->migrate('up', Object(stdClass))
+#7 C:\xampp\htdocs\HMS\system\Commands\Database\Migrate.php(85): CodeIgniter\Database\MigrationRunner->latest(NULL)
+#8 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Migrate->run(Array)
+#9 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate', Array)
+#10 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+ERROR - 2025-11-10 16:14:51 --> mysqli_sql_exception: Table 'hms.treatment_updates' doesn't exist in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT *\nFROM `...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *\nFROM `...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *\nFROM `...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *\nFROM `...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(120): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+CRITICAL - 2025-11-10 16:14:51 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.treatment_updates' doesn't exist
+[Method: GET, Route: nurse/treatment-updates]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `treatment_updates`
+WHERE `patient_id` IN :patient_id:
+ORDER BY `created_at` DESC', [...], false)
+ 2 APPPATH\Controllers\Nurse.php(120): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+ 4 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:14:51 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.treatment_updates' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `treatment_updates`
+WHERE `patient_id` IN (\'2\',\'1\')
+ORDER BY `created_at` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `treatment_updates`
+WHERE `patient_id` IN (\'2\',\'1\')
+ORDER BY `created_at` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `treatment_updates`
+WHERE `patient_id` IN :patient_id:
+ORDER BY `created_at` DESC', [...], false)
+ 4 APPPATH\Controllers\Nurse.php(120): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+ 6 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:14:51 --> [Caused by] mysqli_sql_exception: Table 'hms.treatment_updates' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT *
+FROM `treatment_updates`
+WHERE `patient_id` IN (\'2\',\'1\')
+ORDER BY `created_at` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `treatment_updates`
+WHERE `patient_id` IN (\'2\',\'1\')
+ORDER BY `created_at` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `treatment_updates`
+WHERE `patient_id` IN (\'2\',\'1\')
+ORDER BY `created_at` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `treatment_updates`
+WHERE `patient_id` IN :patient_id:
+ORDER BY `created_at` DESC', [...], false)
+ 5 APPPATH\Controllers\Nurse.php(120): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-10 16:14:53 --> mysqli_sql_exception: Table 'hms.treatment_updates' doesn't exist in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT *\nFROM `...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *\nFROM `...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *\nFROM `...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *\nFROM `...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(120): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+CRITICAL - 2025-11-10 16:14:53 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.treatment_updates' doesn't exist
+[Method: GET, Route: nurse/treatment-updates]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `treatment_updates`
+WHERE `patient_id` IN :patient_id:
+ORDER BY `created_at` DESC', [...], false)
+ 2 APPPATH\Controllers\Nurse.php(120): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+ 4 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:14:53 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.treatment_updates' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `treatment_updates`
+WHERE `patient_id` IN (\'2\',\'1\')
+ORDER BY `created_at` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `treatment_updates`
+WHERE `patient_id` IN (\'2\',\'1\')
+ORDER BY `created_at` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `treatment_updates`
+WHERE `patient_id` IN :patient_id:
+ORDER BY `created_at` DESC', [...], false)
+ 4 APPPATH\Controllers\Nurse.php(120): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+ 6 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:14:53 --> [Caused by] mysqli_sql_exception: Table 'hms.treatment_updates' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT *
+FROM `treatment_updates`
+WHERE `patient_id` IN (\'2\',\'1\')
+ORDER BY `created_at` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `treatment_updates`
+WHERE `patient_id` IN (\'2\',\'1\')
+ORDER BY `created_at` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `treatment_updates`
+WHERE `patient_id` IN (\'2\',\'1\')
+ORDER BY `created_at` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `treatment_updates`
+WHERE `patient_id` IN :patient_id:
+ORDER BY `created_at` DESC', [...], false)
+ 5 APPPATH\Controllers\Nurse.php(120): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-10 16:15:42 --> mysqli_sql_exception: Duplicate column name 'profile_picture' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE `do...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE `do...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE `do...')
+#3 C:\xampp\htdocs\HMS\system\Database\Forge.php(772): CodeIgniter\Database\BaseConnection->query('ALTER TABLE `do...')
+#4 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-10-30-080500_UpdateDoctorsTableForAdminModule.php(136): CodeIgniter\Database\Forge->addColumn('doctors', Array)
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\UpdateDoctorsTableForAdminModule->up()
+#6 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(182): CodeIgniter\Database\MigrationRunner->migrate('up', Object(stdClass))
+#7 C:\xampp\htdocs\HMS\system\Commands\Database\Migrate.php(85): CodeIgniter\Database\MigrationRunner->latest(NULL)
+#8 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Migrate->run(Array)
+#9 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate', Array)
+#10 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+ERROR - 2025-11-10 16:19:16 --> mysqli_sql_exception: Duplicate column name 'profile_picture' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE `do...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE `do...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE `do...')
+#3 C:\xampp\htdocs\HMS\system\Database\Forge.php(772): CodeIgniter\Database\BaseConnection->query('ALTER TABLE `do...')
+#4 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-10-30-080500_UpdateDoctorsTableForAdminModule.php(136): CodeIgniter\Database\Forge->addColumn('doctors', Array)
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\UpdateDoctorsTableForAdminModule->up()
+#6 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(182): CodeIgniter\Database\MigrationRunner->migrate('up', Object(stdClass))
+#7 C:\xampp\htdocs\HMS\system\Commands\Database\Migrate.php(85): CodeIgniter\Database\MigrationRunner->latest(NULL)
+#8 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Migrate->run(Array)
+#9 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate', Array)
+#10 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+ERROR - 2025-11-10 16:20:53 --> mysqli_sql_exception: Duplicate column name 'profile_picture' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE `do...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE `do...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE `do...')
+#3 C:\xampp\htdocs\HMS\system\Database\Forge.php(772): CodeIgniter\Database\BaseConnection->query('ALTER TABLE `do...')
+#4 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-10-30-080500_UpdateDoctorsTableForAdminModule.php(136): CodeIgniter\Database\Forge->addColumn('doctors', Array)
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\UpdateDoctorsTableForAdminModule->up()
+#6 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(182): CodeIgniter\Database\MigrationRunner->migrate('up', Object(stdClass))
+#7 C:\xampp\htdocs\HMS\system\Commands\Database\Migrate.php(85): CodeIgniter\Database\MigrationRunner->latest(NULL)
+#8 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Migrate->run(Array)
+#9 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate', Array)
+#10 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+ERROR - 2025-11-10 16:22:54 --> mysqli_sql_exception: MySQL server has gone away in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `mi...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `mi...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `mi...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(2345): CodeIgniter\Database\BaseConnection->query('INSERT INTO `mi...', Array, false)
+#4 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(605): CodeIgniter\Database\BaseBuilder->insert(Array)
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(189): CodeIgniter\Database\MigrationRunner->addHistory(Object(stdClass), 1)
+#6 C:\xampp\htdocs\HMS\system\Commands\Database\Migrate.php(85): CodeIgniter\Database\MigrationRunner->latest(NULL)
+#7 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Migrate->run(Array)
+#8 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate', Array)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#11 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-10 16:23:40 --> mysqli_sql_exception: Table 'users' already exists in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('CREATE TABLE `u...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('CREATE TABLE `u...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('CREATE TABLE `u...')
+#3 C:\xampp\htdocs\HMS\system\Database\Forge.php(570): CodeIgniter\Database\BaseConnection->query('CREATE TABLE `u...')
+#4 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-09-21-095140_CreateUsersTable.php(52): CodeIgniter\Database\Forge->createTable('users')
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateUsersTable->up()
+#6 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(182): CodeIgniter\Database\MigrationRunner->migrate('up', Object(stdClass))
+#7 C:\xampp\htdocs\HMS\system\Commands\Database\Migrate.php(85): CodeIgniter\Database\MigrationRunner->latest(NULL)
+#8 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Migrate->run(Array)
+#9 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate', Array)
+#10 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2025-11-10 16:24:28 --> ErrorException: Cannot declare class App\Database\Migrations\CreateAppointmentsTable, because the name is already in use
+[Method: CLI, Route: migrate]
+in APPPATH\Database\Migrations\2025-10-21-151716_CreateAppointmentsTable.php on line 7.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+ERROR - 2025-11-10 16:25:17 --> mysqli_sql_exception: Can't create table `hms`.`lab_test_requests` (errno: 150 "Foreign key constraint is incorrectly formed") in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE lab...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE lab...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE lab...')
+#3 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-11-01-090000_CreateLabModuleTables.php(486): CodeIgniter\Database\BaseConnection->query('ALTER TABLE lab...')
+#4 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateLabModuleTables->up()
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(182): CodeIgniter\Database\MigrationRunner->migrate('up', Object(stdClass))
+#6 C:\xampp\htdocs\HMS\system\Commands\Database\Migrate.php(85): CodeIgniter\Database\MigrationRunner->latest(NULL)
+#7 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Migrate->run(Array)
+#8 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate', Array)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#11 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-10 16:30:22 --> mysqli_sql_exception: Can't create table `hms`.`lab_test_requests` (errno: 150 "Foreign key constraint is incorrectly formed") in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE lab...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE lab...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE lab...')
+#3 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-11-01-090000_CreateLabModuleTables.php(486): CodeIgniter\Database\BaseConnection->query('ALTER TABLE lab...')
+#4 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateLabModuleTables->up()
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(182): CodeIgniter\Database\MigrationRunner->migrate('up', Object(stdClass))
+#6 C:\xampp\htdocs\HMS\system\Commands\Database\Migrate.php(85): CodeIgniter\Database\MigrationRunner->latest(NULL)
+#7 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Migrate->run(Array)
+#8 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate', Array)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#11 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-10 16:32:10 --> mysqli_sql_exception: Table 'lab_departments' already exists in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('CREATE TABLE `l...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('CREATE TABLE `l...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('CREATE TABLE `l...')
+#3 C:\xampp\htdocs\HMS\system\Database\Forge.php(570): CodeIgniter\Database\BaseConnection->query('CREATE TABLE `l...')
+#4 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-11-01-090000_CreateLabModuleTables.php(42): CodeIgniter\Database\Forge->createTable('lab_departments')
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateLabModuleTables->up()
+#6 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(182): CodeIgniter\Database\MigrationRunner->migrate('up', Object(stdClass))
+#7 C:\xampp\htdocs\HMS\system\Commands\Database\Migrate.php(85): CodeIgniter\Database\MigrationRunner->latest(NULL)
+#8 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Migrate->run(Array)
+#9 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate', Array)
+#10 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+ERROR - 2025-11-10 16:35:22 --> mysqli_sql_exception: Can't create table `hms`.`lab_test_requests` (errno: 150 "Foreign key constraint is incorrectly formed") in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE lab...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE lab...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE lab...')
+#3 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-11-01-090000_CreateLabModuleTables.php(493): CodeIgniter\Database\BaseConnection->query('ALTER TABLE lab...')
+#4 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateLabModuleTables->up()
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(182): CodeIgniter\Database\MigrationRunner->migrate('up', Object(stdClass))
+#6 C:\xampp\htdocs\HMS\system\Commands\Database\Migrate.php(85): CodeIgniter\Database\MigrationRunner->latest(NULL)
+#7 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Migrate->run(Array)
+#8 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate', Array)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#11 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-10 16:35:22 --> Failed to add fk_lab_requests_doctor: Can't create table `hms`.`lab_test_requests` (errno: 150 "Foreign key constraint is incorrectly formed")
+ERROR - 2025-11-10 16:35:39 --> mysqli_sql_exception: Can't DROP FOREIGN KEY `fk_lab_requests_doctor`; check that it exists in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE lab...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE lab...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE lab...')
+#3 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-11-01-090000_CreateLabModuleTables.php(537): CodeIgniter\Database\BaseConnection->query('ALTER TABLE lab...')
+#4 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateLabModuleTables->down()
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(289): CodeIgniter\Database\MigrationRunner->migrate('down', Object(stdClass))
+#6 C:\xampp\htdocs\HMS\system\Commands\Database\MigrateRollback.php(101): CodeIgniter\Database\MigrationRunner->regress(0)
+#7 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\MigrateRollback->run(Array)
+#8 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate:rollbac...', Array)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#11 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-10 16:36:45 --> mysqli_sql_exception: Can't DROP FOREIGN KEY `fk_lab_transfer_request`; check that it exists in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE lab...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE lab...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE lab...')
+#3 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-11-01-090000_CreateLabModuleTables.php(547): CodeIgniter\Database\BaseConnection->query('ALTER TABLE lab...')
+#4 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateLabModuleTables->down()
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(289): CodeIgniter\Database\MigrationRunner->migrate('down', Object(stdClass))
+#6 C:\xampp\htdocs\HMS\system\Commands\Database\MigrateRollback.php(101): CodeIgniter\Database\MigrationRunner->regress(0)
+#7 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\MigrateRollback->run(Array)
+#8 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate:rollbac...', Array)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#11 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-10 16:36:45 --> mysqli_sql_exception: Can't DROP FOREIGN KEY `fk_lab_inventory_logs_item`; check that it exists in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE lab...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE lab...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE lab...')
+#3 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-11-01-090000_CreateLabModuleTables.php(547): CodeIgniter\Database\BaseConnection->query('ALTER TABLE lab...')
+#4 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateLabModuleTables->down()
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(289): CodeIgniter\Database\MigrationRunner->migrate('down', Object(stdClass))
+#6 C:\xampp\htdocs\HMS\system\Commands\Database\MigrateRollback.php(101): CodeIgniter\Database\MigrationRunner->regress(0)
+#7 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\MigrateRollback->run(Array)
+#8 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate:rollbac...', Array)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#11 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-10 16:36:45 --> mysqli_sql_exception: Can't DROP FOREIGN KEY `fk_lab_inventory_logs_user`; check that it exists in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE lab...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE lab...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE lab...')
+#3 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-11-01-090000_CreateLabModuleTables.php(547): CodeIgniter\Database\BaseConnection->query('ALTER TABLE lab...')
+#4 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateLabModuleTables->down()
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(289): CodeIgniter\Database\MigrationRunner->migrate('down', Object(stdClass))
+#6 C:\xampp\htdocs\HMS\system\Commands\Database\MigrateRollback.php(101): CodeIgniter\Database\MigrationRunner->regress(0)
+#7 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\MigrateRollback->run(Array)
+#8 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate:rollbac...', Array)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#11 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-10 16:36:45 --> mysqli_sql_exception: Can't DROP FOREIGN KEY `fk_lab_equipment_logs_equipment`; check that it exists in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE lab...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE lab...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE lab...')
+#3 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-11-01-090000_CreateLabModuleTables.php(547): CodeIgniter\Database\BaseConnection->query('ALTER TABLE lab...')
+#4 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateLabModuleTables->down()
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(289): CodeIgniter\Database\MigrationRunner->migrate('down', Object(stdClass))
+#6 C:\xampp\htdocs\HMS\system\Commands\Database\MigrateRollback.php(101): CodeIgniter\Database\MigrationRunner->regress(0)
+#7 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\MigrateRollback->run(Array)
+#8 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate:rollbac...', Array)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#11 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-10 16:36:45 --> mysqli_sql_exception: Can't DROP FOREIGN KEY `fk_lab_equipment_logs_staff`; check that it exists in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE lab...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE lab...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE lab...')
+#3 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-11-01-090000_CreateLabModuleTables.php(547): CodeIgniter\Database\BaseConnection->query('ALTER TABLE lab...')
+#4 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateLabModuleTables->down()
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(289): CodeIgniter\Database\MigrationRunner->migrate('down', Object(stdClass))
+#6 C:\xampp\htdocs\HMS\system\Commands\Database\MigrateRollback.php(101): CodeIgniter\Database\MigrationRunner->regress(0)
+#7 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\MigrateRollback->run(Array)
+#8 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate:rollbac...', Array)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#11 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-10 16:36:45 --> mysqli_sql_exception: Can't DROP FOREIGN KEY `fk_lab_results_released_by`; check that it exists in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE lab...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE lab...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE lab...')
+#3 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-11-01-090000_CreateLabModuleTables.php(547): CodeIgniter\Database\BaseConnection->query('ALTER TABLE lab...')
+#4 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateLabModuleTables->down()
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(289): CodeIgniter\Database\MigrationRunner->migrate('down', Object(stdClass))
+#6 C:\xampp\htdocs\HMS\system\Commands\Database\MigrateRollback.php(101): CodeIgniter\Database\MigrationRunner->regress(0)
+#7 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\MigrateRollback->run(Array)
+#8 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate:rollbac...', Array)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#11 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-10 16:36:45 --> mysqli_sql_exception: Can't DROP FOREIGN KEY `fk_lab_results_audited_by`; check that it exists in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE lab...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE lab...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE lab...')
+#3 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-11-01-090000_CreateLabModuleTables.php(547): CodeIgniter\Database\BaseConnection->query('ALTER TABLE lab...')
+#4 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateLabModuleTables->down()
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(289): CodeIgniter\Database\MigrationRunner->migrate('down', Object(stdClass))
+#6 C:\xampp\htdocs\HMS\system\Commands\Database\MigrateRollback.php(101): CodeIgniter\Database\MigrationRunner->regress(0)
+#7 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\MigrateRollback->run(Array)
+#8 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate:rollbac...', Array)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#11 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-10 16:36:45 --> mysqli_sql_exception: Can't DROP FOREIGN KEY `fk_lab_requests_patient`; check that it exists in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE lab...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE lab...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE lab...')
+#3 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-11-01-090000_CreateLabModuleTables.php(547): CodeIgniter\Database\BaseConnection->query('ALTER TABLE lab...')
+#4 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateLabModuleTables->down()
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(289): CodeIgniter\Database\MigrationRunner->migrate('down', Object(stdClass))
+#6 C:\xampp\htdocs\HMS\system\Commands\Database\MigrateRollback.php(101): CodeIgniter\Database\MigrationRunner->regress(0)
+#7 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\MigrateRollback->run(Array)
+#8 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate:rollbac...', Array)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#11 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-10 16:36:45 --> mysqli_sql_exception: Can't DROP FOREIGN KEY `fk_lab_requests_doctor`; check that it exists in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE lab...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE lab...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE lab...')
+#3 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-11-01-090000_CreateLabModuleTables.php(547): CodeIgniter\Database\BaseConnection->query('ALTER TABLE lab...')
+#4 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateLabModuleTables->down()
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(289): CodeIgniter\Database\MigrationRunner->migrate('down', Object(stdClass))
+#6 C:\xampp\htdocs\HMS\system\Commands\Database\MigrateRollback.php(101): CodeIgniter\Database\MigrationRunner->regress(0)
+#7 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\MigrateRollback->run(Array)
+#8 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate:rollbac...', Array)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#11 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-10 16:36:45 --> mysqli_sql_exception: Can't DROP FOREIGN KEY `fk_lab_staff_department`; check that it exists in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE lab...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE lab...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE lab...')
+#3 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-11-01-090000_CreateLabModuleTables.php(547): CodeIgniter\Database\BaseConnection->query('ALTER TABLE lab...')
+#4 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateLabModuleTables->down()
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(289): CodeIgniter\Database\MigrationRunner->migrate('down', Object(stdClass))
+#6 C:\xampp\htdocs\HMS\system\Commands\Database\MigrateRollback.php(101): CodeIgniter\Database\MigrationRunner->regress(0)
+#7 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\MigrateRollback->run(Array)
+#8 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate:rollbac...', Array)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#11 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-10 16:37:07 --> mysqli_sql_exception: Can't create table `hms`.`lab_test_requests` (errno: 150 "Foreign key constraint is incorrectly formed") in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE lab...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE lab...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE lab...')
+#3 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-11-01-090000_CreateLabModuleTables.php(493): CodeIgniter\Database\BaseConnection->query('ALTER TABLE lab...')
+#4 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateLabModuleTables->up()
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(182): CodeIgniter\Database\MigrationRunner->migrate('up', Object(stdClass))
+#6 C:\xampp\htdocs\HMS\system\Commands\Database\Migrate.php(85): CodeIgniter\Database\MigrationRunner->latest(NULL)
+#7 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Migrate->run(Array)
+#8 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate', Array)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#11 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-10 16:37:07 --> Failed to add fk_lab_requests_doctor: Can't create table `hms`.`lab_test_requests` (errno: 150 "Foreign key constraint is incorrectly formed")
+ERROR - 2025-11-10 16:43:01 --> mysqli_sql_exception: Unknown column 'appointments.room_id' in 'on clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appoint...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appoint...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appoint...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appoint...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\app\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#11 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#12 {main}
+CRITICAL - 2025-11-10 16:43:01 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'appointments.room_id' in 'on clause'
+[Method: GET, Route: reception/appointments]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 2 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 3 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:43:01 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'appointments.room_id' in 'on clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 4 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 5 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:43:01 --> [Caused by] mysqli_sql_exception: Unknown column 'appointments.room_id' in 'on clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 5 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 6 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 7 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 8 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 9 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-10 16:43:05 --> mysqli_sql_exception: Unknown column 'appointments.room_id' in 'on clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appoint...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appoint...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appoint...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appoint...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\app\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#11 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#12 {main}
+CRITICAL - 2025-11-10 16:43:05 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'appointments.room_id' in 'on clause'
+[Method: GET, Route: reception/appointments]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 2 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 3 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:43:05 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'appointments.room_id' in 'on clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 4 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 5 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:43:05 --> [Caused by] mysqli_sql_exception: Unknown column 'appointments.room_id' in 'on clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 5 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 6 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 7 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 8 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 9 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-10 16:43:06 --> mysqli_sql_exception: Unknown column 'appointments.room_id' in 'on clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appoint...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appoint...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appoint...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appoint...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\app\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#11 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#12 {main}
+CRITICAL - 2025-11-10 16:43:06 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'appointments.room_id' in 'on clause'
+[Method: GET, Route: reception/appointments]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 2 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 3 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:43:06 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'appointments.room_id' in 'on clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 4 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 5 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:43:06 --> [Caused by] mysqli_sql_exception: Unknown column 'appointments.room_id' in 'on clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 5 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 6 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 7 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 8 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 9 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-10 16:43:07 --> mysqli_sql_exception: Unknown column 'appointments.room_id' in 'on clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appoint...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appoint...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appoint...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appoint...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\app\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#11 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#12 {main}
+CRITICAL - 2025-11-10 16:43:07 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'appointments.room_id' in 'on clause'
+[Method: GET, Route: reception/appointments]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 2 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 3 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:43:07 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'appointments.room_id' in 'on clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 4 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 5 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:43:07 --> [Caused by] mysqli_sql_exception: Unknown column 'appointments.room_id' in 'on clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 5 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 6 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 7 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 8 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 9 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-10 16:43:07 --> mysqli_sql_exception: Unknown column 'appointments.room_id' in 'on clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appoint...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appoint...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appoint...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appoint...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\app\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#11 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#12 {main}
+CRITICAL - 2025-11-10 16:43:07 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'appointments.room_id' in 'on clause'
+[Method: GET, Route: reception/appointments]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 2 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 3 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:43:07 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'appointments.room_id' in 'on clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 4 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 5 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:43:07 --> [Caused by] mysqli_sql_exception: Unknown column 'appointments.room_id' in 'on clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 5 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 6 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 7 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 8 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 9 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-10 16:43:08 --> mysqli_sql_exception: Unknown column 'appointments.room_id' in 'on clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appoint...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appoint...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appoint...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appoint...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\app\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#11 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#12 {main}
+CRITICAL - 2025-11-10 16:43:08 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'appointments.room_id' in 'on clause'
+[Method: GET, Route: reception/appointments]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 2 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 3 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:43:08 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'appointments.room_id' in 'on clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 4 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 5 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:43:08 --> [Caused by] mysqli_sql_exception: Unknown column 'appointments.room_id' in 'on clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 5 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 6 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 7 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 8 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 9 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-10 16:43:08 --> mysqli_sql_exception: Unknown column 'appointments.room_id' in 'on clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appoint...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appoint...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appoint...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appoint...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\app\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#11 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#12 {main}
+CRITICAL - 2025-11-10 16:43:08 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'appointments.room_id' in 'on clause'
+[Method: GET, Route: reception/appointments]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 2 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 3 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:43:08 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'appointments.room_id' in 'on clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 4 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 5 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:43:08 --> [Caused by] mysqli_sql_exception: Unknown column 'appointments.room_id' in 'on clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = \'2025-11-10\'
+AND `appointments`.`status` != \'cancelled\'
+ORDER BY `appointment_time` ASC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `appointments`.*, `patients`.`full_name` as `patient_name`, `users`.`name` as `doctor_name`, `rooms`.`room_number`
+FROM `appointments`
+LEFT JOIN `patients` ON `patients`.`id` = `appointments`.`patient_id`
+LEFT JOIN `users` ON `users`.`id` = `appointments`.`doctor_id`
+LEFT JOIN `rooms` ON `rooms`.`id` = `appointments`.`room_id`
+WHERE `appointment_date` = :appointment_date:
+AND `appointments`.`status` != :appointments.status:
+ORDER BY `appointment_time` ASC', [...], false)
+ 5 APPPATH\Models\AppointmentModel.php(99): CodeIgniter\Database\BaseBuilder->get()
+ 6 APPPATH\Controllers\Reception.php(231): App\Models\AppointmentModel->getAppointmentsByDate('2025-11-10')
+ 7 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->appointments()
+ 8 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 9 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-10 16:50:02 --> mysqli_sql_exception: Table 'hms.prescriptions' doesn't exist in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT *\nFROM `...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *\nFROM `...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *\nFROM `...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *\nFROM `...', Array, false)
+#4 C:\xampp\htdocs\HMS\system\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\BaseModel.php(677): CodeIgniter\Model->doFindAll(200, 0)
+#6 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(98): CodeIgniter\BaseModel->findAll(200)
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#9 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#10 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#11 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#12 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2025-11-10 16:50:02 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.prescriptions' doesn't exist
+[Method: GET, Route: nurse/treatment-updates]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `prescriptions`
+WHERE `patient_id` IN :patient_id:
+ORDER BY `created_at` DESC
+ LIMIT 200', [...], false)
+ 2 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(200, 0)
+ 4 APPPATH\Controllers\Nurse.php(98): CodeIgniter\BaseModel->findAll(200)
+ 5 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+ 6 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:50:02 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.prescriptions' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `prescriptions`
+WHERE `patient_id` IN (\'1\')
+ORDER BY `created_at` DESC
+ LIMIT 200')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `prescriptions`
+WHERE `patient_id` IN (\'1\')
+ORDER BY `created_at` DESC
+ LIMIT 200')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `prescriptions`
+WHERE `patient_id` IN :patient_id:
+ORDER BY `created_at` DESC
+ LIMIT 200', [...], false)
+ 4 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(200, 0)
+ 6 APPPATH\Controllers\Nurse.php(98): CodeIgniter\BaseModel->findAll(200)
+ 7 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+ 8 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 9 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:50:02 --> [Caused by] mysqli_sql_exception: Table 'hms.prescriptions' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT *
+FROM `prescriptions`
+WHERE `patient_id` IN (\'1\')
+ORDER BY `created_at` DESC
+ LIMIT 200', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `prescriptions`
+WHERE `patient_id` IN (\'1\')
+ORDER BY `created_at` DESC
+ LIMIT 200')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `prescriptions`
+WHERE `patient_id` IN (\'1\')
+ORDER BY `created_at` DESC
+ LIMIT 200')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `prescriptions`
+WHERE `patient_id` IN :patient_id:
+ORDER BY `created_at` DESC
+ LIMIT 200', [...], false)
+ 5 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(200, 0)
+ 7 APPPATH\Controllers\Nurse.php(98): CodeIgniter\BaseModel->findAll(200)
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-10 16:50:11 --> mysqli_sql_exception: Table 'hms.prescriptions' doesn't exist in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT *\nFROM `...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *\nFROM `...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *\nFROM `...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *\nFROM `...', Array, false)
+#4 C:\xampp\htdocs\HMS\system\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\BaseModel.php(677): CodeIgniter\Model->doFindAll(200, 0)
+#6 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(98): CodeIgniter\BaseModel->findAll(200)
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#9 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#10 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#11 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#12 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2025-11-10 16:50:11 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.prescriptions' doesn't exist
+[Method: GET, Route: nurse/treatment-updates]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `prescriptions`
+WHERE `patient_id` IN :patient_id:
+ORDER BY `created_at` DESC
+ LIMIT 200', [...], false)
+ 2 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(200, 0)
+ 4 APPPATH\Controllers\Nurse.php(98): CodeIgniter\BaseModel->findAll(200)
+ 5 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+ 6 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:50:11 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.prescriptions' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `prescriptions`
+WHERE `patient_id` IN (\'1\')
+ORDER BY `created_at` DESC
+ LIMIT 200')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `prescriptions`
+WHERE `patient_id` IN (\'1\')
+ORDER BY `created_at` DESC
+ LIMIT 200')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `prescriptions`
+WHERE `patient_id` IN :patient_id:
+ORDER BY `created_at` DESC
+ LIMIT 200', [...], false)
+ 4 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(200, 0)
+ 6 APPPATH\Controllers\Nurse.php(98): CodeIgniter\BaseModel->findAll(200)
+ 7 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+ 8 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 9 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-10 16:50:11 --> [Caused by] mysqli_sql_exception: Table 'hms.prescriptions' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT *
+FROM `prescriptions`
+WHERE `patient_id` IN (\'1\')
+ORDER BY `created_at` DESC
+ LIMIT 200', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `prescriptions`
+WHERE `patient_id` IN (\'1\')
+ORDER BY `created_at` DESC
+ LIMIT 200')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `prescriptions`
+WHERE `patient_id` IN (\'1\')
+ORDER BY `created_at` DESC
+ LIMIT 200')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `prescriptions`
+WHERE `patient_id` IN :patient_id:
+ORDER BY `created_at` DESC
+ LIMIT 200', [...], false)
+ 5 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(200, 0)
+ 7 APPPATH\Controllers\Nurse.php(98): CodeIgniter\BaseModel->findAll(200)
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))

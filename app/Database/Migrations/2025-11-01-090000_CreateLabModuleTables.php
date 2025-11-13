@@ -482,17 +482,43 @@ class CreateLabModuleTables extends Migration
         $db = \Config\Database::connect();
         $prefix = $db->getPrefix();
 
-        $db->query("ALTER TABLE {$prefix}lab_test_requests ADD CONSTRAINT fk_lab_requests_patient FOREIGN KEY (patient_id) REFERENCES {$prefix}patients(id) ON DELETE CASCADE ON UPDATE CASCADE");
-        $db->query("ALTER TABLE {$prefix}lab_test_requests ADD CONSTRAINT fk_lab_requests_doctor FOREIGN KEY (doctor_id) REFERENCES {$prefix}users(id) ON DELETE SET NULL ON UPDATE CASCADE");
-        $db->query("ALTER TABLE {$prefix}lab_test_requests ADD CONSTRAINT fk_lab_requests_staff FOREIGN KEY (assigned_staff_id) REFERENCES {$prefix}lab_staff(id) ON DELETE SET NULL ON UPDATE CASCADE");
-        $db->query("ALTER TABLE {$prefix}lab_test_results ADD CONSTRAINT fk_lab_results_request FOREIGN KEY (request_id) REFERENCES {$prefix}lab_test_requests(id) ON DELETE CASCADE ON UPDATE CASCADE");
-        $db->query("ALTER TABLE {$prefix}lab_test_results ADD CONSTRAINT fk_lab_results_released_by FOREIGN KEY (released_by) REFERENCES {$prefix}lab_staff(id) ON DELETE SET NULL ON UPDATE CASCADE");
-        $db->query("ALTER TABLE {$prefix}lab_test_results ADD CONSTRAINT fk_lab_results_audited_by FOREIGN KEY (audited_by) REFERENCES {$prefix}users(id) ON DELETE SET NULL ON UPDATE CASCADE");
-        $db->query("ALTER TABLE {$prefix}lab_equipment_logs ADD CONSTRAINT fk_lab_equipment_logs_equipment FOREIGN KEY (equipment_id) REFERENCES {$prefix}lab_equipment(id) ON DELETE CASCADE ON UPDATE CASCADE");
-        $db->query("ALTER TABLE {$prefix}lab_equipment_logs ADD CONSTRAINT fk_lab_equipment_logs_staff FOREIGN KEY (performed_by) REFERENCES {$prefix}lab_staff(id) ON DELETE SET NULL ON UPDATE CASCADE");
-        $db->query("ALTER TABLE {$prefix}lab_inventory_logs ADD CONSTRAINT fk_lab_inventory_logs_item FOREIGN KEY (item_id) REFERENCES {$prefix}lab_inventory_items(id) ON DELETE CASCADE ON UPDATE CASCADE");
-        $db->query("ALTER TABLE {$prefix}lab_inventory_logs ADD CONSTRAINT fk_lab_inventory_logs_user FOREIGN KEY (recorded_by) REFERENCES {$prefix}users(id) ON DELETE SET NULL ON UPDATE CASCADE");
-        $db->query("ALTER TABLE {$prefix}lab_sample_transfers ADD CONSTRAINT fk_lab_transfer_request FOREIGN KEY (request_id) REFERENCES {$prefix}lab_test_requests(id) ON DELETE CASCADE ON UPDATE CASCADE");
+        // Add foreign keys with error handling
+        try {
+            $db->query("ALTER TABLE {$prefix}lab_test_requests ADD CONSTRAINT fk_lab_requests_patient FOREIGN KEY (patient_id) REFERENCES {$prefix}patients(id) ON DELETE CASCADE ON UPDATE CASCADE");
+        } catch (\Exception $e) {
+            log_message('error', 'Failed to add fk_lab_requests_patient: ' . $e->getMessage());
+        }
+        
+        try {
+            $db->query("ALTER TABLE {$prefix}lab_test_requests ADD CONSTRAINT fk_lab_requests_doctor FOREIGN KEY (doctor_id) REFERENCES {$prefix}users(id) ON DELETE SET NULL ON UPDATE CASCADE");
+        } catch (\Exception $e) {
+            log_message('error', 'Failed to add fk_lab_requests_doctor: ' . $e->getMessage());
+        }
+        
+        try {
+            $db->query("ALTER TABLE {$prefix}lab_test_requests ADD CONSTRAINT fk_lab_requests_staff FOREIGN KEY (assigned_staff_id) REFERENCES {$prefix}lab_staff(id) ON DELETE SET NULL ON UPDATE CASCADE");
+        } catch (\Exception $e) {
+            log_message('error', 'Failed to add fk_lab_requests_staff: ' . $e->getMessage());
+        }
+        // Add remaining foreign keys with error handling
+        $foreignKeys = [
+            "ALTER TABLE {$prefix}lab_test_results ADD CONSTRAINT fk_lab_results_request FOREIGN KEY (request_id) REFERENCES {$prefix}lab_test_requests(id) ON DELETE CASCADE ON UPDATE CASCADE",
+            "ALTER TABLE {$prefix}lab_test_results ADD CONSTRAINT fk_lab_results_released_by FOREIGN KEY (released_by) REFERENCES {$prefix}lab_staff(id) ON DELETE SET NULL ON UPDATE CASCADE",
+            "ALTER TABLE {$prefix}lab_test_results ADD CONSTRAINT fk_lab_results_audited_by FOREIGN KEY (audited_by) REFERENCES {$prefix}users(id) ON DELETE SET NULL ON UPDATE CASCADE",
+            "ALTER TABLE {$prefix}lab_equipment_logs ADD CONSTRAINT fk_lab_equipment_logs_equipment FOREIGN KEY (equipment_id) REFERENCES {$prefix}lab_equipment(id) ON DELETE CASCADE ON UPDATE CASCADE",
+            "ALTER TABLE {$prefix}lab_equipment_logs ADD CONSTRAINT fk_lab_equipment_logs_staff FOREIGN KEY (performed_by) REFERENCES {$prefix}lab_staff(id) ON DELETE SET NULL ON UPDATE CASCADE",
+            "ALTER TABLE {$prefix}lab_inventory_logs ADD CONSTRAINT fk_lab_inventory_logs_item FOREIGN KEY (item_id) REFERENCES {$prefix}lab_inventory_items(id) ON DELETE CASCADE ON UPDATE CASCADE",
+            "ALTER TABLE {$prefix}lab_inventory_logs ADD CONSTRAINT fk_lab_inventory_logs_user FOREIGN KEY (recorded_by) REFERENCES {$prefix}users(id) ON DELETE SET NULL ON UPDATE CASCADE",
+            "ALTER TABLE {$prefix}lab_sample_transfers ADD CONSTRAINT fk_lab_transfer_request FOREIGN KEY (request_id) REFERENCES {$prefix}lab_test_requests(id) ON DELETE CASCADE ON UPDATE CASCADE"
+        ];
+        
+        foreach ($foreignKeys as $sql) {
+            try {
+                $db->query($sql);
+            } catch (\Exception $e) {
+                log_message('error', 'Failed to add foreign key: ' . $e->getMessage());
+            }
+        }
     }
 
     public function down()
@@ -500,26 +526,48 @@ class CreateLabModuleTables extends Migration
         $db = \Config\Database::connect();
         $prefix = $db->getPrefix();
 
-        $db->query("ALTER TABLE {$prefix}lab_sample_transfers DROP FOREIGN KEY fk_lab_transfer_request");
-        $db->query("ALTER TABLE {$prefix}lab_inventory_logs DROP FOREIGN KEY fk_lab_inventory_logs_item");
-        $db->query("ALTER TABLE {$prefix}lab_inventory_logs DROP FOREIGN KEY fk_lab_inventory_logs_user");
-        $db->query("ALTER TABLE {$prefix}lab_equipment_logs DROP FOREIGN KEY fk_lab_equipment_logs_equipment");
-        $db->query("ALTER TABLE {$prefix}lab_equipment_logs DROP FOREIGN KEY fk_lab_equipment_logs_staff");
-        $db->query("ALTER TABLE {$prefix}lab_test_results DROP FOREIGN KEY fk_lab_results_released_by");
-        $db->query("ALTER TABLE {$prefix}lab_test_results DROP FOREIGN KEY fk_lab_results_audited_by");
-        $db->query("ALTER TABLE {$prefix}lab_test_requests DROP FOREIGN KEY fk_lab_requests_patient");
-        $db->query("ALTER TABLE {$prefix}lab_test_requests DROP FOREIGN KEY fk_lab_requests_doctor");
-        $db->query("ALTER TABLE {$prefix}lab_test_requests DROP FOREIGN KEY fk_lab_requests_staff");
-        $db->query("ALTER TABLE {$prefix}lab_staff DROP FOREIGN KEY fk_lab_staff_department");
+        // Drop foreign keys with error handling (they might not exist)
+        $foreignKeys = [
+            "ALTER TABLE {$prefix}lab_sample_transfers DROP FOREIGN KEY fk_lab_transfer_request",
+            "ALTER TABLE {$prefix}lab_inventory_logs DROP FOREIGN KEY fk_lab_inventory_logs_item",
+            "ALTER TABLE {$prefix}lab_inventory_logs DROP FOREIGN KEY fk_lab_inventory_logs_user",
+            "ALTER TABLE {$prefix}lab_equipment_logs DROP FOREIGN KEY fk_lab_equipment_logs_equipment",
+            "ALTER TABLE {$prefix}lab_equipment_logs DROP FOREIGN KEY fk_lab_equipment_logs_staff",
+            "ALTER TABLE {$prefix}lab_test_results DROP FOREIGN KEY fk_lab_results_request",
+            "ALTER TABLE {$prefix}lab_test_results DROP FOREIGN KEY fk_lab_results_released_by",
+            "ALTER TABLE {$prefix}lab_test_results DROP FOREIGN KEY fk_lab_results_audited_by",
+            "ALTER TABLE {$prefix}lab_test_requests DROP FOREIGN KEY fk_lab_requests_patient",
+            "ALTER TABLE {$prefix}lab_test_requests DROP FOREIGN KEY fk_lab_requests_doctor",
+            "ALTER TABLE {$prefix}lab_test_requests DROP FOREIGN KEY fk_lab_requests_staff",
+            "ALTER TABLE {$prefix}lab_staff DROP FOREIGN KEY fk_lab_staff_department"
+        ];
 
-        $this->forge->dropTable('lab_sample_transfers', true);
-        $this->forge->dropTable('lab_inventory_logs', true);
-        $this->forge->dropTable('lab_inventory_items', true);
-        $this->forge->dropTable('lab_equipment_logs', true);
-        $this->forge->dropTable('lab_equipment', true);
-        $this->forge->dropTable('lab_test_results', true);
-        $this->forge->dropTable('lab_test_requests', true);
-        $this->forge->dropTable('lab_staff', true);
-        $this->forge->dropTable('lab_departments', true);
+        foreach ($foreignKeys as $sql) {
+            try {
+                $db->query($sql);
+            } catch (\Exception $e) {
+                // Foreign key doesn't exist, continue
+                log_message('debug', 'Foreign key drop skipped: ' . $e->getMessage());
+            }
+        }
+
+        // Drop tables (with IF EXISTS check)
+        $tables = [
+            'lab_sample_transfers',
+            'lab_inventory_logs',
+            'lab_inventory_items',
+            'lab_equipment_logs',
+            'lab_equipment',
+            'lab_test_results',
+            'lab_test_requests',
+            'lab_staff',
+            'lab_departments'
+        ];
+
+        foreach ($tables as $table) {
+            if ($db->tableExists($table)) {
+                $this->forge->dropTable($table, true);
+            }
+        }
     }
 }

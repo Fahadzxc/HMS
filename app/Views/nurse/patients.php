@@ -132,12 +132,12 @@
                             </div>
                         </div>
                         <div class="col-age">
-                            <div><?= esc($age) ?><?= (is_numeric($age) && $age > 0) ? ' years' : '' ?></div>
-                            <div><?= esc($p['gender']) ?></div>
+                            <div style="margin-bottom: 0.25rem; color: #1e293b;"><?= esc($age) ?><?= (is_numeric($age) && $age > 0) ? ' years' : '' ?></div>
+                            <div style="color: #64748b; font-size: 0.8125rem;"><?= esc($p['gender']) ?></div>
                         </div>
                         <div class="col-contact">
-                            <p class="phone"><?= esc($p['contact']) ?></p>
-                            <p class="email"><?= esc($p['email'] ?? 'patient@email.com') ?></p>
+                            <div style="margin-bottom: 0.25rem; color: #1e293b;"><?= esc($p['contact']) ?></div>
+                            <div style="color: #64748b; font-size: 0.8125rem;"><?= esc($p['email'] ?? 'patient@email.com') ?></div>
                         </div>
                         <div class="col-status">
                             <?php 
@@ -156,9 +156,11 @@
                                 }
                             }
                             ?>
-                            <span class="badge <?= $statusClass ?>"><?= $statusText ?></span>
+                            <div style="margin-bottom: 0.25rem;">
+                                <span class="badge <?= $statusClass ?>"><?= $statusText ?></span>
+                            </div>
                             <?php if (isset($p['patient_type'])): ?>
-                                <br><small class="text-muted"><?= ucfirst($p['patient_type']) ?></small>
+                                <div style="color: #64748b; font-size: 0.8125rem;"><?= ucfirst($p['patient_type']) ?></div>
                             <?php endif; ?>
                         </div>
                         <div class="col-room">
@@ -169,11 +171,13 @@
                             ?>
                             <?php if (!empty($displayRoom)): ?>
                                 <div class="room-info">
-                                    <span class="room-number"><?= esc($displayRoom) ?></span>
+                                    <div style="margin-bottom: 0.25rem;">
+                                        <span class="room-number"><?= esc($displayRoom) ?></span>
+                                    </div>
                                     <?php if (isset($p['patient_type']) && $p['patient_type'] === 'inpatient'): ?>
-                                        <br><small class="text-muted">Inpatient</small>
+                                        <div style="color: #64748b; font-size: 0.8125rem;">Inpatient</div>
                                     <?php else: ?>
-                                        <br><small class="text-muted">Outpatient</small>
+                                        <div style="color: #64748b; font-size: 0.8125rem;">Outpatient</div>
                                     <?php endif; ?>
                                 </div>
                             <?php else: ?>
@@ -182,9 +186,9 @@
                         </div>
                         <div class="col-doctor">
                             <?php if (!empty($p['assigned_doctor_name'])): ?>
-                                <strong><?= esc($p['assigned_doctor_name']) ?></strong>
+                                <div style="margin-bottom: 0.25rem; color: #1e293b; font-weight: 600;"><?= esc($p['assigned_doctor_name']) ?></div>
                                 <?php if (!empty($p['last_appointment_date'])): ?>
-                                    <br><small class="text-muted">Last: <?= date('M j, Y', strtotime($p['last_appointment_date'])) ?></small>
+                                    <div style="color: #64748b; font-size: 0.8125rem;">Last: <?= date('M j, Y', strtotime($p['last_appointment_date'])) ?></div>
                                 <?php endif; ?>
                             <?php else: ?>
                                 <span class="text-muted">No appointments</span>
@@ -207,13 +211,14 @@
 /* Room column styling */
 .col-room {
     flex: 0 0 100px;
-    text-align: center;
+    text-align: left;
 }
 
 .room-info {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
+    gap: 0.25rem;
 }
 
 .room-number {
@@ -232,7 +237,7 @@
 
 /* Adjust existing column widths to accommodate room column */
 .table-header .row > div, .table-row .row > div {
-    padding: 0.5rem 0.75rem;
+    padding: 0.875rem 0;
 }
 
 /* Make header and rows align by column widths (override space-between) */
@@ -242,41 +247,88 @@
     gap: 0;
 }
 
+/* Table header styling */
+.table-header {
+    background: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.table-header .patients-grid > div {
+    padding: 1rem 0;
+}
+
+/* Table row styling */
+.table-row {
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.table-row:last-child {
+    border-bottom: none;
+}
+
 /* Grid layout to guarantee perfect alignment */
 .patients-grid {
     display: grid;
-    grid-template-columns: 70px 300px 140px 240px 140px 110px 190px; /* ID, Name, Age, Contact, Status, Room, Doctor */
+    grid-template-columns: 90px 280px 130px 220px 130px 100px 200px; /* ID, Name, Age, Contact, Status, Room, Doctor */
     align-items: center;
-    column-gap: 10px;
+    column-gap: 16px;
+    padding: 0 1rem;
 }
 
 /* Prevent legacy flex widths from interfering */
-.patients-grid > div { flex: none; min-width: 0; }
+.patients-grid > div { 
+    flex: none; 
+    min-width: 0;
+    padding: 0;
+}
 
 .col-id {
-    flex: 0 0 70px;
+    flex: 0 0 90px;
+    text-align: left;
 }
 
 .col-name {
-    flex: 0 0 260px;
+    flex: 0 0 280px;
+    text-align: left;
 }
 
 .col-age {
-    flex: 0 0 120px;
-    text-align: center;
+    flex: 0 0 130px;
+    text-align: left;
+}
+
+.col-age > div {
+    line-height: 1.5;
 }
 
 .col-contact {
-    flex: 0 0 260px;
+    flex: 0 0 220px;
+    text-align: left;
 }
 
 .col-status {
-    flex: 0 0 120px;
-    text-align: center;
+    flex: 0 0 130px;
+    text-align: left;
+}
+
+.col-status .badge {
+    display: inline-block;
+    margin-bottom: 0.25rem;
+}
+
+.col-room {
+    flex: 0 0 100px;
+    text-align: left;
 }
 
 .col-doctor {
-    flex: 0 0 180px;
+    flex: 0 0 200px;
+    text-align: left;
 }
 
 /* removed actions column for nurse view */

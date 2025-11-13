@@ -120,8 +120,38 @@
                                     <div>Heart Rate</div>
                                     <div>Temperature</div>
                                     <div>Oxygen Saturation</div>
+                                    <div>Nurse</div>
                                 </div>
-                                <div id="vital-history-list-<?= $p['id'] ?>" class="vh-grid-list"></div>
+                                <div id="vital-history-list-<?= $p['id'] ?>" class="vh-grid-list">
+                                    <?php 
+                                    // Debug: Log what we're trying to display
+                                    $patientIdForDebug = $p['id'];
+                                    $updates = $treatmentUpdatesByPatient[$patientIdForDebug] ?? [];
+                                    // Debug output (remove in production)
+                                    if (ENVIRONMENT !== 'production') {
+                                        echo "<!-- DEBUG: Patient ID: {$patientIdForDebug}, Updates count: " . count($updates) . " -->";
+                                    }
+                                    
+                                    if (!empty($updates)): 
+                                        foreach ($updates as $update): 
+                                    ?>
+                                        <div class="vh-row">
+                                            <div><?= esc($update['time'] ?? '—') ?></div>
+                                            <div><?= esc($update['blood_pressure'] ?? '—') ?></div>
+                                            <div><?= esc($update['heart_rate'] ?? '—') ?></div>
+                                            <div><?= esc($update['temperature'] ?? '—') ?></div>
+                                            <div><?= esc($update['oxygen_saturation'] ?? '—') ?></div>
+                                            <div><strong><?= esc($update['nurse_name'] ?? '—') ?></strong></div>
+                                        </div>
+                                    <?php 
+                                        endforeach;
+                                    else:
+                                    ?>
+                                        <!-- No vital signs history found for this patient -->
+                                    <?php 
+                                    endif; 
+                                    ?>
+                                </div>
                             </div>
                         </div>
                         
@@ -298,10 +328,10 @@
 .vital-actions-right { display:flex; align-items:flex-end; }
 
 /* Vital history grid */
-.vh-grid { display:grid; grid-template-columns: 200px 1fr 1fr 1fr 1fr; gap:.5rem; align-items:center; }
+.vh-grid { display:grid; grid-template-columns: 200px 1fr 1fr 1fr 1fr 150px; gap:.5rem; align-items:center; }
 .vh-header { font-weight:600; color:#475569; }
 .vh-grid-list { margin-top:.5rem; }
-.vh-grid-list .vh-row { display:grid; grid-template-columns: 200px 1fr 1fr 1fr 1fr; gap:.5rem; padding:.35rem .5rem; border:1px solid #e2e8f0; border-radius:.375rem; margin-bottom:.35rem; }
+.vh-grid-list .vh-row { display:grid; grid-template-columns: 200px 1fr 1fr 1fr 1fr 150px; gap:.5rem; padding:.35rem .5rem; border:1px solid #e2e8f0; border-radius:.375rem; margin-bottom:.35rem; }
 
 .treatment-textarea {
     width: 100%;
@@ -382,35 +412,59 @@
 </style>
 
 <script>
+// Get nurse name from PHP - must be defined before functions use it
+const nurseName = '<?= esc($user_name ?? session()->get('name') ?? 'Unknown') ?>';
+
+// NEW SIMPLE SAVE FUNCTION - Directly saves to database
 function saveTreatmentUpdate(patientId) {
-    // Collect vital signs
-    const vitalInputs = document.querySelectorAll(`.vital-input[data-patient="${patientId}"]`);
-    const vitals = {};
-    vitalInputs.forEach((input, index) => {
-        const labels = ['blood_pressure', 'heart_rate', 'temperature', 'oxygen_saturation'];
-        vitals[labels[index]] = input.value;
-    });
+    // Get time input
+    const timeInput = document.getElementById('vital-time-input-' + patientId);
+    let timeValue = '';
+    if (timeInput && timeInput.value) {
+        const [h, m] = timeInput.value.split(':');
+        let hour = parseInt(h, 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12; if (hour === 0) hour = 12;
+        timeValue = hour + ':' + m + ' ' + ampm;
+    }
     
-    // Get treatment notes
+    // Get vital signs directly
+    const bpInput = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="bp"]`);
+    const hrInput = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="hr"]`);
+    const tempInput = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="temp"]`);
+    const o2Input = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="o2"]`);
     const notesTextarea = document.querySelector(`.treatment-textarea[data-patient="${patientId}"]`);
-    const notes = notesTextarea ? notesTextarea.value : '';
     
-    // Validate
-    if (!notes && !Object.values(vitals).some(v => v)) {
-        alert('Please enter at least vital signs or treatment notes.');
+    // Prepare simple data structure
+    const data = {
+        patient_id: patientId,
+        time: timeValue,
+        blood_pressure: bpInput ? bpInput.value.trim() : '',
+        heart_rate: hrInput ? hrInput.value.trim() : '',
+        temperature: tempInput ? tempInput.value.trim() : '',
+        oxygen_saturation: o2Input ? o2Input.value.trim() : '',
+        nurse_name: nurseName,
+        notes: notesTextarea ? notesTextarea.value.trim() : ''
+    };
+    
+    // Validate - at least one vital sign or notes
+    if (!data.blood_pressure && !data.heart_rate && !data.temperature && !data.oxygen_saturation && !data.notes) {
+        alert('Please enter at least one vital sign or treatment notes.');
         return;
     }
     
-    // Prepare data
-    const data = {
-        patient_id: patientId,
-        vitals: vitals,
-        notes: notes,
-        timestamp: new Date().toISOString()
-    };
+    console.log('Saving vital signs:', data);
     
-    // Send to server
-    fetch('<?= site_url('nurse/updateTreatment') ?>', {
+    // Show loading
+    const saveBtn = document.querySelector(`button[onclick*="saveTreatmentUpdate(${patientId})"]`);
+    const originalBtnText = saveBtn ? saveBtn.innerHTML : '';
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = 'Saving...';
+    }
+    
+    // Send to NEW simple endpoint
+    fetch('<?= site_url('nurse/saveVitalSigns') ?>', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -420,16 +474,33 @@ function saveTreatmentUpdate(patientId) {
     })
     .then(response => response.json())
     .then(result => {
-        if (result.success) {
-            alert('Treatment update saved successfully!');
+        console.log('Save result:', result);
+        
+        // Re-enable button
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalBtnText;
+        }
+        
+        if (result && result.success) {
+            alert('✅ Vital signs saved successfully!');
+            // Clear form
             clearForm(patientId);
+            // Reload page to show saved data
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
         } else {
-            alert('Error saving treatment update: ' + (result.message || 'Unknown error'));
+            alert('❌ Error: ' + (result?.message || 'Failed to save vital signs'));
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error saving treatment update. Please try again.');
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalBtnText;
+        }
+        alert('Error saving vital signs: ' + error.message);
     });
 }
 
@@ -467,58 +538,136 @@ function saveVitalTime(patientId) {
         alert('Please select a time first.');
         return;
     }
+    
     // Format time to HH:MM AM/PM for display
     const [h, m] = val.split(':');
     let hour = parseInt(h, 10);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     hour = hour % 12; if (hour === 0) hour = 12;
     const display = hour + ':' + m + ' ' + ampm;
+    
     if (output) {
         output.textContent = 'Saved time: ' + display;
     }
 
-    const history = document.getElementById('vital-time-history-' + patientId);
-    if (history) {
-        const nowDate = new Date();
-        const mm = String(nowDate.getMonth() + 1).padStart(2, '0');
-        const dd = String(nowDate.getDate()).padStart(2, '0');
-        const yyyy = nowDate.getFullYear();
-        const hh = String(nowDate.getHours()).padStart(2, '0');
-        const min = String(nowDate.getMinutes()).padStart(2, '0');
-        const ampm = parseInt(hh, 10) >= 12 ? 'PM' : 'AM';
-        let hour12 = parseInt(hh, 10) % 12; if (hour12 === 0) hour12 = 12;
-        const timestamp = `${mm}/${dd}/${yyyy} ${hour12}:${min} ${ampm}`;
-        const row = document.createElement('div');
-        row.className = 'time-row';
-        row.textContent = `Recorded: ${display} by ${nurseName} on ${timestamp}`;
-        history.prepend(row);
-
-        // Also push a vitals record below, aligned with placeholders
-        const list = document.getElementById('vital-history-list-' + patientId);
-        if (list) {
-            const gridRow = document.createElement('div');
-            gridRow.className = 'vh-row';
-            // Get vital values for this patient
-            const container = input.closest('.treatment-section');
-            const getVal = (selector) => {
-                const el = container.parentElement.querySelector(selector + `[data-patient="${patientId}"]`);
-                return el ? (el.value || el.placeholder) : '';
-            };
-            const bp = getVal('input[data-field="bp"]');
-            const hr = getVal('input[data-field="hr"]');
-            const temp = getVal('input[data-field="temp"]');
-            const o2 = getVal('input[data-field="o2"]');
-
-            gridRow.innerHTML = `
-                <div>${display}</div>
-                <div>${bp}</div>
-                <div>${hr}</div>
-                <div>${temp}</div>
-                <div>${o2}</div>
-            `;
-            list.prepend(gridRow);
-        }
+    // Get vital signs values
+    const bpInput = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="bp"]`);
+    const hrInput = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="hr"]`);
+    const tempInput = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="temp"]`);
+    const o2Input = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="o2"]`);
+    const notesTextarea = document.querySelector(`.treatment-textarea[data-patient="${patientId}"]`);
+    
+    // Prepare data to save
+    const data = {
+        patient_id: patientId,
+        time: display,
+        blood_pressure: bpInput ? bpInput.value.trim() : '',
+        heart_rate: hrInput ? hrInput.value.trim() : '',
+        temperature: tempInput ? tempInput.value.trim() : '',
+        oxygen_saturation: o2Input ? o2Input.value.trim() : '',
+        nurse_name: nurseName,
+        notes: notesTextarea ? notesTextarea.value.trim() : ''
+    };
+    
+    console.log('Saving vital signs via Save Time:', data);
+    
+    // Show loading on button
+    const saveTimeBtn = document.querySelector(`button[onclick="saveVitalTime(${patientId})"]`);
+    const originalBtnText = saveTimeBtn ? saveTimeBtn.textContent : '';
+    if (saveTimeBtn) {
+        saveTimeBtn.disabled = true;
+        saveTimeBtn.textContent = 'Saving...';
     }
+    
+    // Save to database
+    fetch('<?= site_url('nurse/saveVitalSigns') ?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        console.log('Save result:', result);
+        
+        // Re-enable button
+        if (saveTimeBtn) {
+            saveTimeBtn.disabled = false;
+            saveTimeBtn.textContent = originalBtnText;
+        }
+        
+        if (result && result.success) {
+            // Show success message
+            if (output) {
+                output.textContent = '✅ Saved: ' + display;
+                output.style.color = '#10b981';
+            }
+            
+            // Display in history
+            const history = document.getElementById('vital-time-history-' + patientId);
+            if (history) {
+                const nowDate = new Date();
+                const mm = String(nowDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(nowDate.getDate()).padStart(2, '0');
+                const yyyy = nowDate.getFullYear();
+                const hh = String(nowDate.getHours()).padStart(2, '0');
+                const min = String(nowDate.getMinutes()).padStart(2, '0');
+                const ampm = parseInt(hh, 10) >= 12 ? 'PM' : 'AM';
+                let hour12 = parseInt(hh, 10) % 12; if (hour12 === 0) hour12 = 12;
+                const timestamp = `${mm}/${dd}/${yyyy} ${hour12}:${min} ${ampm}`;
+                const row = document.createElement('div');
+                row.className = 'time-row';
+                row.textContent = `Recorded: ${display} by ${nurseName} on ${timestamp}`;
+                history.prepend(row);
+            }
+
+            // Add to vital history grid
+            const list = document.getElementById('vital-history-list-' + patientId);
+            if (list) {
+                const gridRow = document.createElement('div');
+                gridRow.className = 'vh-row';
+                const displayNurseName = nurseName && nurseName.trim() !== '' ? nurseName : 'Unknown';
+                
+                gridRow.innerHTML = `
+                    <div>${display}</div>
+                    <div>${data.blood_pressure || '—'}</div>
+                    <div>${data.heart_rate || '—'}</div>
+                    <div>${data.temperature || '—'}</div>
+                    <div>${data.oxygen_saturation || '—'}</div>
+                    <div><strong>${displayNurseName}</strong></div>
+                `;
+                list.prepend(gridRow);
+            }
+            
+            // Clear form after successful save
+            clearForm(patientId);
+            
+            // Reload page after 1 second to show data from database
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            alert('❌ Error: ' + (result?.message || 'Failed to save vital signs'));
+            if (output) {
+                output.textContent = 'Error saving';
+                output.style.color = '#ef4444';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (saveTimeBtn) {
+            saveTimeBtn.disabled = false;
+            saveTimeBtn.textContent = originalBtnText;
+        }
+        alert('Error saving vital signs: ' + error.message);
+        if (output) {
+            output.textContent = 'Error saving';
+            output.style.color = '#ef4444';
+        }
+    });
 }
 
 // Live/current time handling for each patient card
@@ -542,9 +691,36 @@ function initLiveTime() {
 }
 
 // Initialize live time on page load
-document.addEventListener('DOMContentLoaded', initLiveTime);
+document.addEventListener('DOMContentLoaded', function() {
+    initLiveTime();
+    // Debug: Check if nurse name is set
+    if (!nurseName || nurseName.trim() === '' || nurseName === 'Unknown') {
+        console.warn('Nurse name not found. Check session or user_name variable.');
+    } else {
+        console.log('Nurse name loaded:', nurseName);
+    }
+});
 
-const nurseName = '<?= esc($user_name ?? session()->get('name')) ?>';
+// Function to add entry to vital history
+function addToVitalHistory(patientId, time, vitals, nurse) {
+    const list = document.getElementById('vital-history-list-' + patientId);
+    if (!list) return;
+    
+    // Ensure nurse name is available
+    const displayNurseName = (nurse && nurse.trim() !== '') ? nurse : (nurseName && nurseName.trim() !== '' ? nurseName : 'Unknown');
+    
+    const gridRow = document.createElement('div');
+    gridRow.className = 'vh-row';
+    gridRow.innerHTML = `
+        <div>${time || '—'}</div>
+        <div>${vitals.blood_pressure || '—'}</div>
+        <div>${vitals.heart_rate || '—'}</div>
+        <div>${vitals.temperature || '—'}</div>
+        <div>${vitals.oxygen_saturation || '—'}</div>
+        <div><strong>${displayNurseName}</strong></div>
+    `;
+    list.prepend(gridRow);
+}
 </script>
 
 <?= $this->endSection() ?>

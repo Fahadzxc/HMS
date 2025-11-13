@@ -29,12 +29,43 @@ class Nurses extends Controller
         // Get nurses with their schedules using the new method
         $nurses = $this->nurseScheduleModel->getNursesWithSchedules();
 
+        // Fetch treatment updates (vital signs) grouped by nurse name
+        $db = \Config\Database::connect();
+        $vitalSignsByNurse = [];
+        
+        if ($db->tableExists('treatment_updates')) {
+            try {
+                $updates = $db->table('treatment_updates')
+                    ->select('nurse_name, patient_id, time, blood_pressure, heart_rate, temperature, oxygen_saturation, notes, created_at')
+                    ->where('nurse_name IS NOT NULL')
+                    ->where('nurse_name !=', '')
+                    ->orderBy('created_at', 'DESC')
+                    ->get()
+                    ->getResultArray();
+                
+                // Group by nurse name
+                foreach ($updates as $update) {
+                    $nurseName = $update['nurse_name'];
+                    if (!isset($vitalSignsByNurse[$nurseName])) {
+                        $vitalSignsByNurse[$nurseName] = [];
+                    }
+                    // Keep only recent 20 entries per nurse
+                    if (count($vitalSignsByNurse[$nurseName]) < 20) {
+                        $vitalSignsByNurse[$nurseName][] = $update;
+                    }
+                }
+            } catch (\Exception $e) {
+                log_message('error', 'Error loading vital signs: ' . $e->getMessage());
+            }
+        }
+
         $data = [
             'pageTitle' => 'Nurses',
             'title' => 'Nurses - HMS',
             'user_role' => 'admin',
             'user_name' => session()->get('name'),
             'nurses' => $nurses,
+            'vitalSignsByNurse' => $vitalSignsByNurse,
         ];
 
         return view('admin/nurse', $data);
