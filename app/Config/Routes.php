@@ -34,6 +34,7 @@ $routes->post('nurse/updateVitals', 'Nurse::updateVitals');
 $routes->post('nurse/saveVitalSigns', 'Nurse::updateVitals'); // New simple endpoint
 $routes->post('nurse/updateTreatment', 'Nurse::updateTreatment');
 $routes->post('nurse/assignPatient', 'Nurse::assignPatient');
+$routes->post('nurse/markPrescriptionAsGiven', 'Nurse::markPrescriptionAsGiven');
 
 // Reception Routes
 $routes->get('reception/patients', 'Reception::patients');
@@ -64,8 +65,15 @@ $routes->get('pharmacy/reports', 'Pharmacy::reports');
 
 // Accounts Routes
 $routes->get('accounts/billing', 'Accounts::billing');
+$routes->post('accounts/createBill', 'Accounts::createBill');
+$routes->post('accounts/recordPayment', 'Accounts::recordPayment');
+$routes->get('accounts/getBillDetails/(:num)', 'Accounts::getBillDetails/$1');
+$routes->get('accounts/getPrescriptionDetails/(:num)', 'Accounts::getPrescriptionDetails/$1');
+$routes->get('accounts/getPatientBillableItems/(:num)', 'Accounts::getPatientBillableItems/$1');
 $routes->get('accounts/payments', 'Accounts::payments');
 $routes->get('accounts/insurance', 'Accounts::insurance');
+$routes->post('accounts/createInsuranceClaim', 'Accounts::createInsuranceClaim');
+$routes->post('accounts/updateInsuranceClaim', 'Accounts::updateInsuranceClaim');
 $routes->get('accounts/reports', 'Accounts::reports');
 $routes->get('accounts/financial', 'Accounts::financial');
 
@@ -129,6 +137,8 @@ $routes->post('admin/lab/inventory/delete/(:num)', 'Admin\\Lab\\Inventory::delet
 $routes->post('admin/lab/reports/download', 'Admin\\Lab\\Reports::download');
 $routes->get('admin/appointments', 'Admin\\Appointments::index');
 $routes->get('admin/billing', 'Admin\\Billing::index');
+$routes->post('admin/billing/createBillsForCompleted', 'Admin\\Billing::createBillsForCompletedPrescriptions');
+$routes->post('admin/billing/createBillForPrescription/(:num)', 'Admin\\Billing::createBillForPrescription/$1');
 $routes->get('admin/users', 'Admin\\Users::index');
 $routes->post('admin/users/create', 'Admin\\Users::create');
 $routes->post('admin/users/update', 'Admin\\Users::update');

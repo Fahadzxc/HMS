@@ -4,8 +4,18 @@
 
 <section class="panel">
     <header class="panel-header">
-        <h2>Treatment Updates</h2>
-        <p>Monitor and update patient treatment progress</p>
+        <div class="page-header-content">
+            <div>
+                <h2 class="page-title">
+                    <span>💉</span>
+                    Treatment Updates
+                </h2>
+                <p class="page-subtitle">
+                    Welcome, <?= esc($user_name ?? session()->get('name') ?? 'Nurse') ?>
+                    <span class="date-text"> • Date: <?= date('F j, Y') ?></span>
+                </p>
+            </div>
+        </div>
     </header>
 </section>
 
@@ -159,26 +169,6 @@
                             <h4>Treatment Notes</h4>
                             <textarea class="treatment-textarea" placeholder="Enter treatment updates, observations, or care notes..." data-patient="<?= $p['id'] ?>"></textarea>
                         </div>
-
-                        <?php $rxList = $prescriptionsByPatient[$p['id']] ?? []; ?>
-                        <?php if (!empty($rxList)): ?>
-                        <div class="treatment-section">
-                            <h4>Latest Prescriptions</h4>
-                            <div class="rx-list">
-                                <?php foreach ($rxList as $rx): ?>
-                                    <div class="rx-item">
-                                        <div class="rx-head"><strong>RX#<?= (int) $rx['id'] ?></strong> <span class="text-muted">• <?= date('M j, Y g:i A', strtotime($rx['created_at'])) ?></span> <span class="badge badge-green" style="margin-left:.5rem;"><?= ucfirst($rx['status']) ?></span></div>
-                                        <?php foreach (($rx['items'] ?? []) as $it): ?>
-                                            <div class="text-muted">- <?= esc($it['name'] ?? '') ?> <?= !empty($it['dosage']) ? '• ' . esc($it['dosage']) : '' ?><?= !empty($it['instructions']) ? ' • ' . esc($it['instructions']) : '' ?></div>
-                                        <?php endforeach; ?>
-                                        <?php if (!empty($rx['notes'])): ?>
-                                            <div class="text-muted">Notes: <?= esc($rx['notes']) ?></div>
-                                        <?php endif; ?>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                        <?php endif; ?>
                         
                         <div class="treatment-actions">
                             <button class="btn btn-primary" onclick="saveTreatmentUpdate(<?= $p['id'] ?>)">
@@ -200,216 +190,172 @@
     </div>
 </section>
 
-<style>
-/* Treatment Cards */
-.treatment-card {
-    margin-bottom: 1.5rem;
-    border-left: 4px solid #3B82F6;
-}
-
-.treatment-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 1.5rem;
-    border-bottom: 1px solid #e2e8f0;
-    gap: 2rem;
-}
-
-.patient-summary {
-    display: flex;
-    gap: 1rem;
-    flex: 1;
-}
-
-.patient-avatar-large {
-    flex-shrink: 0;
-}
-
-.patient-main-info h3 {
-    margin: 0 0 0.5rem 0;
-    color: #1e293b;
-    font-size: 1.25rem;
-}
-
-.patient-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    color: #64748b;
-    font-size: 0.875rem;
-}
-
-.meta-item strong {
-    color: #475569;
-}
-
-.patient-status-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    min-width: 200px;
-}
-
-.info-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-}
-
-.info-row strong {
-    color: #475569;
-    min-width: 60px;
-}
-
-.room-badge {
-    background: #dbeafe;
-    color: #1e293b;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-weight: 600;
-    font-size: 0.875rem;
-}
-
-.treatment-body {
-    padding: 1.5rem;
-}
-
-.treatment-section {
-    margin-bottom: 1.5rem;
-}
-
-.rx-list .rx-item { padding:.5rem .75rem; border:1px solid #e2e8f0; border-radius:.375rem; margin-bottom:.5rem; }
-.rx-head { margin-bottom:.25rem; }
-
-.treatment-section h4 {
-    margin: 0 0 1rem 0;
-    color: #1e293b;
-    font-size: 1rem;
-    font-weight: 600;
-}
-
-.vital-signs-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-}
-
-.vital-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.vital-item label {
-    color: #475569;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.vital-input {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    transition: border-color 0.2s;
-}
-
-.vital-input:focus {
-    outline: none;
-    border-color: #3B82F6;
-}
-
-.btn-small { padding: .45rem .8rem; }
-.time-output { margin-top: .25rem; color:#475569; font-size:.85rem; }
-.time-history { margin-top:.25rem; }
-.time-history .time-row { color:#475569; font-size:.85rem; }
-.vital-actions-right { display:flex; align-items:flex-end; }
-
-/* Vital history grid */
-.vh-grid { display:grid; grid-template-columns: 200px 1fr 1fr 1fr 1fr 150px; gap:.5rem; align-items:center; }
-.vh-header { font-weight:600; color:#475569; }
-.vh-grid-list { margin-top:.5rem; }
-.vh-grid-list .vh-row { display:grid; grid-template-columns: 200px 1fr 1fr 1fr 1fr 150px; gap:.5rem; padding:.35rem .5rem; border:1px solid #e2e8f0; border-radius:.375rem; margin-bottom:.35rem; }
-
-.treatment-textarea {
-    width: 100%;
-    min-height: 100px;
-    padding: 0.75rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    font-family: inherit;
-    resize: vertical;
-    transition: border-color 0.2s;
-}
-
-.treatment-textarea:focus {
-    outline: none;
-    border-color: #3B82F6;
-}
-
-.treatment-actions {
-    display: flex;
-    gap: 0.75rem;
-    padding-top: 1rem;
-}
-
-.btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
-    border: none;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-primary {
-    background: #3B82F6;
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #2563eb;
-}
-
-.btn-secondary {
-    background: #e2e8f0;
-    color: #475569;
-}
-
-.btn-secondary:hover {
-    background: #cbd5e1;
-}
-
-.text-center {
-    text-align: center;
-}
-
-.text-muted {
-    color: #64748b;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .treatment-header {
-        flex-direction: column;
-    }
+<!-- Pending Prescriptions Section -->
+<section class="panel panel-spaced">
+    <header class="panel-header">
+        <h2>⏳ Pending Prescriptions</h2>
+        <p>Prescriptions waiting to be given to patients</p>
+    </header>
     
-    .patient-status-info {
-        width: 100%;
-    }
+    <div class="stack">
+        <?php if (!empty($pending_prescriptions)): ?>
+            <div class="prescriptions-table-wrapper">
+                <table class="prescriptions-table">
+                    <thead>
+                        <tr>
+                            <th>RX#</th>
+                            <th>Patient</th>
+                            <th>Doctor</th>
+                            <th>Medication</th>
+                            <th>Frequency</th>
+                            <th>Meal Instruction</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($pending_prescriptions as $rx): ?>
+                            <?php 
+                            $items = json_decode($rx['items_json'] ?? '[]', true) ?: [];
+                            $firstItem = $items[0] ?? [];
+                            $durationDays = $rx['duration_days'] ?? 0;
+                            $isDailyTracking = $rx['is_daily_tracking'] ?? false;
+                            $currentDay = $rx['current_day'] ?? 1;
+                            $daysRemaining = $rx['days_remaining'] ?? 0;
+                            ?>
+                            <tr>
+                                <td><strong>RX#<?= str_pad((string)$rx['id'], 3, '0', STR_PAD_LEFT) ?></strong></td>
+                                <td><?= esc($rx['patient_name'] ?? 'N/A') ?></td>
+                                <td><?= esc($rx['doctor_name'] ?? 'N/A') ?></td>
+                                <td><?= esc($firstItem['name'] ?? 'N/A') ?></td>
+                                <td><?= esc($firstItem['frequency'] ?? '—') ?></td>
+                                <td><?= esc($firstItem['meal_instruction'] ?? '—') ?></td>
+                                <td>
+                                    <?= esc($firstItem['duration'] ?? '—') ?>
+                                    <?php if ($durationDays > 0 && $isDailyTracking): ?>
+                                        <div class="wizard-progress-inline">
+                                            <div class="wizard-steps">
+                                                <?php for ($i = 1; $i <= $durationDays; $i++): ?>
+                                                    <div class="wizard-step <?= $i <= $currentDay ? 'completed' : '' ?> <?= $i == $currentDay ? 'active' : '' ?>">
+                                                        <?= $i ?>
+                                                    </div>
+                                                    <?php if ($i < $durationDays): ?>
+                                                        <div class="wizard-line <?= $i < $currentDay ? 'completed' : '' ?>"></div>
+                                                    <?php endif; ?>
+                                                <?php endfor; ?>
+                                            </div>
+                                            <div class="wizard-text">Day <?= $currentDay ?>/<?= $durationDays ?> (<?= $daysRemaining ?> days left)</div>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if ($isDailyTracking): ?>
+                                        <span class="status-badge status-pending">
+                                            <span class="status-dot"></span>
+                                            Day <?= $currentDay ?>/<?= $durationDays ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="status-badge status-pending">
+                                            <span class="status-dot"></span>
+                                            Pending
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn-mark-given" onclick="markAsGiven(<?= $rx['id'] ?>)">
+                                        <span>✅</span> Mark as Given
+                                    </button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php else: ?>
+            <div class="card">
+                <p class="text-muted text-center-empty">No pending prescriptions at this time.</p>
+            </div>
+        <?php endif; ?>
+    </div>
+</section>
+
+<!-- Completed Prescriptions Section -->
+<section class="panel panel-spaced">
+    <header class="panel-header">
+        <h2>✅ Completed Prescriptions</h2>
+        <p>Prescriptions that have been given to patients</p>
+    </header>
     
-    .vital-signs-grid {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
+    <div class="stack">
+        <?php if (!empty($completed_prescriptions)): ?>
+            <div class="prescriptions-table-wrapper">
+                <table class="prescriptions-table">
+                    <thead>
+                        <tr>
+                            <th>RX#</th>
+                            <th>Patient</th>
+                            <th>Medication</th>
+                            <th>Duration</th>
+                            <th>Progress</th>
+                            <th>Date Completed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($completed_prescriptions as $rx): ?>
+                            <?php 
+                            $items = json_decode($rx['items_json'] ?? '[]', true) ?: [];
+                            $firstItem = $items[0] ?? [];
+                            $durationDays = $rx['duration_days'] ?? 0;
+                            $currentDay = $rx['current_day'] ?? 0;
+                            $daysRemaining = $rx['days_remaining'] ?? 0;
+                            $isCompleted = $rx['is_completed_duration'] ?? false;
+                            ?>
+                            <tr>
+                                <td><strong>RX#<?= str_pad((string)$rx['id'], 3, '0', STR_PAD_LEFT) ?></strong></td>
+                                <td><?= esc($rx['patient_name'] ?? 'N/A') ?></td>
+                                <td><?= esc($firstItem['name'] ?? 'N/A') ?></td>
+                                <td><?= esc($firstItem['duration'] ?? '—') ?></td>
+                                <td>
+                                    <?php if ($durationDays > 0): ?>
+                                        <div class="wizard-progress">
+                                            <div class="wizard-steps">
+                                                <?php for ($i = 1; $i <= $durationDays; $i++): ?>
+                                                    <div class="wizard-step <?= $i <= $currentDay ? 'completed' : '' ?> <?= $i == $currentDay ? 'active' : '' ?>">
+                                                        <?= $i ?>
+                                                    </div>
+                                                    <?php if ($i < $durationDays): ?>
+                                                        <div class="wizard-line <?= $i < $currentDay ? 'completed' : '' ?>"></div>
+                                                    <?php endif; ?>
+                                                <?php endfor; ?>
+                                            </div>
+                                            <div class="wizard-text">
+                                                <?php if ($isCompleted): ?>
+                                                    <span class="badge badge-success">✅ Completed</span>
+                                                <?php else: ?>
+                                                    Day <?= $currentDay ?>/<?= $durationDays ?> (<?= $daysRemaining ?> days left)
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="text-muted">—</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= !empty($rx['updated_at']) ? date('M j, Y', strtotime($rx['updated_at'])) : date('M j, Y', strtotime($rx['created_at'])) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php else: ?>
+            <div class="card">
+                <p class="text-muted text-center-empty">No completed prescriptions yet.</p>
+            </div>
+        <?php endif; ?>
+    </div>
+</section>
+
+<!-- All CSS moved to template.php for centralized styling -->
 
 <script>
 // Get nurse name from PHP - must be defined before functions use it
@@ -720,6 +666,44 @@ function addToVitalHistory(patientId, time, vitals, nurse) {
         <div><strong>${displayNurseName}</strong></div>
     `;
     list.prepend(gridRow);
+}
+
+function markAsGiven(prescriptionId) {
+    if (!confirm('Mark this prescription as given to the patient?')) {
+        return;
+    }
+
+    const btn = event.target.closest('.btn-mark-given');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span> Processing...';
+
+    fetch('<?= site_url('nurse/markPrescriptionAsGiven') ?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ prescription_id: prescriptionId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Prescription marked as given successfully!');
+            // Reload page to update both tables
+            location.reload();
+        } else {
+            alert('❌ Error: ' + (data.message || 'Failed to update prescription'));
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Network error. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
 }
 </script>
 

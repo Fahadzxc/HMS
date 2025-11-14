@@ -98,6 +98,8 @@ class Nurse extends Controller
             if ($db->tableExists('prescriptions')) {
                 try {
                     $rxModel = new PrescriptionModel();
+                    
+                    // Get all prescriptions for patient cards (latest first)
                     $rxRows = $rxModel->whereIn('patient_id', $patientIds)
                                       ->orderBy('created_at', 'DESC')
                                       ->findAll(200);
@@ -110,6 +112,83 @@ class Nurse extends Controller
                         // keep only recent few per patient
                         if (count($prescriptionsByPatient[$pid]) < 3) {
                             $prescriptionsByPatient[$pid][] = $rx;
+                        }
+                    }
+                    
+                    // Get pending and completed prescriptions for display sections
+                    $builder = $db->table('prescriptions p');
+                    $builder->select('p.*, pt.full_name as patient_name, u.name as doctor_name');
+                    $builder->join('patients pt', 'pt.id = p.patient_id', 'left');
+                    $builder->join('users u', 'u.id = p.doctor_id', 'left');
+                    $builder->whereIn('p.patient_id', $patientIds);
+                    $builder->orderBy('p.created_at', 'DESC');
+                    $allPrescriptions = $builder->get()->getResultArray();
+                    
+                    // Separate pending and completed, calculate duration progress
+                    $pendingPrescriptions = [];
+                    $completedPrescriptions = [];
+                    
+                    foreach ($allPrescriptions as $rx) {
+                        $items = json_decode($rx['items_json'] ?? '[]', true) ?: [];
+                        $firstItem = $items[0] ?? [];
+                        $durationStr = $firstItem['duration'] ?? '';
+                        
+                        // Parse duration (e.g., "5 days", "7 days", "5")
+                        $durationDays = 0;
+                        if (!empty($durationStr)) {
+                            preg_match('/(\d+)/', $durationStr, $matches);
+                            if (!empty($matches[1])) {
+                                $durationDays = (int)$matches[1];
+                            }
+                        }
+                        
+                        $rx['duration_days'] = $durationDays;
+                        $status = $rx['status'] ?? 'pending';
+                        
+                        if ($status === 'pending') {
+                            $pendingPrescriptions[] = $rx;
+                        } else {
+                            // Calculate progress for completed prescriptions
+                            $startDate = !empty($rx['updated_at']) ? $rx['updated_at'] : $rx['created_at'];
+                            $startDateTime = new \DateTime($startDate);
+                            $startDateTime->setTime(0, 0, 0);
+                            
+                            $today = new \DateTime();
+                            $today->setTime(0, 0, 0);
+                            
+                            $daysElapsed = $startDateTime->diff($today)->days;
+                            $currentDay = $daysElapsed + 1; // Day 1 is the first day
+                            
+                            $rx['days_elapsed'] = $daysElapsed;
+                            $rx['current_day'] = $currentDay;
+                            // Days remaining = total days - current day
+                            // Example: Day 1 of 5 = 4 days left (Day 2, 3, 4, 5)
+                            $rx['days_remaining'] = max(0, $durationDays - $currentDay);
+                            $rx['is_completed_duration'] = ($currentDay > $durationDays);
+                            
+                            // If duration not complete, show in pending again tomorrow
+                            if ($durationDays > 0 && !$rx['is_completed_duration']) {
+                                // Check if it was already given today
+                                // startDate is the FIRST day it was given (preserved in updated_at)
+                                // If currentDay > 1, it means we're past Day 1, so it should appear in pending
+                                $lastGivenDate = date('Y-m-d', strtotime($startDate));
+                                $todayDate = date('Y-m-d');
+                                $wasGivenToday = ($lastGivenDate === $todayDate);
+                                
+                                // If it's Day 1 and was given today, show in completed
+                                // If it's Day 2+, show in pending so nurse can mark as given for today
+                                if ($currentDay > 1 || !$wasGivenToday) {
+                                    // Day 2+ or not given today yet, show in pending
+                                    $rx['is_daily_tracking'] = true;
+                                    $pendingPrescriptions[] = $rx;
+                                } else {
+                                    // Day 1 and already given today, show in completed
+                                    $completedPrescriptions[] = $rx;
+                                }
+                            } else {
+                                // Duration complete, show in completed
+                                $completedPrescriptions[] = $rx;
+                            }
                         }
                     }
                 } catch (\Exception $e) {
@@ -183,6 +262,8 @@ class Nurse extends Controller
             'patients' => $patients,
             'prescriptionsByPatient' => $prescriptionsByPatient,
             'treatmentUpdatesByPatient' => $treatmentUpdatesByPatient,
+            'pending_prescriptions' => $pendingPrescriptions ?? [],
+            'completed_prescriptions' => $completedPrescriptions ?? [],
         ];
 
         return view('nurse/treatment_updates', $data);
@@ -541,5 +622,338 @@ class Nurse extends Controller
         }
 
         return redirect()->back()->with('error', 'Invalid request method.');
+    }
+
+    public function markPrescriptionAsGiven()
+    {
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'nurse') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(401);
+        }
+
+        $prescriptionId = $this->request->getPost('prescription_id') ?? $this->request->getJSON(true)['prescription_id'] ?? null;
+
+        if (!$prescriptionId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Prescription ID is required']);
+        }
+
+        $rxModel = new PrescriptionModel();
+        $prescription = $rxModel->find($prescriptionId);
+
+        if (!$prescription) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Prescription not found']);
+        }
+
+        // Update status to completed - use direct DB query to bypass validation
+        $db = \Config\Database::connect();
+        
+        // First, try to update the ENUM if 'completed' is not in the list
+        try {
+            $db->query("ALTER TABLE prescriptions MODIFY COLUMN status ENUM('pending', 'dispensed', 'cancelled', 'completed') DEFAULT 'pending'");
+        } catch (\Exception $e) {
+            // ENUM might already be updated, or table doesn't exist - continue
+            log_message('debug', 'ENUM update attempt: ' . $e->getMessage());
+        }
+        
+        // Check if this is the first time marking as given
+        $currentStatus = $prescription['status'] ?? 'pending';
+        $wasCompleted = ($currentStatus === 'completed');
+        
+        // Update using direct query
+        $builder = $db->table('prescriptions');
+        $builder->where('id', $prescriptionId);
+        
+        // Only update updated_at if this is the FIRST time marking as given
+        // This preserves the start date for accurate day counting
+        $updateData = ['status' => 'completed'];
+        if (!$wasCompleted) {
+            // First time marking as given - set the start date
+            $updateData['updated_at'] = date('Y-m-d H:i:s');
+        }
+        // If already completed, don't update updated_at to preserve the original start date
+        
+        $result = $builder->update($updateData);
+
+        if ($result && !$wasCompleted) {
+            // Auto-create bill for prescription medications (first time only)
+            $this->autoCreatePrescriptionBill($prescriptionId, $prescription);
+        }
+
+        if ($result) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Prescription marked as given successfully'
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to update prescription status. Please check database connection.'
+            ]);
+        }
+    }
+    
+    private function autoCreatePrescriptionBill($prescriptionId, $prescription)
+    {
+        try {
+            // Check if bill already exists for this prescription
+            $db = \Config\Database::connect();
+            $existingBill = $db->table('bills')
+                ->where('prescription_id', $prescriptionId)
+                ->first();
+            
+            if ($existingBill) {
+                log_message('debug', "Bill already exists for prescription #{$prescriptionId}");
+                return; // Bill already exists
+            }
+            
+            // Ensure billing tables exist
+            $this->ensureBillingTables();
+            
+            $billingModel = new \App\Models\BillingModel();
+            $billItemModel = new \App\Models\BillItemModel();
+            
+            // Parse prescription items
+            $itemsJson = $prescription['items_json'] ?? '[]';
+            $items = json_decode($itemsJson, true);
+            
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                log_message('error', "Failed to parse prescription items JSON for prescription #{$prescriptionId}: " . json_last_error_msg());
+                return;
+            }
+            
+            if (empty($items) || !is_array($items)) {
+                log_message('debug', "No items found in prescription #{$prescriptionId}");
+                return; // No items to bill
+            }
+            
+            // Calculate medication costs
+            $subtotal = 0;
+            $billItems = [];
+            
+            foreach ($items as $item) {
+                if (!is_array($item)) continue;
+                
+                // Get medication name - check multiple possible fields
+                $medicationName = $item['name'] ?? $item['medication'] ?? $item['med_name'] ?? '';
+                
+                if (empty($medicationName)) {
+                    // Try to get from med_id if name is not available
+                    if (!empty($item['med_id'])) {
+                        $medModel = new \App\Models\MedicationModel();
+                        $med = $medModel->find($item['med_id']);
+                        if ($med) {
+                            $medicationName = $med['name'] ?? '';
+                            if (!empty($med['strength'])) {
+                                $medicationName .= ' ' . $med['strength'];
+                            }
+                        }
+                    }
+                }
+                
+                if (empty($medicationName)) {
+                    log_message('debug', "Skipping item without name in prescription #{$prescriptionId}");
+                    continue; // Skip items without name
+                }
+                
+                // Get quantity - default to 1 if not specified
+                $quantity = 1;
+                if (isset($item['quantity']) && $item['quantity'] > 0) {
+                    $quantity = floatval($item['quantity']);
+                } else {
+                    // Try to calculate quantity from duration if available
+                    $durationStr = $item['duration'] ?? '';
+                    if (!empty($durationStr)) {
+                        preg_match('/(\d+)/', $durationStr, $matches);
+                        if (!empty($matches[1])) {
+                            $durationDays = (int)$matches[1];
+                            // Estimate quantity based on frequency
+                            $frequency = $item['frequency'] ?? '';
+                            if (strpos(strtolower($frequency), '2x') !== false || strpos(strtolower($frequency), 'twice') !== false) {
+                                $quantity = $durationDays * 2;
+                            } elseif (strpos(strtolower($frequency), '3x') !== false || strpos(strtolower($frequency), 'thrice') !== false) {
+                                $quantity = $durationDays * 3;
+                            } else {
+                                $quantity = $durationDays; // Once a day
+                            }
+                        }
+                    }
+                }
+                
+                $dosage = $item['dosage'] ?? '';
+                $frequency = $item['frequency'] ?? '';
+                $duration = $item['duration'] ?? '';
+                $mealInstruction = $item['meal_instruction'] ?? '';
+                
+                // Get medication price (default pricing if not in database)
+                $unitPrice = $this->getMedicationPrice($medicationName);
+                $totalPrice = $quantity * $unitPrice;
+                
+                $subtotal += $totalPrice;
+                
+                $description = [];
+                if ($dosage) $description[] = "Dosage: {$dosage}";
+                if ($frequency) $description[] = "Frequency: {$frequency}";
+                if ($mealInstruction) $description[] = "Meal: {$mealInstruction}";
+                if ($duration) $description[] = "Duration: {$duration}";
+                
+                $billItems[] = [
+                    'item_type' => 'medication',
+                    'item_name' => $medicationName,
+                    'description' => implode(', ', $description),
+                    'quantity' => $quantity,
+                    'unit_price' => $unitPrice,
+                    'total_price' => $totalPrice,
+                    'reference_id' => $prescriptionId,
+                ];
+            }
+            
+            if ($subtotal <= 0 || empty($billItems)) {
+                log_message('debug', "No valid items to bill for prescription #{$prescriptionId}");
+                return; // No cost to bill
+            }
+            
+            // Calculate tax (12%)
+            $tax = $subtotal * 0.12;
+            $totalAmount = $subtotal + $tax;
+            
+            // Generate bill number
+            $billNumber = $billingModel->generateBillNumber();
+            
+            // Create bill
+            $billData = [
+                'bill_number' => $billNumber,
+                'patient_id' => $prescription['patient_id'],
+                'prescription_id' => $prescriptionId,
+                'bill_type' => 'prescription',
+                'subtotal' => $subtotal,
+                'discount' => 0,
+                'tax' => $tax,
+                'total_amount' => $totalAmount,
+                'paid_amount' => 0,
+                'balance' => $totalAmount,
+                'status' => 'pending',
+                'due_date' => date('Y-m-d', strtotime('+7 days')),
+                'notes' => 'Auto-generated from prescription #' . $prescriptionId,
+                'created_by' => session()->get('user_id'),
+            ];
+            
+            $billId = $billingModel->insert($billData);
+            
+            if (!$billId) {
+                log_message('error', "Failed to create bill for prescription #{$prescriptionId}: " . json_encode($billingModel->errors()));
+                return;
+            }
+            
+            // Create bill items
+            foreach ($billItems as $item) {
+                $item['bill_id'] = $billId;
+                if (!$billItemModel->insert($item)) {
+                    log_message('error', "Failed to create bill item: " . json_encode($billItemModel->errors()));
+                }
+            }
+            
+            log_message('info', "Auto-created bill #{$billNumber} for prescription #{$prescriptionId}, amount: ₱{$totalAmount}");
+            
+        } catch (\Exception $e) {
+            log_message('error', "Error auto-creating bill for prescription #{$prescriptionId}: " . $e->getMessage());
+        }
+    }
+    
+    private function getMedicationPrice($medicationName)
+    {
+        // Default medication pricing (can be customized)
+        $defaultPrices = [
+            'amoxicillin' => 50.00,
+            'paracetamol' => 25.00,
+            'ibuprofen' => 30.00,
+            'aspirin' => 20.00,
+            'metformin' => 40.00,
+            'losartan' => 45.00,
+            'atorvastatin' => 60.00,
+            'omeprazole' => 35.00,
+            'cefuroxime' => 80.00,
+            'azithromycin' => 75.00,
+        ];
+        
+        // Try to get price from database first
+        $db = \Config\Database::connect();
+        if ($db->tableExists('medications')) {
+            $med = $db->table('medications')
+                ->where('name', $medicationName)
+                ->orLike('name', $medicationName)
+                ->first();
+            
+            if ($med && isset($med['price'])) {
+                return floatval($med['price']);
+            }
+        }
+        
+        // Use default pricing based on medication name
+        $nameLower = strtolower($medicationName);
+        foreach ($defaultPrices as $key => $price) {
+            if (strpos($nameLower, $key) !== false) {
+                return $price;
+            }
+        }
+        
+        // Default price if not found
+        return 50.00;
+    }
+    
+    private function ensureBillingTables()
+    {
+        $db = \Config\Database::connect();
+        
+        // Create bills table if not exists
+        if (!$db->tableExists('bills')) {
+            $forge = \Config\Database::forge();
+            $forge->addField([
+                'id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'auto_increment' => true],
+                'bill_number' => ['type' => 'VARCHAR', 'constraint' => 50],
+                'patient_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true],
+                'appointment_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
+                'prescription_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
+                'lab_test_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
+                'room_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
+                'bill_type' => ['type' => 'ENUM', 'constraint' => ['appointment', 'prescription', 'lab_test', 'room', 'consultation', 'procedure', 'other'], 'default' => 'other'],
+                'subtotal' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'default' => 0],
+                'discount' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'default' => 0],
+                'tax' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'default' => 0],
+                'total_amount' => ['type' => 'DECIMAL', 'constraint' => '10,2'],
+                'paid_amount' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'default' => 0],
+                'balance' => ['type' => 'DECIMAL', 'constraint' => '10,2'],
+                'status' => ['type' => 'ENUM', 'constraint' => ['pending', 'partial', 'paid', 'overdue', 'cancelled'], 'default' => 'pending'],
+                'due_date' => ['type' => 'DATE', 'null' => true],
+                'payment_method' => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => true],
+                'notes' => ['type' => 'TEXT', 'null' => true],
+                'created_by' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
+                'created_at' => ['type' => 'DATETIME', 'null' => true],
+                'updated_at' => ['type' => 'DATETIME', 'null' => true],
+            ]);
+            $forge->addKey('id', true);
+            $forge->addKey('patient_id');
+            $forge->addKey('bill_number');
+            $forge->createTable('bills', true);
+        }
+        
+        // Create bill_items table if not exists
+        if (!$db->tableExists('bill_items')) {
+            $forge = \Config\Database::forge();
+            $forge->addField([
+                'id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'auto_increment' => true],
+                'bill_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true],
+                'item_type' => ['type' => 'VARCHAR', 'constraint' => 50],
+                'item_name' => ['type' => 'VARCHAR', 'constraint' => 255],
+                'description' => ['type' => 'TEXT', 'null' => true],
+                'quantity' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'default' => 1],
+                'unit_price' => ['type' => 'DECIMAL', 'constraint' => '10,2'],
+                'total_price' => ['type' => 'DECIMAL', 'constraint' => '10,2'],
+                'reference_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
+                'created_at' => ['type' => 'DATETIME', 'null' => true],
+                'updated_at' => ['type' => 'DATETIME', 'null' => true],
+            ]);
+            $forge->addKey('id', true);
+            $forge->addKey('bill_id');
+            $forge->createTable('bill_items', true);
+        }
     }
 }

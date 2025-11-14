@@ -223,12 +223,37 @@ class Doctor extends Controller
         // Patients assigned to this doctor for selection
         $db = \Config\Database::connect();
         $builder = $db->table('patients p');
-        $builder->select('p.id, p.full_name');
+        $builder->select('p.id, p.full_name, p.date_of_birth, p.gender');
         $builder->join('(SELECT patient_id, doctor_id, appointment_date,
                                 ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
                          FROM appointments WHERE status != "cancelled" AND doctor_id = ' . (int) $doctorId . ') a', 'a.patient_id = p.id AND a.rn = 1', 'inner');
         $builder->orderBy('p.full_name', 'ASC');
-        $patients = $builder->get()->getResultArray();
+        $patientsRaw = $builder->get()->getResultArray();
+        
+        // Calculate age for each patient
+        $patients = [];
+        foreach ($patientsRaw as $pt) {
+            $age = '—';
+            if (!empty($pt['date_of_birth']) && $pt['date_of_birth'] !== '0000-00-00' && $pt['date_of_birth'] !== '') {
+                try {
+                    $dateStr = $pt['date_of_birth'];
+                    if (strpos($dateStr, '/') !== false) {
+                        $parts = explode('/', $dateStr);
+                        if (count($parts) === 3) {
+                            $dateStr = $parts[2] . '-' . $parts[0] . '-' . $parts[1];
+                        }
+                    }
+                    $birthDate = new \DateTime($dateStr);
+                    $today = new \DateTime();
+                    $ageDiff = $today->diff($birthDate);
+                    $age = $ageDiff->y;
+                } catch (\Exception $e) {
+                    $age = '—';
+                }
+            }
+            $pt['age'] = $age;
+            $patients[] = $pt;
+        }
 
         $this->ensureMedicationsTable();
         $medications = $medModel->listOptions();
@@ -326,7 +351,7 @@ class Doctor extends Controller
             ],
             'status' => [
                 'type'       => 'ENUM',
-                'constraint' => ['pending', 'dispensed', 'cancelled'],
+                'constraint' => ['pending', 'dispensed', 'cancelled', 'completed'],
                 'default'    => 'pending',
             ],
             'created_at' => [

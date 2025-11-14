@@ -8,11 +8,11 @@
         <div class="actions-grid">
             <div class="action-tile">
                 <span>Today's Revenue</span>
-                <strong>₱45,250</strong>
+                <strong>₱<?= number_format($today_revenue ?? 0, 2) ?></strong>
             </div>
             <div class="action-tile">
                 <span>Pending Bills</span>
-                <strong>12</strong>
+                <strong><?= $pending_bills_count ?? 0 ?></strong>
             </div>
             <div class="action-tile">
                 <span>Insurance Claims</span>
@@ -20,7 +20,7 @@
             </div>
             <div class="action-tile">
                 <span>Overdue Payments</span>
-                <strong>3</strong>
+                <strong><?= $overdue_bills_count ?? 0 ?></strong>
             </div>
         </div>
     </div>
@@ -59,33 +59,33 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>B001234</td>
-                        <td>Juan Dela Cruz</td>
-                        <td>Consultation + Lab</td>
-                        <td>₱2,500</td>
-                        <td>Today</td>
-                        <td><span class="badge badge-warning">Pending</span></td>
-                        <td><a href="#" class="button button-small">Process</a></td>
-                    </tr>
-                    <tr>
-                        <td>B001235</td>
-                        <td>Maria Garcia</td>
-                        <td>Emergency Room</td>
-                        <td>₱8,750</td>
-                        <td>Tomorrow</td>
-                        <td><span class="badge badge-warning">Pending</span></td>
-                        <td><a href="#" class="button button-small">Process</a></td>
-                    </tr>
-                    <tr>
-                        <td>B001236</td>
-                        <td>Pedro Rodriguez</td>
-                        <td>Surgery</td>
-                        <td>₱25,000</td>
-                        <td>Overdue</td>
-                        <td><span class="badge badge-danger">Overdue</span></td>
-                        <td><a href="#" class="button button-small">Follow-up</a></td>
-                    </tr>
+                    <?php if (!empty($recent_bills)): ?>
+                        <?php foreach ($recent_bills as $bill): ?>
+                            <tr>
+                                <td><?= esc($bill['bill_number'] ?? 'N/A') ?></td>
+                                <td><?= esc($bill['patient_name'] ?? 'N/A') ?></td>
+                                <td><?= ucfirst(esc($bill['bill_type'] ?? 'N/A')) ?></td>
+                                <td>₱<?= number_format($bill['total_amount'] ?? 0, 2) ?></td>
+                                <td><?= $bill['due_date'] ? date('M j, Y', strtotime($bill['due_date'])) : '—' ?></td>
+                                <td>
+                                    <span class="badge badge-<?= 
+                                        $bill['status'] === 'paid' ? 'success' : 
+                                        ($bill['status'] === 'overdue' ? 'danger' : 
+                                        ($bill['status'] === 'partial' ? 'warning' : 'warning'))
+                                    ?>">
+                                        <?= ucfirst(esc($bill['status'] ?? 'pending')) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="/accounts/billing?bill_id=<?= $bill['id'] ?>" class="button button-small">View</a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No pending bills</td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -110,22 +110,29 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>P001234</td>
-                        <td>Ana Martinez</td>
-                        <td>₱1,500</td>
-                        <td>Cash</td>
-                        <td><span class="badge badge-success">Paid</span></td>
-                        <td>09:30 AM</td>
-                    </tr>
-                    <tr>
-                        <td>P001235</td>
-                        <td>Carlos Reyes</td>
-                        <td>₱3,200</td>
-                        <td>Credit Card</td>
-                        <td><span class="badge badge-success">Paid</span></td>
-                        <td>09:15 AM</td>
-                    </tr>
+                    <?php if (!empty($recent_payments)): ?>
+                        <?php foreach ($recent_payments as $payment): ?>
+                            <tr>
+                                <td><?= esc($payment['payment_number'] ?? 'N/A') ?></td>
+                                <td><?= esc($payment['patient_name'] ?? 'N/A') ?></td>
+                                <td>₱<?= number_format($payment['amount'] ?? 0, 2) ?></td>
+                                <td><?= ucfirst(str_replace('_', ' ', esc($payment['payment_method'] ?? 'N/A'))) ?></td>
+                                <td>
+                                    <span class="badge badge-<?= 
+                                        $payment['status'] === 'completed' ? 'success' : 
+                                        ($payment['status'] === 'failed' ? 'danger' : 'warning')
+                                    ?>">
+                                        <?= ucfirst(esc($payment['status'] ?? 'pending')) ?>
+                                    </span>
+                                </td>
+                                <td><?= $payment['payment_date'] ? date('M j, Y g:i A', strtotime($payment['created_at'])) : '—' ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No recent payments</td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>

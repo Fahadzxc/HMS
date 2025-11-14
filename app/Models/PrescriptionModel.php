@@ -32,13 +32,19 @@ class PrescriptionModel extends Model
         'patient_id' => 'required|integer',
         'doctor_id' => 'required|integer',
         'items_json' => 'required',
-        'status' => 'permit_empty|in_list[pending,dispensed,cancelled]'
+        'status' => 'permit_empty|in_list[pending,dispensed,cancelled,completed]'
     ];
 
     public function getDoctorPrescriptions(int $doctorId): array
     {
-        return $this->where('doctor_id', $doctorId)
-                    ->orderBy('created_at', 'DESC')
-                    ->findAll(100);
+        $db = \Config\Database::connect();
+        $builder = $db->table('prescriptions p');
+        $builder->select('p.*, pt.full_name as patient_name');
+        $builder->join('patients pt', 'pt.id = p.patient_id', 'left');
+        $builder->where('p.doctor_id', $doctorId);
+        $builder->orderBy('p.created_at', 'DESC');
+        $builder->limit(100);
+        
+        return $builder->get()->getResultArray();
     }
 }
