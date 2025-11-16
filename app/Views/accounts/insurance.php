@@ -205,7 +205,20 @@
                 </div>
                 <div class="form-group">
                     <label>Insurance Provider *</label>
-                    <input type="text" name="insurance_provider" id="claim_provider" class="form-input" placeholder="e.g., PhilHealth, Maxicare, etc." required>
+                    <select name="insurance_provider" id="claim_provider" class="form-input" required onchange="updateProviderDefaults()">
+                        <option value="">Select Insurance Provider</option>
+                        <option value="PhilHealth">PhilHealth</option>
+                        <option value="Maxicare">Maxicare</option>
+                        <option value="Medicard">Medicard</option>
+                        <option value="Intellicare">Intellicare</option>
+                        <option value="Cocolife">Cocolife</option>
+                        <option value="Pacific Cross">Pacific Cross</option>
+                        <option value="Aetna">Aetna</option>
+                        <option value="Blue Cross">Blue Cross</option>
+                        <option value="Caritas Health Shield">Caritas Health Shield</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <input type="text" name="insurance_provider_other" id="claim_provider_other" class="form-input" placeholder="Specify other provider" style="display: none; margin-top: 0.5rem;">
                 </div>
                 <div class="form-group">
                     <label>Policy Number</label>
@@ -286,14 +299,154 @@ function openCreateClaimModal() {
 function closeCreateClaimModal() {
     document.getElementById('createClaimModal').style.display = 'none';
     document.getElementById('createClaimForm').reset();
+    // Hide "Other" provider input
+    document.getElementById('claim_provider_other').style.display = 'none';
+    document.getElementById('claim_provider_other').value = '';
 }
 
-function loadBillDetails(billId) {
+async function loadBillDetails(billId) {
+    if (!billId) {
+        // Clear all fields if no bill selected
+        document.getElementById('claim_amount').value = '';
+        document.getElementById('claim_deductible').value = '0';
+        document.getElementById('claim_copay').value = '0';
+        document.getElementById('claim_policy').value = '';
+        document.getElementById('claim_member').value = '';
+        return;
+    }
+    
     const select = document.getElementById('claim_bill_id');
     const option = select.options[select.selectedIndex];
     if (option && option.dataset.balance) {
-        document.getElementById('claim_amount').value = option.dataset.balance;
+        // Auto-populate claim amount with bill balance
+        const balance = parseFloat(option.dataset.balance) || 0;
+        document.getElementById('claim_amount').value = balance.toFixed(2);
+        
+        // Get patient insurance info
+        try {
+            const response = await fetch(`<?= base_url('accounts/getPatientInsuranceInfo') ?>/${billId}`);
+            const result = await response.json();
+            
+            if (result.success && result.insurance_info) {
+                const info = result.insurance_info;
+                
+                // Auto-populate policy number and member ID if available
+                if (info.policy_number) {
+                    document.getElementById('claim_policy').value = info.policy_number;
+                }
+                if (info.member_id) {
+                    document.getElementById('claim_member').value = info.member_id;
+                }
+                
+                // If patient has previous claims with a provider, suggest it
+                if (info.last_provider) {
+                    const providerSelect = document.getElementById('claim_provider');
+                    // Check if the provider exists in the dropdown
+                    for (let i = 0; i < providerSelect.options.length; i++) {
+                        if (providerSelect.options[i].value === info.last_provider) {
+                            providerSelect.value = info.last_provider;
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.log('Could not load patient insurance info:', error);
+            // Continue without insurance info - user can fill manually
+        }
+        
+        // Auto-calculate deductible and co-payment based on provider
+        updateProviderDefaults();
     }
+}
+
+function updateProviderDefaults() {
+    const provider = document.getElementById('claim_provider').value;
+    const claimAmount = parseFloat(document.getElementById('claim_amount').value) || 0;
+    
+    // Show/hide "Other" provider input
+    const otherInput = document.getElementById('claim_provider_other');
+    if (provider === 'Other') {
+        otherInput.style.display = 'block';
+        otherInput.required = true;
+    } else {
+        otherInput.style.display = 'none';
+        otherInput.required = false;
+        otherInput.value = '';
+    }
+    
+    // Auto-generate Policy Number and Member ID if empty
+    if (provider && provider !== 'Other' && provider !== '') {
+        const policyInput = document.getElementById('claim_policy');
+        const memberInput = document.getElementById('claim_member');
+        
+        // Only auto-generate if fields are empty
+        if (!policyInput.value.trim()) {
+            // Generate policy number based on provider and date
+            const year = new Date().getFullYear();
+            const month = String(new Date().getMonth() + 1).padStart(2, '0');
+            const providerCode = provider.substring(0, 3).toUpperCase();
+            policyInput.value = `${providerCode}-${year}${month}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+        }
+        
+        if (!memberInput.value.trim()) {
+            // Generate member ID based on provider
+            const providerCode = provider.substring(0, 2).toUpperCase();
+            const randomNum = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+            memberInput.value = `${providerCode}${randomNum}`;
+        }
+    }
+    
+    // Auto-set deductible and co-payment based on provider
+    let deductible = 0;
+    let copay = 0;
+    
+    switch(provider) {
+        case 'PhilHealth':
+            // PhilHealth typically covers 80-90%, patient pays 10-20%
+            deductible = 0;
+            copay = (claimAmount * 0.10).toFixed(2); // 10% co-payment
+            break;
+        case 'Maxicare':
+            // Maxicare usually has minimal deductible
+            deductible = 0;
+            copay = (claimAmount * 0.05).toFixed(2); // 5% co-payment
+            break;
+        case 'Medicard':
+            deductible = 0;
+            copay = (claimAmount * 0.05).toFixed(2);
+            break;
+        case 'Intellicare':
+            deductible = 0;
+            copay = (claimAmount * 0.05).toFixed(2);
+            break;
+        case 'Cocolife':
+            deductible = 0;
+            copay = (claimAmount * 0.10).toFixed(2);
+            break;
+        case 'Pacific Cross':
+            deductible = 0;
+            copay = (claimAmount * 0.10).toFixed(2);
+            break;
+        case 'Aetna':
+            deductible = (claimAmount * 0.05).toFixed(2); // 5% deductible
+            copay = (claimAmount * 0.10).toFixed(2);
+            break;
+        case 'Blue Cross':
+            deductible = 0;
+            copay = (claimAmount * 0.15).toFixed(2);
+            break;
+        case 'Caritas Health Shield':
+            deductible = 0;
+            copay = (claimAmount * 0.10).toFixed(2);
+            break;
+        default:
+            deductible = 0;
+            copay = 0;
+    }
+    
+    document.getElementById('claim_deductible').value = deductible;
+    document.getElementById('claim_copay').value = copay;
 }
 
 function updateClaim(claimId, status) {
@@ -320,21 +473,68 @@ document.getElementById('createClaimForm').addEventListener('submit', async func
     const formData = new FormData(this);
     const data = Object.fromEntries(formData);
     
+    // Handle "Other" provider
+    const provider = document.getElementById('claim_provider').value;
+    if (provider === 'Other') {
+        const otherProvider = document.getElementById('claim_provider_other').value.trim();
+        if (!otherProvider) {
+            alert('Please specify the insurance provider name.');
+            return;
+        }
+        data.insurance_provider = otherProvider;
+    }
+    
+    // Convert numeric fields
+    data.claim_amount = parseFloat(data.claim_amount) || 0;
+    data.deductible = parseFloat(data.deductible) || 0;
+    data.co_payment = parseFloat(data.co_payment) || 0;
+    
+    // Disable submit button
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creating...';
+    }
+    
     try {
-        const response = await fetch('/accounts/createInsuranceClaim', {
+        console.log('Sending data:', data);
+        const response = await fetch('<?= base_url('accounts/createInsuranceClaim') ?>', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
         });
+        
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers.get('content-type'));
+        
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('Non-JSON response:', text.substring(0, 500));
+            throw new Error('Server returned non-JSON response. Please check server logs.');
+        }
+        
         const result = await response.json();
+        console.log('Result:', result);
+        
         if (result.success) {
             alert('Insurance claim created successfully!');
             location.reload();
         } else {
-            alert('Error: ' + result.message);
+            alert('Error: ' + (result.message || 'Unknown error'));
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Claim';
+            }
         }
     } catch (error) {
+        console.error('Error creating claim:', error);
         alert('Error creating claim: ' + error.message);
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Create Claim';
+        }
     }
 });
 

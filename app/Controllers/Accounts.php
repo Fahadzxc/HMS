@@ -179,9 +179,11 @@ class Accounts extends Controller
 				return $this->response->setJSON(['success' => false, 'message' => 'Bill total must be greater than zero']);
 			}
 			
-			$discount = floatval($postData['discount'] ?? 0);
-			$tax = ($subtotal - $discount) * 0.12; // 12% tax
-			$totalAmount = $subtotal - $discount + $tax;
+			// Discount is always 0 (no PhilHealth yet)
+			$discount = 0;
+			// Tax is automatically 12% of subtotal
+			$tax = $subtotal * 0.12;
+			$totalAmount = $subtotal + $tax;
 			
 			// Create bill
 			$billData = [
@@ -342,6 +344,47 @@ class Accounts extends Controller
 		return $this->response->setJSON(['success' => false, 'message' => 'Bill not found']);
 	}
 	
+	public function getPatientInsuranceInfo($billId)
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
+			return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(401);
+		}
+		
+		try {
+			$billingModel = new BillingModel();
+			$bill = $billingModel->find($billId);
+			
+			if (!$bill) {
+				return $this->response->setJSON(['success' => false, 'message' => 'Bill not found']);
+			}
+			
+			$patientId = $bill['patient_id'];
+			$insuranceModel = new InsuranceModel();
+			
+			// Get patient's most recent insurance claim for reference
+			$lastClaim = $insuranceModel->where('patient_id', $patientId)
+				->orderBy('created_at', 'DESC')
+				->first();
+			
+			$insuranceInfo = [
+				'policy_number' => $lastClaim['policy_number'] ?? '',
+				'member_id' => $lastClaim['member_id'] ?? '',
+				'last_provider' => $lastClaim['insurance_provider'] ?? ''
+			];
+			
+			return $this->response->setJSON([
+				'success' => true,
+				'insurance_info' => $insuranceInfo
+			]);
+		} catch (\Exception $e) {
+			log_message('error', 'Error getting patient insurance info: ' . $e->getMessage());
+			return $this->response->setJSON([
+				'success' => false,
+				'message' => 'Error: ' . $e->getMessage()
+			]);
+		}
+	}
+	
 	public function getPatientBillableItems($patientId)
 	{
 		try {
@@ -475,8 +518,27 @@ class Accounts extends Controller
 			
 			foreach ($prescriptions as $prescription) {
 				try {
+					$prescriptionStatus = $prescription['status'] ?? 'pending';
 					$itemsJson = $prescription['items_json'] ?? '[]';
 					$items = json_decode($itemsJson, true);
+					
+					// Get nurse name if prescription is completed
+					$nurseName = null;
+					if ($prescriptionStatus === 'completed' && $db->tableExists('treatment_updates')) {
+						try {
+							$nurseUpdate = $db->table('treatment_updates')
+								->where('patient_id', $patientId)
+								->where('nurse_name IS NOT NULL')
+								->where('nurse_name !=', '')
+								->orderBy('created_at', 'DESC')
+								->first();
+							if ($nurseUpdate && !empty($nurseUpdate['nurse_name'])) {
+								$nurseName = $nurseUpdate['nurse_name'];
+							}
+						} catch (\Exception $e) {
+							log_message('warning', 'Error fetching nurse name: ' . $e->getMessage());
+						}
+					}
 					
 					if (json_last_error() === JSON_ERROR_NONE && is_array($items)) {
 						$medCodeCounter = 1;
@@ -524,6 +586,7 @@ class Accounts extends Controller
 							
 							$prescriptionDate = $prescription['created_at'] ?? date('Y-m-d H:i:s');
 							
+							// Add medication item
 							$billableItems[] = [
 								'category' => 'medication',
 								'code' => 'MED' . str_pad($medCodeCounter++, 4, '0', STR_PAD_LEFT),
@@ -531,6 +594,23 @@ class Accounts extends Controller
 								'item_name' => $medicationName,
 								'unit_price' => $unitPrice,
 								'quantity' => $quantity,
+								'reference_id' => $prescription['id'],
+								'reference_type' => 'prescription'
+							];
+						}
+						
+						// Add nurse fee if prescription is completed (given by nurse)
+						if ($prescriptionStatus === 'completed') {
+							if (empty($nurseName)) {
+								$nurseName = 'Nurse';
+							}
+							$billableItems[] = [
+								'category' => 'nursing',
+								'code' => '102001',
+								'date_time' => date('Y-m-d\TH:i', strtotime($prescription['updated_at'] ?? $prescriptionDate)),
+								'item_name' => 'Nurse Fee - ' . $nurseName . ' (Medication Administration)',
+								'unit_price' => 200.00, // Default nursing fee
+								'quantity' => 1,
 								'reference_id' => $prescription['id'],
 								'reference_type' => 'prescription'
 							];
@@ -964,54 +1044,89 @@ class Accounts extends Controller
 	
 	public function createInsuranceClaim()
 	{
-		if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
-			return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(401);
-		}
+		// Set JSON response header first
+		$this->response->setContentType('application/json');
 		
-		$insuranceModel = new InsuranceModel();
-		$billingModel = new BillingModel();
-		
-		$postData = $this->request->getJSON(true);
-		$billId = $postData['bill_id'];
-		
-		$bill = $billingModel->find($billId);
-		if (!$bill) {
-			return $this->response->setJSON(['success' => false, 'message' => 'Bill not found']);
-		}
-		
-		// Generate claim number
-		$claimNumber = $insuranceModel->generateClaimNumber();
-		
-		// Create insurance claim
-		$claimData = [
-			'claim_number' => $claimNumber,
-			'bill_id' => $billId,
-			'patient_id' => $bill['patient_id'],
-			'insurance_provider' => $postData['insurance_provider'],
-			'policy_number' => $postData['policy_number'] ?? null,
-			'member_id' => $postData['member_id'] ?? null,
-			'claim_amount' => $postData['claim_amount'] ?? $bill['balance'],
-			'approved_amount' => 0,
-			'deductible' => $postData['deductible'] ?? 0,
-			'co_payment' => $postData['co_payment'] ?? 0,
-			'status' => 'submitted',
-			'submitted_date' => date('Y-m-d'),
-			'notes' => $postData['notes'] ?? null,
-			'created_by' => session()->get('user_id'),
-		];
-		
-		$claimId = $insuranceModel->insert($claimData);
-		
-		if ($claimId) {
+		try {
+			if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
+				return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(401);
+			}
+			
+			// Ensure insurance tables exist
+			$this->ensureInsuranceTables();
+			
+			$insuranceModel = new InsuranceModel();
+			$billingModel = new BillingModel();
+			
+			// Get JSON data
+			$postData = $this->request->getJSON(true);
+			
+			// If getJSON returns null, try getPost
+			if (empty($postData)) {
+				$postData = $this->request->getPost();
+			}
+			
+			if (empty($postData)) {
+				return $this->response->setJSON(['success' => false, 'message' => 'No data received']);
+			}
+			
+			$billId = $postData['bill_id'] ?? null;
+			if (!$billId) {
+				return $this->response->setJSON(['success' => false, 'message' => 'Bill ID is required']);
+			}
+			
+			$bill = $billingModel->find($billId);
+			if (!$bill) {
+				return $this->response->setJSON(['success' => false, 'message' => 'Bill not found']);
+			}
+			
+			// Generate claim number
+			$claimNumber = $insuranceModel->generateClaimNumber();
+			
+			// Create insurance claim
+			$claimData = [
+				'claim_number' => $claimNumber,
+				'bill_id' => $billId,
+				'patient_id' => $bill['patient_id'],
+				'insurance_provider' => $postData['insurance_provider'] ?? '',
+				'policy_number' => !empty($postData['policy_number']) ? $postData['policy_number'] : null,
+				'member_id' => !empty($postData['member_id']) ? $postData['member_id'] : null,
+				'claim_amount' => floatval($postData['claim_amount'] ?? $bill['balance']),
+				'approved_amount' => 0,
+				'deductible' => floatval($postData['deductible'] ?? 0),
+				'co_payment' => floatval($postData['co_payment'] ?? 0),
+				'status' => 'submitted',
+				'submitted_date' => date('Y-m-d'),
+				'notes' => !empty($postData['notes']) ? $postData['notes'] : null,
+				'created_by' => session()->get('user_id'),
+			];
+			
+			$claimId = $insuranceModel->insert($claimData);
+			
+			if ($claimId) {
+				return $this->response->setJSON([
+					'success' => true,
+					'message' => 'Insurance claim created successfully',
+					'claim_id' => $claimId,
+					'claim_number' => $claimNumber
+				]);
+			}
+			
+			$errors = $insuranceModel->errors();
 			return $this->response->setJSON([
-				'success' => true,
-				'message' => 'Insurance claim created successfully',
-				'claim_id' => $claimId,
-				'claim_number' => $claimNumber
+				'success' => false, 
+				'message' => 'Failed to create insurance claim: ' . (is_array($errors) ? implode(', ', $errors) : 'Unknown error')
+			]);
+			
+		} catch (\Exception $e) {
+			log_message('error', 'Error creating insurance claim: ' . $e->getMessage());
+			log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+			log_message('error', 'File: ' . $e->getFile() . ' Line: ' . $e->getLine());
+			return $this->response->setJSON([
+				'success' => false,
+				'message' => 'Error: ' . $e->getMessage()
 			]);
 		}
-		
-		return $this->response->setJSON(['success' => false, 'message' => 'Failed to create insurance claim']);
 	}
 	
 	public function updateInsuranceClaim()

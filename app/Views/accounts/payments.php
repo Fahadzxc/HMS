@@ -244,7 +244,7 @@
                 </div>
                 <div class="form-group">
                     <label>Amount *</label>
-                    <input type="number" name="amount" id="record_payment_amount" class="form-input" step="0.01" required>
+                    <input type="number" name="amount" id="record_payment_amount" class="form-input" step="0.01" required onchange="updateRemainingBalance()" oninput="updateRemainingBalance()">
                     <small class="text-muted">Enter payment amount (cannot exceed balance)</small>
                 </div>
                 <div class="form-group">
@@ -265,11 +265,17 @@
                 </div>
                 <div class="form-group">
                     <label>Transaction ID</label>
-                    <input type="text" name="transaction_id" id="record_payment_transaction_id" class="form-input">
+                    <input type="text" name="transaction_id" id="record_payment_transaction_id" class="form-input" readonly style="background-color: #f5f5f5;">
+                    <small class="text-muted">Auto-generated</small>
                 </div>
                 <div class="form-group">
                     <label>Reference Number</label>
-                    <input type="text" name="reference_number" id="record_payment_reference" class="form-input">
+                    <input type="text" name="reference_number" id="record_payment_reference" class="form-input" readonly style="background-color: #f5f5f5;">
+                    <small class="text-muted">Auto-generated</small>
+                </div>
+                <div class="form-group">
+                    <label>Remaining Balance</label>
+                    <input type="text" id="record_payment_remaining_balance" class="form-input" readonly style="font-weight: 600; color: #d32f2f;">
                 </div>
                 <div class="form-group">
                     <label>Notes</label>
@@ -296,6 +302,9 @@ function closeRecordPaymentModal() {
     document.getElementById('recordPaymentForm').reset();
     document.getElementById('record_payment_patient').value = '';
     document.getElementById('record_payment_balance').value = '';
+    document.getElementById('record_payment_transaction_id').value = '';
+    document.getElementById('record_payment_reference').value = '';
+    document.getElementById('record_payment_remaining_balance').value = '';
 }
 
 function updatePaymentAmount() {
@@ -310,11 +319,69 @@ function updatePaymentAmount() {
         document.getElementById('record_payment_balance').value = '₱' + balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         document.getElementById('record_payment_amount').value = balance;
         document.getElementById('record_payment_amount').max = balance;
+        
+        // Auto-generate Transaction ID and Reference Number
+        generateTransactionIds();
+        
+        // Update remaining balance
+        updateRemainingBalance();
     } else {
         document.getElementById('record_payment_patient').value = '';
         document.getElementById('record_payment_balance').value = '';
         document.getElementById('record_payment_amount').value = '';
         document.getElementById('record_payment_amount').max = '';
+        document.getElementById('record_payment_transaction_id').value = '';
+        document.getElementById('record_payment_reference').value = '';
+        document.getElementById('record_payment_remaining_balance').value = '';
+    }
+}
+
+function generateTransactionIds() {
+    // Generate Transaction ID: TXN-YYYYMMDD-HHMMSS-XXXX
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    
+    const transactionId = `TXN-${year}${month}${day}-${hours}${minutes}${seconds}-${random}`;
+    document.getElementById('record_payment_transaction_id').value = transactionId;
+    
+    // Generate Reference Number: REF-YYYYMMDD-XXXXXX
+    const refRandom = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+    const referenceNumber = `REF-${year}${month}${day}-${refRandom}`;
+    document.getElementById('record_payment_reference').value = referenceNumber;
+}
+
+function updateRemainingBalance() {
+    const select = document.getElementById('record_payment_bill_id');
+    const selectedOption = select.options[select.selectedIndex];
+    
+    if (!selectedOption || !selectedOption.value) {
+        document.getElementById('record_payment_remaining_balance').value = '';
+        return;
+    }
+    
+    const balance = parseFloat(selectedOption.getAttribute('data-balance')) || 0;
+    const amount = parseFloat(document.getElementById('record_payment_amount').value) || 0;
+    
+    if (amount > balance) {
+        document.getElementById('record_payment_remaining_balance').value = '⚠️ Amount exceeds balance!';
+        document.getElementById('record_payment_remaining_balance').style.color = '#d32f2f';
+    } else {
+        const remaining = balance - amount;
+        document.getElementById('record_payment_remaining_balance').value = '₱' + remaining.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        
+        if (remaining === 0) {
+            document.getElementById('record_payment_remaining_balance').style.color = '#28a745';
+        } else if (remaining < balance * 0.5) {
+            document.getElementById('record_payment_remaining_balance').style.color = '#ff9800';
+        } else {
+            document.getElementById('record_payment_remaining_balance').style.color = '#d32f2f';
+        }
     }
 }
 
@@ -330,13 +397,35 @@ document.getElementById('recordPaymentForm').addEventListener('submit', async fu
     const balance = parseFloat(selectedOption.getAttribute('data-balance')) || 0;
     const amount = parseFloat(data.amount) || 0;
     
+    if (amount <= 0) {
+        alert('Payment amount must be greater than zero!');
+        return;
+    }
+    
     if (amount > balance) {
         alert('Payment amount cannot exceed bill balance!');
         return;
     }
     
+    // Auto-generate Transaction ID and Reference Number if empty
+    if (!data.transaction_id || !data.transaction_id.trim()) {
+        generateTransactionIds();
+        data.transaction_id = document.getElementById('record_payment_transaction_id').value;
+    }
+    if (!data.reference_number || !data.reference_number.trim()) {
+        generateTransactionIds();
+        data.reference_number = document.getElementById('record_payment_reference').value;
+    }
+    
+    // Disable submit button
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Recording...';
+    }
+    
     try {
-        const response = await fetch('/accounts/recordPayment', {
+        const response = await fetch('<?= base_url('accounts/recordPayment') ?>', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
@@ -347,9 +436,17 @@ document.getElementById('recordPaymentForm').addEventListener('submit', async fu
             location.reload();
         } else {
             alert('Error: ' + result.message);
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Record Payment';
+            }
         }
     } catch (error) {
         alert('Error recording payment: ' + error.message);
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Record Payment';
+        }
     }
 });
 </script>

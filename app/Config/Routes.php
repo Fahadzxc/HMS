@@ -70,6 +70,7 @@ $routes->post('accounts/recordPayment', 'Accounts::recordPayment');
 $routes->get('accounts/getBillDetails/(:num)', 'Accounts::getBillDetails/$1');
 $routes->get('accounts/getPrescriptionDetails/(:num)', 'Accounts::getPrescriptionDetails/$1');
 $routes->get('accounts/getPatientBillableItems/(:num)', 'Accounts::getPatientBillableItems/$1');
+$routes->get('accounts/getPatientInsuranceInfo/(:num)', 'Accounts::getPatientInsuranceInfo/$1');
 $routes->get('accounts/payments', 'Accounts::payments');
 $routes->get('accounts/insurance', 'Accounts::insurance');
 $routes->post('accounts/createInsuranceClaim', 'Accounts::createInsuranceClaim');

@@ -197,6 +197,17 @@
                 <div class="form-group">
                     <label>Bill Items</label>
                     <div id="billItemsContainer">
+                        <!-- Header row for bill items -->
+                        <div class="bill-items-header" style="display: none; grid-template-columns: 120px 100px 150px 2fr 100px 80px 100px auto; gap: 0.5rem; padding: 0.75rem; background: #f8f9fa; border-radius: 6px 6px 0 0; font-weight: 600; font-size: 0.875rem; color: #495057; margin-bottom: 0;">
+                            <div>Category</div>
+                            <div>Code</div>
+                            <div>Date & Time</div>
+                            <div>Particulars</div>
+                            <div>Rate (₱)</div>
+                            <div>Units</div>
+                            <div>Amount (₱)</div>
+                            <div></div>
+                        </div>
                         <!-- Items will be auto-populated when patient is selected -->
                         <div id="billItems">
                             <div class="text-center-empty" style="padding: 2rem; color: #666;">
@@ -214,8 +225,8 @@
                     <input type="number" id="bill_subtotal" class="form-input" value="0" step="0.01" readonly>
                 </div>
                 <div class="form-group">
-                    <label>Discount</label>
-                    <input type="number" name="discount" id="bill_discount" class="form-input" value="0" step="0.01" onchange="calculateBillTotal()">
+                    <label>Discount (PhilHealth)</label>
+                    <input type="number" name="discount" id="bill_discount" class="form-input" value="0" step="0.01" readonly style="background-color: #f5f5f5;" title="Discount will be available when PhilHealth is configured">
                 </div>
                 <div class="form-group">
                     <label>Tax (12%)</label>
@@ -348,6 +359,7 @@ function closeCreateBillModal() {
         </div>
     `;
     document.getElementById('bill_subtotal').value = '0.00';
+    document.getElementById('bill_discount').value = '0.00';
     document.getElementById('bill_tax').value = '0.00';
     document.getElementById('bill_total').value = '0.00';
     document.getElementById('bill_amount_words').value = '';
@@ -363,8 +375,13 @@ async function loadPatientBillableItems() {
         // Clear items if no patient selected
         const itemsDiv = document.getElementById('billItems');
         itemsDiv.innerHTML = '<div class="text-center-empty" style="padding: 2rem; color: #666;"><p>Please select a patient to automatically load billable items</p></div>';
+        const headerRow = document.querySelector('.bill-items-header');
+        if (headerRow) {
+            headerRow.style.display = 'none';
+        }
         billItemCount = 0;
         document.getElementById('bill_subtotal').value = '0.00';
+        document.getElementById('bill_discount').value = '0.00';
         document.getElementById('bill_tax').value = '0.00';
         document.getElementById('bill_total').value = '0.00';
         document.getElementById('bill_amount_words').value = '';
@@ -399,6 +416,12 @@ async function loadPatientBillableItems() {
             
             // Add all billable items automatically
             if (result.items.length > 0) {
+                // Show header row
+                const headerRow = document.querySelector('.bill-items-header');
+                if (headerRow) {
+                    headerRow.style.display = 'grid';
+                }
+                
                 result.items.forEach((item) => {
                     const itemRow = document.createElement('div');
                     itemRow.className = 'bill-item-row';
@@ -412,22 +435,22 @@ async function loadPatientBillableItems() {
                     const amount = (rate * units).toFixed(2);
                     
                     itemRow.innerHTML = `
-                        <select class="form-input bill-category" onchange="updateItemCategory(this)" required>
-                            <option value="room" ${item.category === 'room' ? 'selected' : ''}>Room/Bed Charges</option>
-                            <option value="nursing" ${item.category === 'nursing' ? 'selected' : ''}>Nursing Charges</option>
-                            <option value="ot" ${item.category === 'ot' ? 'selected' : ''}>OT Charges</option>
-                            <option value="professional" ${item.category === 'professional' ? 'selected' : ''}>Professional Fees</option>
+                        <select class="form-input bill-category" onchange="updateItemCategory(this)" required style="font-size: 0.875rem;">
+                            <option value="room" ${item.category === 'room' ? 'selected' : ''}>Room/Bed</option>
+                            <option value="nursing" ${item.category === 'nursing' ? 'selected' : ''}>Nursing</option>
+                            <option value="ot" ${item.category === 'ot' ? 'selected' : ''}>OT</option>
+                            <option value="professional" ${item.category === 'professional' ? 'selected' : ''}>Professional</option>
                             <option value="medication" ${item.category === 'medication' ? 'selected' : ''}>Medication</option>
                             <option value="lab" ${item.category === 'lab' ? 'selected' : ''}>Lab Test</option>
                             <option value="other" ${item.category === 'other' ? 'selected' : ''}>Other</option>
                         </select>
-                        <input type="text" class="form-input bill-code" placeholder="Code" name="items[${billItemCount}][code]" value="${code}" readonly>
-                        <input type="datetime-local" class="form-input bill-datetime" placeholder="Date & Time" name="items[${billItemCount}][date_time]" value="${currentDateTime}" readonly>
-                        <input type="text" class="form-input bill-particulars" placeholder="Particulars *" name="items[${billItemCount}][item_name]" value="${particulars}" required readonly>
-                        <input type="number" class="form-input bill-rate" placeholder="Rate *" name="items[${billItemCount}][unit_price]" value="${rate}" step="0.01" required readonly>
-                        <input type="number" class="form-input bill-units" placeholder="Units *" name="items[${billItemCount}][quantity]" value="${units}" step="0.01" required readonly>
-                        <input type="number" class="form-input bill-amount" placeholder="Amount" name="items[${billItemCount}][amount]" value="${amount}" readonly>
-                        <span class="text-muted" style="padding: 0.5rem; display: flex; align-items: center; font-size: 0.85rem;">Auto-loaded</span>
+                        <input type="text" class="form-input bill-code" placeholder="Code" name="items[${billItemCount}][code]" value="${code}" readonly style="font-size: 0.875rem;">
+                        <input type="datetime-local" class="form-input bill-datetime" placeholder="Date & Time" name="items[${billItemCount}][date_time]" value="${currentDateTime}" readonly style="font-size: 0.875rem;">
+                        <input type="text" class="form-input bill-particulars" placeholder="Particulars *" name="items[${billItemCount}][item_name]" value="${particulars}" required readonly style="font-size: 0.875rem; min-width: 200px;" title="${particulars}">
+                        <input type="number" class="form-input bill-rate" placeholder="Rate" name="items[${billItemCount}][unit_price]" value="${rate}" step="0.01" required readonly style="font-size: 0.875rem; text-align: right;">
+                        <input type="number" class="form-input bill-units" placeholder="Units" name="items[${billItemCount}][quantity]" value="${units}" step="0.01" required readonly style="font-size: 0.875rem; text-align: center;">
+                        <input type="number" class="form-input bill-amount" placeholder="Amount" name="items[${billItemCount}][amount]" value="${amount}" readonly style="font-size: 0.875rem; text-align: right; font-weight: 600;">
+                        <span class="text-muted" style="padding: 0.5rem; display: flex; align-items: center; font-size: 0.75rem; color: #28a745;">✓ Auto</span>
                     `;
                     // Store reference info in data attributes
                     if (item.reference_id) {
@@ -721,9 +744,13 @@ function calculateBillTotal() {
         }
     });
     
-    const discount = parseFloat(document.getElementById('bill_discount').value) || 0;
-    const tax = (subtotal - discount) * 0.12;
-    const total = subtotal - discount + tax;
+    // Discount is always 0 (no PhilHealth yet)
+    const discount = 0;
+    document.getElementById('bill_discount').value = '0.00';
+    
+    // Tax is automatically 12% of subtotal
+    const tax = subtotal * 0.12;
+    const total = subtotal + tax;
     
     document.getElementById('bill_subtotal').value = subtotal.toFixed(2);
     document.getElementById('bill_tax').value = tax.toFixed(2);
@@ -819,10 +846,22 @@ async function handleBillFormSubmit(e) {
     
     console.log('Form submit triggered');
     
+    // Disable button to prevent double-click
+    const createBtn = document.getElementById('createBillBtn');
+    if (createBtn) {
+        createBtn.disabled = true;
+        createBtn.textContent = 'Creating...';
+    }
+    
     // Get the form element
     const form = document.getElementById('createBillForm');
     if (!form) {
         alert('Form not found!');
+        // Re-enable button
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.textContent = 'Create Bill';
+        }
         return;
     }
     
@@ -836,7 +875,7 @@ async function handleBillFormSubmit(e) {
     // Collect data directly from form inputs (don't use FormData to avoid issues)
     const data = {
         patient_id: document.getElementById('bill_patient_id').value,
-        bill_type: document.getElementById('bill_type').value,
+        bill_type: 'other', // Overall bill type - removed from form, using default
         due_date: document.getElementById('bill_due_date').value,
         discount: parseFloat(document.getElementById('bill_discount').value) || 0,
         notes: document.getElementById('bill_notes').value || ''
@@ -948,13 +987,25 @@ async function handleBillFormSubmit(e) {
     } catch (error) {
         console.error('Error creating bill:', error);
         alert('Error creating bill: ' + error.message);
+    } finally {
+        // Re-enable button
+        const createBtn = document.getElementById('createBillBtn');
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.textContent = 'Create Bill';
+        }
     }
 }
 
 function submitBillForm() {
     console.log('Create Bill button clicked');
-    // Call handleBillFormSubmit directly without event
-    handleBillFormSubmit(null);
+    try {
+        // Call handleBillFormSubmit directly without event
+        handleBillFormSubmit(null);
+    } catch (error) {
+        console.error('Error in submitBillForm:', error);
+        alert('Error creating bill: ' + error.message);
+    }
 }
 
 // Handle form submissions - wait for DOM to be ready
@@ -1012,10 +1063,15 @@ document.getElementById('paymentForm').addEventListener('submit', async function
 <style>
 .bill-item-row {
     display: grid;
-    grid-template-columns: 2fr 2fr 1fr 1fr auto;
+    grid-template-columns: 120px 100px 150px 2fr 100px 80px 100px auto;
     gap: 0.5rem;
-    margin-bottom: 0.5rem;
-    align-items: end;
+    padding: 0.75rem;
+    border-bottom: 1px solid #e9ecef;
+    align-items: center;
+}
+
+.bill-items-header {
+    display: none;
 }
 
 .filter-form {
@@ -1037,3 +1093,4 @@ document.getElementById('paymentForm').addEventListener('submit', async function
 
 <?= $this->endSection() ?>
 
+    
