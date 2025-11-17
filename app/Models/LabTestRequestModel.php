@@ -29,29 +29,58 @@ class LabTestRequestModel extends Model
 
     public function getAllWithRelations(array $filters = [])
     {
-        $builder = $this->select('lab_test_requests.*, patients.full_name AS patient_name, doctors.name AS doctor_name, staff_user.name AS staff_name')
-            ->join('patients', 'patients.id = lab_test_requests.patient_id', 'left')
-            ->join('users AS doctors', 'doctors.id = lab_test_requests.doctor_id', 'left')
-            ->join('lab_staff', 'lab_staff.id = lab_test_requests.assigned_staff_id', 'left')
-            ->join('users AS staff_user', 'staff_user.id = lab_staff.user_id', 'left');
-
-        if (!empty($filters['status'])) {
-            $builder->where('lab_test_requests.status', $filters['status']);
+        $db = \Config\Database::connect();
+        
+        // Check if required tables exist
+        $tablesExist = $db->tableExists('lab_test_requests') && 
+                      $db->tableExists('patients') && 
+                      $db->tableExists('users');
+        
+        if (!$tablesExist) {
+            return [];
         }
+        
+        try {
+            // Build select statement based on available tables
+            $selectFields = 'lab_test_requests.*, patients.full_name AS patient_name, doctors.name AS doctor_name';
+            
+            if ($db->tableExists('lab_staff')) {
+                $selectFields .= ', staff_user.name AS staff_name';
+            }
+            
+            $builder = $this->select($selectFields);
+            $builder->join('patients', 'patients.id = lab_test_requests.patient_id', 'left');
+            $builder->join('users AS doctors', 'doctors.id = lab_test_requests.doctor_id', 'left');
+            
+            // Only join lab_staff if table exists
+            if ($db->tableExists('lab_staff')) {
+                $builder->join('lab_staff', 'lab_staff.id = lab_test_requests.assigned_staff_id', 'left');
+                $builder->join('users AS staff_user', 'staff_user.id = lab_staff.user_id', 'left');
+            }
 
-        if (!empty($filters['priority'])) {
-            $builder->where('lab_test_requests.priority', $filters['priority']);
+            if (!empty($filters['status'])) {
+                $builder->where('lab_test_requests.status', $filters['status']);
+            }
+
+            if (!empty($filters['priority'])) {
+                $builder->where('lab_test_requests.priority', $filters['priority']);
+            }
+
+            if (!empty($filters['date_from'])) {
+                $builder->where('lab_test_requests.requested_at >=', $filters['date_from']);
+            }
+
+            if (!empty($filters['date_to'])) {
+                $builder->where('lab_test_requests.requested_at <=', $filters['date_to']);
+            }
+
+            return $builder->orderBy('lab_test_requests.requested_at', 'DESC')->findAll();
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Error in getAllWithRelations: ' . $e->getMessage());
+            // Return empty array on error
+            return [];
         }
-
-        if (!empty($filters['date_from'])) {
-            $builder->where('lab_test_requests.requested_at >=', $filters['date_from']);
-        }
-
-        if (!empty($filters['date_to'])) {
-            $builder->where('lab_test_requests.requested_at <=', $filters['date_to']);
-        }
-
-        return $builder->orderBy('lab_test_requests.requested_at', 'DESC')->findAll();
     }
 
     public function getDashboardMetrics(): array

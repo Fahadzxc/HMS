@@ -145,45 +145,69 @@ class Nurse extends Controller
                         $rx['duration_days'] = $durationDays;
                         $status = $rx['status'] ?? 'pending';
                         
+                        // Determine progress days (times marked as given)
+                        $progressDays = isset($rx['progress_days']) ? (int) $rx['progress_days'] : 0;
+                        
+                        // Get start date from notes (first time marked as given)
+                        $notes = $rx['notes'] ?? '';
+                        $startDate = null;
+                        if (preg_match('/START_DATE:(\d{4}-\d{2}-\d{2})/', $notes, $matches)) {
+                            $startDate = $matches[1];
+                        }
+                        
+                        // Fallback to updated_at if no start date in notes (for old records)
+                        if (!$startDate) {
+                            $startDate = !empty($rx['updated_at']) ? date('Y-m-d', strtotime($rx['updated_at'])) : date('Y-m-d', strtotime($rx['created_at']));
+                        }
+                        
+                        $startDateTime = new \DateTime($startDate);
+                        $startDateTime->setTime(0, 0, 0);
+                        
+                        $today = new \DateTime();
+                        $today->setTime(0, 0, 0);
+                        
+                        $daysElapsed = $startDateTime->diff($today)->days;
+                        $calculatedDay = $daysElapsed + 1; // Day 1 is the first day
+                        
+                        // Use progress_days if available, otherwise fallback to calculated day
+                        if ($progressDays > 0) {
+                            $currentDay = $progressDays;
+                        } else {
+                            $currentDay = $calculatedDay;
+                        }
+                        
+                        if ($durationDays > 0) {
+                            $currentDay = min($currentDay, $durationDays);
+                        } else {
+                            $currentDay = max(1, $currentDay);
+                        }
+                        
+                        $rx['progress_days'] = $currentDay;
+                        $rx['days_elapsed'] = $daysElapsed;
+                        $rx['current_day'] = $currentDay;
+                        $rx['days_remaining'] = $durationDays > 0 ? max(0, $durationDays - $currentDay) : 0;
+                        $rx['is_completed_duration'] = ($durationDays > 0 && $currentDay >= $durationDays);
+                        
+                        $isDailyTracking = ($durationDays > 0);
+                        $rx['is_daily_tracking'] = $isDailyTracking;
+                        
                         if ($status === 'pending') {
                             $pendingPrescriptions[] = $rx;
                         } else {
-                            // Calculate progress for completed prescriptions
-                            $startDate = !empty($rx['updated_at']) ? $rx['updated_at'] : $rx['created_at'];
-                            $startDateTime = new \DateTime($startDate);
-                            $startDateTime->setTime(0, 0, 0);
+                            $needsMoreDoses = ($durationDays > 0 && !$rx['is_completed_duration']);
                             
-                            $today = new \DateTime();
-                            $today->setTime(0, 0, 0);
-                            
-                            $daysElapsed = $startDateTime->diff($today)->days;
-                            $currentDay = $daysElapsed + 1; // Day 1 is the first day
-                            
-                            $rx['days_elapsed'] = $daysElapsed;
-                            $rx['current_day'] = $currentDay;
-                            // Days remaining = total days - current day
-                            // Example: Day 1 of 5 = 4 days left (Day 2, 3, 4, 5)
-                            $rx['days_remaining'] = max(0, $durationDays - $currentDay);
-                            $rx['is_completed_duration'] = ($currentDay > $durationDays);
-                            
-                            // If duration not complete, show in pending again tomorrow
-                            if ($durationDays > 0 && !$rx['is_completed_duration']) {
+                            if ($needsMoreDoses) {
                                 // Check if it was already given today
-                                // startDate is the FIRST day it was given (preserved in updated_at)
-                                // If currentDay > 1, it means we're past Day 1, so it should appear in pending
-                                $lastGivenDate = date('Y-m-d', strtotime($startDate));
+                                $lastGivenDate = !empty($rx['updated_at']) ? date('Y-m-d', strtotime($rx['updated_at'])) : null;
                                 $todayDate = date('Y-m-d');
                                 $wasGivenToday = ($lastGivenDate === $todayDate);
                                 
-                                // If it's Day 1 and was given today, show in completed
-                                // If it's Day 2+, show in pending so nurse can mark as given for today
-                                if ($currentDay > 1 || !$wasGivenToday) {
-                                    // Day 2+ or not given today yet, show in pending
-                                    $rx['is_daily_tracking'] = true;
-                                    $pendingPrescriptions[] = $rx;
-                                } else {
-                                    // Day 1 and already given today, show in completed
+                                if ($wasGivenToday) {
+                                    // Already given today, show in completed (with progress indicator)
                                     $completedPrescriptions[] = $rx;
+                                } else {
+                                    // Not given today yet, show in pending so nurse can mark as given
+                                    $pendingPrescriptions[] = $rx;
                                 }
                             } else {
                                 // Duration complete, show in completed
@@ -654,22 +678,79 @@ class Nurse extends Controller
             log_message('debug', 'ENUM update attempt: ' . $e->getMessage());
         }
         
+        // Ensure progress tracking column exists
+        try {
+            $db->query("ALTER TABLE prescriptions ADD COLUMN progress_days INT DEFAULT 0");
+        } catch (\Exception $e) {
+            // Column might already exist
+            log_message('debug', 'progress_days column check: ' . $e->getMessage());
+        }
+        
+        // Determine prescription duration (in days)
+        $durationDays = 0;
+        $itemsForDuration = json_decode($prescription['items_json'] ?? '[]', true) ?: [];
+        $durationSource = $itemsForDuration[0]['duration'] ?? '';
+        if (!empty($durationSource) && preg_match('/(\d+)/', $durationSource, $durationMatch)) {
+            $durationDays = (int) $durationMatch[1];
+        }
+        
         // Check if this is the first time marking as given
         $currentStatus = $prescription['status'] ?? 'pending';
         $wasCompleted = ($currentStatus === 'completed');
+        
+        // Get or set the start date (first time it was marked as given)
+        $notes = $prescription['notes'] ?? '';
+        $startDate = null;
+        
+        // Try to extract start date from notes (format: START_DATE:YYYY-MM-DD)
+        if (preg_match('/START_DATE:(\d{4}-\d{2}-\d{2})/', $notes, $matches)) {
+            $startDate = $matches[1];
+        }
+        
+        // If no start date found and this is first time, set it
+        if (!$startDate && !$wasCompleted) {
+            $startDate = date('Y-m-d');
+            // Store start date in notes
+            $notes = trim($notes);
+            if (!empty($notes) && !str_contains($notes, 'START_DATE:')) {
+                $notes .= "\nSTART_DATE:" . $startDate;
+            } elseif (empty($notes)) {
+                $notes = "START_DATE:" . $startDate;
+            }
+        }
+        
+        // Determine progress days (how many days/doses already given)
+        $existingProgress = isset($prescription['progress_days']) ? (int) $prescription['progress_days'] : 0;
+        $lastGivenDate = !empty($prescription['updated_at']) ? date('Y-m-d', strtotime($prescription['updated_at'])) : null;
+        $todayDate = date('Y-m-d');
+        $shouldIncrementProgress = true;
+        if ($lastGivenDate === $todayDate && $existingProgress > 0) {
+            // Already marked as given today, don't increment to avoid double counting
+            $shouldIncrementProgress = false;
+        }
+        
+        if ($shouldIncrementProgress) {
+            $existingProgress++;
+            if ($durationDays > 0) {
+                $existingProgress = min($existingProgress, $durationDays);
+            }
+        }
         
         // Update using direct query
         $builder = $db->table('prescriptions');
         $builder->where('id', $prescriptionId);
         
-        // Only update updated_at if this is the FIRST time marking as given
-        // This preserves the start date for accurate day counting
-        $updateData = ['status' => 'completed'];
-        if (!$wasCompleted) {
-            // First time marking as given - set the start date
-            $updateData['updated_at'] = date('Y-m-d H:i:s');
+        // Always update status to completed and updated_at (for last given check)
+        $updateData = [
+            'status' => 'completed',
+            'updated_at' => date('Y-m-d H:i:s'), // Track last given date
+            'progress_days' => $existingProgress
+        ];
+        
+        // If first time, also update notes with start date
+        if (!$wasCompleted && $startDate) {
+            $updateData['notes'] = $notes;
         }
-        // If already completed, don't update updated_at to preserve the original start date
         
         $result = $builder->update($updateData);
 

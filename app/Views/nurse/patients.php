@@ -208,43 +208,13 @@
 </section>
 
 <style>
-/* Room column styling */
-.col-room {
-    flex: 0 0 100px;
-    text-align: left;
+/* Patient Records Section - Spacing and Alignment Fixes */
+.panel-header {
+    margin-bottom: 1.5rem;
 }
 
-.room-info {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-}
-
-.room-number {
-    color: #1e293b;
-    font-weight: 600;
-    background: #dbeafe;
-    padding: 0.125rem 0.375rem;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
-}
-
-.text-muted {
-    color: #64748b;
-    font-size: 0.75rem;
-}
-
-/* Adjust existing column widths to accommodate room column */
-.table-header .row > div, .table-row .row > div {
-    padding: 0.875rem 0;
-}
-
-/* Make header and rows align by column widths (override space-between) */
-.table-header .row,
-.table-row .row {
-    justify-content: flex-start;
-    gap: 0;
+.panel-header .row.between {
+    margin-top: 0.75rem;
 }
 
 /* Table header styling */
@@ -256,15 +226,13 @@
     color: #475569;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-}
-
-.table-header .patients-grid > div {
-    padding: 1rem 0;
+    padding: 0;
 }
 
 /* Table row styling */
 .table-row {
     border-bottom: 1px solid #f1f5f9;
+    padding: 0;
 }
 
 .table-row:last-child {
@@ -276,68 +244,180 @@
     display: grid;
     grid-template-columns: 90px 280px 130px 220px 130px 100px 200px; /* ID, Name, Age, Contact, Status, Room, Doctor */
     align-items: center;
-    column-gap: 16px;
-    padding: 0 1rem;
+    column-gap: 20px;
+    padding: 0 1.25rem;
+    min-height: 60px;
+}
+
+/* Header cells - consistent padding */
+.table-header .patients-grid > div {
+    padding: 1rem 0;
+    display: flex;
+    align-items: center;
+    line-height: 1.4;
+}
+
+/* Row cells - consistent padding and alignment */
+.table-row .patients-grid > div {
+    padding: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 60px;
+}
+
+/* Column-specific adjustments */
+.col-id {
+    text-align: left;
+    padding-left: 0;
+}
+
+.col-id.patient-id {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.col-name {
+    text-align: left;
+}
+
+.patient-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.patient-avatar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.patient-details {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.patient-details strong {
+    line-height: 1.4;
+    margin: 0;
+}
+
+.blood-type {
+    margin: 0;
+    line-height: 1.4;
+}
+
+.col-age {
+    text-align: left;
+    gap: 0.25rem;
+}
+
+.col-age > div {
+    line-height: 1.5;
+    margin: 0;
+}
+
+.col-contact {
+    text-align: left;
+    gap: 0.25rem;
+}
+
+.col-contact > div {
+    line-height: 1.5;
+    margin: 0;
+}
+
+.col-status {
+    text-align: left;
+    gap: 0.25rem;
+}
+
+.col-status > div {
+    margin: 0;
+}
+
+.col-status .badge {
+    display: inline-block;
+    margin: 0;
+}
+
+.col-status .text-muted,
+.col-status > div:last-child {
+    margin-top: 0.25rem;
+}
+
+.col-room {
+    text-align: left;
+}
+
+.room-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    width: 100%;
+}
+
+.room-number {
+    color: #1e293b;
+    font-weight: 600;
+    background: #dbeafe;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    display: inline-block;
+}
+
+.col-room .text-muted {
+    color: #64748b;
+    font-size: 0.8125rem;
+    margin: 0;
+}
+
+.col-doctor {
+    text-align: left;
+    gap: 0.25rem;
+}
+
+.col-doctor > div {
+    line-height: 1.5;
+    margin: 0;
+}
+
+.col-doctor .text-muted {
+    color: #64748b;
+    font-size: 0.8125rem;
+    margin: 0;
+}
+
+.text-muted {
+    color: #64748b;
+    font-size: 0.75rem;
+    line-height: 1.4;
 }
 
 /* Prevent legacy flex widths from interfering */
 .patients-grid > div { 
     flex: none; 
     min-width: 0;
-    padding: 0;
 }
-
-.col-id {
-    flex: 0 0 90px;
-    text-align: left;
-}
-
-.col-name {
-    flex: 0 0 280px;
-    text-align: left;
-}
-
-.col-age {
-    flex: 0 0 130px;
-    text-align: left;
-}
-
-.col-age > div {
-    line-height: 1.5;
-}
-
-.col-contact {
-    flex: 0 0 220px;
-    text-align: left;
-}
-
-.col-status {
-    flex: 0 0 130px;
-    text-align: left;
-}
-
-.col-status .badge {
-    display: inline-block;
-    margin-bottom: 0.25rem;
-}
-
-.col-room {
-    flex: 0 0 100px;
-    text-align: left;
-}
-
-.col-doctor {
-    flex: 0 0 200px;
-    text-align: left;
-}
-
-/* removed actions column for nurse view */
 
 /* Responsive adjustments */
 @media (max-width: 1200px) {
-    .col-room { flex: 0 0 90px; }
-    .col-name { flex: 0 0 220px; }
-    .col-contact { flex: 0 0 200px; }
+    .patients-grid {
+        grid-template-columns: 80px 240px 120px 200px 120px 90px 180px;
+        column-gap: 16px;
+        padding: 0 1rem;
+    }
+    
     .room-number {
         font-size: 0.75rem;
         padding: 0.1rem 0.25rem;
@@ -345,6 +425,10 @@
 }
 
 @media (max-width: 768px) {
+    .patients-grid {
+        grid-template-columns: 70px 200px 100px 180px 110px 0px 160px;
+    }
+    
     .col-room {
         display: none;
     }

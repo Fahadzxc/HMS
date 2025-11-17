@@ -1,127 +1,159 @@
 <!-- Doctor dashboard partial (inner content only) -->
+
 <section class="panel">
     <header class="panel-header">
-        <h2>Doctor Dashboard</h2>
-        <p>Quick overview of today's appointments and patient care</p>
+        <div class="page-header-content">
+            <div>
+                <h2 class="page-title">
+                    <span>👨‍⚕️</span>
+                    Doctor Dashboard
+                </h2>
+                <p class="page-subtitle">
+                    Quick overview of today's appointments and patient care
+                </p>
+            </div>
+        </div>
     </header>
-    <div class="stack">
-        <div class="kpi-grid">
-            <div class="kpi-card">
-                <div class="kpi-content">
-                    <div class="kpi-label">Today's Appointments</div>
-                    <div class="kpi-value">12</div>
-                    <div class="kpi-change kpi-positive">+2 from yesterday</div>
-                </div>
+</section>
+
+<!-- KPI Cards -->
+<section class="panel panel-spaced">
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-content">
+                <div class="kpi-label">Today's Appointments</div>
+                <div class="kpi-value"><?= number_format($todayAppointments ?? 0) ?></div>
+                <div class="kpi-change kpi-positive">+2 from yesterday</div>
             </div>
-            <div class="kpi-card">
-                <div class="kpi-content">
-                    <div class="kpi-label">Total Patients</div>
-                    <div class="kpi-value">1,247</div>
-                    <div class="kpi-change kpi-positive">&nbsp;</div>
-                </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-content">
+                <div class="kpi-label">Total Patients</div>
+                <div class="kpi-value"><?= number_format($totalPatients ?? 0) ?></div>
+                <div class="kpi-change">&nbsp;</div>
             </div>
-            <div class="kpi-card">
-                <div class="kpi-content">
-                    <div class="kpi-label">Pending Reports</div>
-                    <div class="kpi-value">8</div>
-                    <div class="kpi-change kpi-negative">-1 from yesterday</div>
-                </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-content">
+                <div class="kpi-label">Pending Reports</div>
+                <div class="kpi-value"><?= number_format($pendingReports ?? 0) ?></div>
+                <div class="kpi-change kpi-negative">-1 from yesterday</div>
             </div>
-            <div class="kpi-card">
-                <div class="kpi-content">
-                    <div class="kpi-label">Revenue This Month</div>
-                    <div class="kpi-value">₱125,580</div>
-                    <div class="kpi-change kpi-positive">+8% from last month</div>
-                </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-content">
+                <div class="kpi-label">Revenue This Month</div>
+                <div class="kpi-value">₱<?= number_format($monthRevenue ?? 0, 2) ?></div>
+                <div class="kpi-change kpi-positive">+8% from last month</div>
             </div>
         </div>
     </div>
 </section>
 
-<div class="page-grid">
-    <section class="panel">
-        <header class="panel-header">
-            <h2>Today's Appointments</h2>
-            <p>Your scheduled appointments for today</p>
-        </header>
-        <div class="stack">
-            <div class="card">
-                <div class="row between">
-                    <div>
-                        <h3>Sarah Johnson</h3>
-                        <p>Regular Checkup</p>
-                    </div>
-                    <div class="row">
-                        <span>09:00 AM</span>
-                        <span class="badge low">completed</span>
-                    </div>
-                </div>
-                <a class="link" href="#">View Details</a>
-            </div>
-            <div class="card">
-                <div class="row between">
-                    <div>
-                        <h3>Michael Chen</h3>
-                        <p>Follow-up</p>
-                    </div>
-                    <div class="row">
-                        <span>10:30 AM</span>
-                        <span class="badge medium">in progress</span>
-                    </div>
-                </div>
-                <a class="link" href="#">View Details</a>
-            </div>
-            <div class="card">
-                <div class="row between">
-                    <div>
-                        <h3>Emma Williams</h3>
-                        <p>Consultation</p>
-                    </div>
-                    <div class="row">
-                        <span>11:45 AM</span>
-                        <span class="badge high">upcoming</span>
-                    </div>
-                </div>
-                <a class="link" href="#">View Details</a>
-            </div>
-        </div>
-    </section>
-
-    <section class="panel">
-        <header class="panel-header">
-            <h2>Quick Actions</h2>
-        </header>
-        <div class="actions-grid">
-            <a class="action-tile" href="#"><span class="icon"></span><span>New Appointment</span></a>
-            <a class="action-tile" href="#"><span class="icon"></span><span>Write Prescription</span></a>
-            <a class="action-tile" href="#"><span class="icon"></span><span>Lab Request</span></a>
-            <a class="action-tile" href="#"><span class="icon"></span><span>Patient Report</span></a>
-        </div>
-    </section>
-</div>
-
+<!-- Today's Appointments -->
 <section class="panel panel-spaced">
     <header class="panel-header">
-        <h2>Patient Care Overview</h2>
-        <p>Your current patient care activities and statistics</p>
+        <h2>Today's Appointments</h2>
+        <p>Your scheduled appointments for today</p>
     </header>
     <div class="stack">
-        <div class="card">
-            <div class="row between">
-                <div>
-                    <h3>This Week's Consultations</h3>
-                    <p>Summary of your weekly activities</p>
+        <?php if (!empty($appointments)): ?>
+            <?php foreach ($appointments as $appointment): ?>
+                <div class="card" style="padding: 1.25rem; border: 1px solid #e2e8f0; border-radius: 0.75rem; margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                        <div>
+                            <h3 style="margin: 0 0 0.25rem; font-size: 1.1rem; font-weight: 600; color: #1e293b;"><?= esc($appointment['patient_name'] ?? 'N/A') ?></h3>
+                            <p style="margin: 0; color: #64748b; font-size: 0.9rem;"><?= esc($appointment['type'] ?? 'Consultation') ?></p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="color: #475569; font-size: 0.9rem; font-weight: 500;"><?= !empty($appointment['appointment_time']) ? date('g:i A', strtotime($appointment['appointment_time'])) : '—' ?></span>
+                            <?php
+                            $status = strtolower($appointment['status'] ?? 'upcoming');
+                            $badgeClass = '';
+                            if ($status === 'completed') {
+                                $badgeClass = 'badge-success';
+                            } elseif ($status === 'in progress' || $status === 'in_progress') {
+                                $badgeClass = 'badge-warning';
+                            } else {
+                                $badgeClass = 'badge-danger';
+                            }
+                            ?>
+                            <span class="badge <?= $badgeClass ?>" style="text-transform: uppercase; font-size: 0.75rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: 999px;">
+                                <?= strtoupper(str_replace('_', ' ', $status)) ?>
+                            </span>
+                        </div>
+                    </div>
+                    <a href="<?= base_url('doctor/appointments/view/' . ($appointment['id'] ?? '')) ?>" style="color: #3b82f6; text-decoration: none; font-size: 0.9rem; font-weight: 500;">View Details</a>
                 </div>
-                <div class="row">
-                    <span class="badge success">Active</span>
-                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div style="padding: 2rem; text-align: center; color: #64748b;">
+                <p style="margin: 0; font-size: 1rem;">No appointments scheduled for today</p>
             </div>
-            <ul class="list">
-                <li class="list-item info"><span class="dot"></span>Regular Checkups <strong>28</strong></li>
-                <li class="list-item success"><span class="dot"></span>Follow-up Visits <strong>15</strong></li>
-                <li class="list-item warn"><span class="dot"></span>Emergency Cases <strong>6</strong></li>
-                <li class="list-item"><span class="dot"></span>Consultations <strong>22</strong></li>
-            </ul>
-        </div>
+        <?php endif; ?>
     </div>
 </section>
+
+<!-- Recent Appointments -->
+<section class="panel panel-spaced">
+    <header class="panel-header">
+        <h2>Recent Appointments</h2>
+        <p>Your recent appointments from the past week</p>
+    </header>
+    <div class="stack">
+        <?php if (!empty($recentAppointments)): ?>
+            <?php foreach ($recentAppointments as $appointment): ?>
+                <div class="card" style="padding: 1.25rem; border: 1px solid #e2e8f0; border-radius: 0.75rem; margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                        <div>
+                            <h3 style="margin: 0 0 0.25rem; font-size: 1.1rem; font-weight: 600; color: #1e293b;"><?= esc($appointment['patient_name'] ?? 'N/A') ?></h3>
+                            <p style="margin: 0; color: #64748b; font-size: 0.9rem;"><?= esc($appointment['type'] ?? 'Consultation') ?></p>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
+                            <span style="color: #475569; font-size: 0.9rem; font-weight: 500;">
+                                <?= !empty($appointment['appointment_date']) ? date('M j, Y', strtotime($appointment['appointment_date'])) : '—' ?>
+                                <?= !empty($appointment['appointment_time']) ? ' • ' . date('g:i A', strtotime($appointment['appointment_time'])) : '' ?>
+                            </span>
+                            <?php
+                            $status = strtolower($appointment['status'] ?? 'completed');
+                            $badgeClass = '';
+                            if ($status === 'completed') {
+                                $badgeClass = 'badge-success';
+                            } elseif ($status === 'in progress' || $status === 'in_progress') {
+                                $badgeClass = 'badge-warning';
+                            } else {
+                                $badgeClass = 'badge-danger';
+                            }
+                            ?>
+                            <span class="badge <?= $badgeClass ?>" style="text-transform: uppercase; font-size: 0.75rem; font-weight: 600; padding: 0.35rem 0.75rem; border-radius: 999px;">
+                                <?= strtoupper(str_replace('_', ' ', $status)) ?>
+                            </span>
+                        </div>
+                    </div>
+                    <a href="<?= base_url('doctor/appointments/view/' . ($appointment['id'] ?? '')) ?>" style="color: #3b82f6; text-decoration: none; font-size: 0.9rem; font-weight: 500;">View Details</a>
+                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div style="padding: 2rem; text-align: center; color: #64748b;">
+                <p style="margin: 0; font-size: 1rem;">No recent appointments</p>
+            </div>
+        <?php endif; ?>
+    </div>
+</section>
+
+<style>
+.badge-success {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.badge-warning {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.badge-danger {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+</style>

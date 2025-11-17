@@ -56,65 +56,6 @@
     </div>
 </section>
 
-<!-- Filters -->
-<section class="panel panel-spaced">
-    <header class="panel-header">
-        <h3>Filters</h3>
-    </header>
-    <div class="stack">
-        <form method="GET" action="/accounts/insurance" class="filter-form">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Status</label>
-                    <select name="status" class="form-input">
-                        <option value="">All Status</option>
-                        <option value="pending" <?= ($filters['status'] ?? '') === 'pending' ? 'selected' : '' ?>>Pending</option>
-                        <option value="submitted" <?= ($filters['status'] ?? '') === 'submitted' ? 'selected' : '' ?>>Submitted</option>
-                        <option value="approved" <?= ($filters['status'] ?? '') === 'approved' ? 'selected' : '' ?>>Approved</option>
-                        <option value="rejected" <?= ($filters['status'] ?? '') === 'rejected' ? 'selected' : '' ?>>Rejected</option>
-                        <option value="paid" <?= ($filters['status'] ?? '') === 'paid' ? 'selected' : '' ?>>Paid</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Patient</label>
-                    <select name="patient_id" class="form-input">
-                        <option value="">All Patients</option>
-                        <?php foreach ($patients ?? [] as $patient): ?>
-                            <option value="<?= $patient['id'] ?>" <?= ($filters['patient_id'] ?? '') == $patient['id'] ? 'selected' : '' ?>>
-                                <?= esc($patient['full_name']) ?> (<?= esc($patient['patient_id']) ?>)
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Insurance Provider</label>
-                    <select name="insurance_provider" class="form-input">
-                        <option value="">All Providers</option>
-                        <?php foreach ($providers ?? [] as $provider): ?>
-                            <option value="<?= esc($provider['insurance_provider']) ?>" <?= ($filters['insurance_provider'] ?? '') === $provider['insurance_provider'] ? 'selected' : '' ?>>
-                                <?= esc($provider['insurance_provider']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Date From</label>
-                    <input type="date" name="date_from" value="<?= esc($filters['date_from'] ?? '') ?>" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label>Date To</label>
-                    <input type="date" name="date_to" value="<?= esc($filters['date_to'] ?? '') ?>" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label>&nbsp;</label>
-                    <button type="submit" class="btn-primary">Filter</button>
-                    <a href="/accounts/insurance" class="btn-secondary">Clear</a>
-                </div>
-            </div>
-        </form>
-    </div>
-</section>
-
 <!-- Claims Table -->
 <section class="panel panel-spaced">
     <header class="panel-header">

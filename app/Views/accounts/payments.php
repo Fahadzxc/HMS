@@ -91,66 +91,6 @@
 </section>
 <?php endif; ?>
 
-<!-- Filters -->
-<section class="panel panel-spaced">
-    <header class="panel-header">
-        <h3>Filters</h3>
-    </header>
-    <div class="stack">
-        <form method="GET" action="/accounts/payments" class="filter-form">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Status</label>
-                    <select name="status" class="form-input">
-                        <option value="">All Status</option>
-                        <option value="completed" <?= ($filters['status'] ?? '') === 'completed' ? 'selected' : '' ?>>Completed</option>
-                        <option value="pending" <?= ($filters['status'] ?? '') === 'pending' ? 'selected' : '' ?>>Pending</option>
-                        <option value="failed" <?= ($filters['status'] ?? '') === 'failed' ? 'selected' : '' ?>>Failed</option>
-                        <option value="refunded" <?= ($filters['status'] ?? '') === 'refunded' ? 'selected' : '' ?>>Refunded</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Patient</label>
-                    <select name="patient_id" class="form-input">
-                        <option value="">All Patients</option>
-                        <?php foreach ($patients ?? [] as $patient): ?>
-                            <option value="<?= $patient['id'] ?>" <?= ($filters['patient_id'] ?? '') == $patient['id'] ? 'selected' : '' ?>>
-                                <?= esc($patient['full_name']) ?> (<?= esc($patient['patient_id']) ?>)
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Payment Method</label>
-                    <select name="payment_method" class="form-input">
-                        <option value="">All Methods</option>
-                        <option value="cash" <?= ($filters['payment_method'] ?? '') === 'cash' ? 'selected' : '' ?>>Cash</option>
-                        <option value="credit_card" <?= ($filters['payment_method'] ?? '') === 'credit_card' ? 'selected' : '' ?>>Credit Card</option>
-                        <option value="debit_card" <?= ($filters['payment_method'] ?? '') === 'debit_card' ? 'selected' : '' ?>>Debit Card</option>
-                        <option value="insurance" <?= ($filters['payment_method'] ?? '') === 'insurance' ? 'selected' : '' ?>>Insurance</option>
-                        <option value="check" <?= ($filters['payment_method'] ?? '') === 'check' ? 'selected' : '' ?>>Check</option>
-                        <option value="bank_transfer" <?= ($filters['payment_method'] ?? '') === 'bank_transfer' ? 'selected' : '' ?>>Bank Transfer</option>
-                        <option value="online" <?= ($filters['payment_method'] ?? '') === 'online' ? 'selected' : '' ?>>Online</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Date From</label>
-                    <input type="date" name="date_from" value="<?= esc($filters['date_from'] ?? '') ?>" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label>Date To</label>
-                    <input type="date" name="date_to" value="<?= esc($filters['date_to'] ?? '') ?>" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label>&nbsp;</label>
-                    <button type="submit" class="btn-primary">Filter</button>
-                    <a href="/accounts/payments" class="btn-secondary">Clear</a>
-                </div>
-            </div>
-        </form>
-    </div>
-</section>
-
 <!-- Payments Table -->
 <section class="panel panel-spaced">
     <header class="panel-header">

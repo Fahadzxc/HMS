@@ -1,52 +1,66 @@
-<!-- Accountant dashboard partial (inner content only) -->
+<?= $this->extend('template') ?>
+
+<?= $this->section('content') ?>
+
 <section class="panel">
     <header class="panel-header">
-        <h2>Accounts Dashboard</h2>
-        <p>Welcome back, <?= session()->get('name') ?>. Here's your financial overview for today.</p>
+        <div class="page-header-content">
+            <div>
+                <h2 class="page-title">
+                    <span>📊</span>
+                    Accounts Dashboard
+                </h2>
+                <p class="page-subtitle">
+                    Welcome back, <?= esc(session()->get('name') ?? 'Accountant') ?>. Here's your financial overview for today.
+                    <span class="date-text"> • Date: <?= date('F j, Y') ?></span>
+                </p>
+            </div>
+        </div>
     </header>
-    <div class="stack">
-        <div class="actions-grid">
-            <div class="action-tile">
-                <span>Today's Revenue</span>
-                <strong>₱<?= number_format($today_revenue ?? 0, 2) ?></strong>
+</section>
+
+<!-- KPI Cards -->
+<section class="panel panel-spaced">
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-content">
+                <div class="kpi-label">Today's Revenue</div>
+                <div class="kpi-value">₱<?= number_format($today_revenue ?? 0, 2) ?></div>
+                <div class="kpi-change kpi-positive">Today</div>
             </div>
-            <div class="action-tile">
-                <span>Pending Bills</span>
-                <strong><?= $pending_bills_count ?? 0 ?></strong>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-content">
+                <div class="kpi-label">Pending Bills</div>
+                <div class="kpi-value"><?= $pending_bills_count ?? 0 ?></div>
+                <div class="kpi-change kpi-warning">Requires attention</div>
             </div>
-            <div class="action-tile">
-                <span>Insurance Claims</span>
-                <strong>8</strong>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-content">
+                <div class="kpi-label">Insurance Claims</div>
+                <div class="kpi-value"><?= $insurance_claims_count ?? 8 ?></div>
+                <div class="kpi-change kpi-positive">All claims</div>
             </div>
-            <div class="action-tile">
-                <span>Overdue Payments</span>
-                <strong><?= $overdue_bills_count ?? 0 ?></strong>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-content">
+                <div class="kpi-label">Overdue Payments</div>
+                <div class="kpi-value"><?= $overdue_bills_count ?? 0 ?></div>
+                <div class="kpi-change kpi-negative">Requires attention</div>
             </div>
         </div>
     </div>
 </section>
 
-<section class="panel">
-    <header class="panel-header">
-        <h3>Quick Actions</h3>
-    </header>
-    <div class="stack">
-        <div class="button-group">
-            <a href="/accounts/billing" class="button button-primary">Process Billing</a>
-            <a href="/accounts/payments" class="button button-secondary">Record Payments</a>
-            <a href="/accounts/insurance" class="button button-secondary">Insurance Claims</a>
-            <a href="/accounts/reports" class="button button-secondary">Financial Reports</a>
-        </div>
-    </div>
-</section>
-
-<section class="panel">
+<!-- Pending Bills -->
+<section class="panel panel-spaced">
     <header class="panel-header">
         <h3>Pending Bills</h3>
     </header>
     <div class="stack">
         <div class="table-container">
-            <table class="table">
+            <table class="data-table">
                 <thead>
                     <tr>
                         <th>Bill ID</th>
@@ -62,10 +76,10 @@
                     <?php if (!empty($recent_bills)): ?>
                         <?php foreach ($recent_bills as $bill): ?>
                             <tr>
-                                <td><?= esc($bill['bill_number'] ?? 'N/A') ?></td>
+                                <td><strong><?= esc($bill['bill_number'] ?? 'N/A') ?></strong></td>
                                 <td><?= esc($bill['patient_name'] ?? 'N/A') ?></td>
                                 <td><?= ucfirst(esc($bill['bill_type'] ?? 'N/A')) ?></td>
-                                <td>₱<?= number_format($bill['total_amount'] ?? 0, 2) ?></td>
+                                <td><strong>₱<?= number_format($bill['total_amount'] ?? 0, 2) ?></strong></td>
                                 <td><?= $bill['due_date'] ? date('M j, Y', strtotime($bill['due_date'])) : '—' ?></td>
                                 <td>
                                     <span class="badge badge-<?= 
@@ -73,17 +87,17 @@
                                         ($bill['status'] === 'overdue' ? 'danger' : 
                                         ($bill['status'] === 'partial' ? 'warning' : 'warning'))
                                     ?>">
-                                        <?= ucfirst(esc($bill['status'] ?? 'pending')) ?>
+                                        <?= strtoupper(esc($bill['status'] ?? 'pending')) ?>
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="/accounts/billing?bill_id=<?= $bill['id'] ?>" class="button button-small">View</a>
+                                    <a href="/accounts/billing?bill_id=<?= $bill['id'] ?>" class="btn-xs btn-primary">View</a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="7" class="text-center text-muted">No pending bills</td>
+                            <td colspan="7" class="text-center-empty">No pending bills</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -92,13 +106,14 @@
     </div>
 </section>
 
-<section class="panel">
+<!-- Recent Payments -->
+<section class="panel panel-spaced">
     <header class="panel-header">
         <h3>Recent Payments</h3>
     </header>
     <div class="stack">
         <div class="table-container">
-            <table class="table">
+            <table class="data-table">
                 <thead>
                     <tr>
                         <th>Payment ID</th>
@@ -113,16 +128,16 @@
                     <?php if (!empty($recent_payments)): ?>
                         <?php foreach ($recent_payments as $payment): ?>
                             <tr>
-                                <td><?= esc($payment['payment_number'] ?? 'N/A') ?></td>
+                                <td><strong><?= esc($payment['payment_number'] ?? 'N/A') ?></strong></td>
                                 <td><?= esc($payment['patient_name'] ?? 'N/A') ?></td>
-                                <td>₱<?= number_format($payment['amount'] ?? 0, 2) ?></td>
+                                <td><strong>₱<?= number_format($payment['amount'] ?? 0, 2) ?></strong></td>
                                 <td><?= ucfirst(str_replace('_', ' ', esc($payment['payment_method'] ?? 'N/A'))) ?></td>
                                 <td>
                                     <span class="badge badge-<?= 
                                         $payment['status'] === 'completed' ? 'success' : 
                                         ($payment['status'] === 'failed' ? 'danger' : 'warning')
                                     ?>">
-                                        <?= ucfirst(esc($payment['status'] ?? 'pending')) ?>
+                                        <?= strtoupper(esc($payment['status'] ?? 'pending')) ?>
                                     </span>
                                 </td>
                                 <td><?= $payment['payment_date'] ? date('M j, Y g:i A', strtotime($payment['created_at'])) : '—' ?></td>
@@ -130,7 +145,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" class="text-center text-muted">No recent payments</td>
+                            <td colspan="6" class="text-center-empty">No recent payments</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -139,13 +154,14 @@
     </div>
 </section>
 
-<section class="panel">
+<!-- Insurance Claims -->
+<section class="panel panel-spaced">
     <header class="panel-header">
         <h3>Insurance Claims</h3>
     </header>
     <div class="stack">
         <div class="table-container">
-            <table class="table">
+            <table class="data-table">
                 <thead>
                     <tr>
                         <th>Claim ID</th>
@@ -157,24 +173,36 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>C001234</td>
-                        <td>Juan Dela Cruz</td>
-                        <td>PhilHealth</td>
-                        <td>₱5,000</td>
-                        <td><span class="badge badge-warning">Processing</span></td>
-                        <td><a href="#" class="button button-small">Update</a></td>
-                    </tr>
-                    <tr>
-                        <td>C001235</td>
-                        <td>Maria Garcia</td>
-                        <td>Maxicare</td>
-                        <td>₱8,500</td>
-                        <td><span class="badge badge-success">Approved</span></td>
-                        <td><a href="#" class="button button-small">View</a></td>
-                    </tr>
+                    <?php if (!empty($recent_claims)): ?>
+                        <?php foreach ($recent_claims as $claim): ?>
+                            <tr>
+                                <td><strong><?= esc($claim['claim_number'] ?? 'N/A') ?></strong></td>
+                                <td><?= esc($claim['patient_name'] ?? 'N/A') ?></td>
+                                <td><?= esc($claim['insurance_provider'] ?? 'N/A') ?></td>
+                                <td><strong>₱<?= number_format($claim['claim_amount'] ?? 0, 2) ?></strong></td>
+                                <td>
+                                    <span class="badge badge-<?= 
+                                        $claim['status'] === 'approved' ? 'success' : 
+                                        ($claim['status'] === 'rejected' ? 'danger' : 
+                                        ($claim['status'] === 'paid' ? 'info' : 'warning'))
+                                    ?>">
+                                        <?= ucfirst(esc($claim['status'] ?? 'pending')) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="/accounts/insurance?claim_id=<?= $claim['id'] ?>" class="btn-xs btn-primary">View</a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="6" class="text-center-empty">No insurance claims found</td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
 </section>
+
+<?= $this->endSection() ?>

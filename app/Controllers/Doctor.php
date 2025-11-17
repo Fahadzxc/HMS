@@ -7,6 +7,8 @@ use App\Models\DoctorScheduleModel;
 use App\Models\AppointmentModel;
 use App\Models\PrescriptionModel;
 use App\Models\MedicationModel;
+use App\Models\LabTestRequestModel;
+use App\Models\LabTestResultModel;
 
 class Doctor extends Controller
 {
@@ -16,10 +18,93 @@ class Doctor extends Controller
 			return redirect()->to('/login');
 		}
 
+		$doctorId = session()->get('user_id');
+		$appointmentModel = new AppointmentModel();
+		$patientModel = new \App\Models\PatientModel();
+		$db = \Config\Database::connect();
+
+		// Get today's appointments
+		$today = date('Y-m-d');
+		$todayAppointments = $appointmentModel
+			->where('doctor_id', $doctorId)
+			->where('appointment_date', $today)
+			->where('status !=', 'cancelled')
+			->orderBy('appointment_time', 'ASC')
+			->findAll();
+
+		// Format appointments for display
+		$appointments = [];
+		foreach ($todayAppointments as $apt) {
+			$patient = $patientModel->find($apt['patient_id']);
+			$appointments[] = [
+				'id' => $apt['id'],
+				'patient_name' => $patient['full_name'] ?? 'N/A',
+				'type' => $apt['appointment_type'] ?? 'Consultation',
+				'appointment_time' => $apt['appointment_time'] ?? null,
+				'status' => $apt['status'] ?? 'upcoming',
+			];
+		}
+
+		// Get total patients (unique patients seen by this doctor)
+		$totalPatients = $db->query("
+			SELECT COUNT(DISTINCT patient_id) as total 
+			FROM appointments 
+			WHERE doctor_id = ? AND status != 'cancelled'
+		", [$doctorId])->getRow()->total ?? 0;
+
+		// Get pending reports (prescriptions with pending status)
+		$pendingReports = $db->table('prescriptions')
+			->where('doctor_id', $doctorId)
+			->where('status', 'pending')
+			->countAllResults();
+
+		// Get revenue this month (from bills)
+		$monthStart = date('Y-m-01');
+		$monthRevenue = $db->table('bills')
+			->selectSum('total_amount')
+			->where('created_at >=', $monthStart)
+			->get()
+			->getRow()->total_amount ?? 0;
+
+		// Count today's appointments
+		$todayAppointmentsCount = count($todayAppointments);
+
+		// Get recent appointments (past week, excluding today)
+		$weekAgo = date('Y-m-d', strtotime('-7 days'));
+		$recentAppointmentsRaw = $appointmentModel
+			->where('doctor_id', $doctorId)
+			->where('appointment_date <', $today)
+			->where('appointment_date >=', $weekAgo)
+			->where('status !=', 'cancelled')
+			->orderBy('appointment_date', 'DESC')
+			->orderBy('appointment_time', 'DESC')
+			->limit(10)
+			->findAll();
+
+		// Format recent appointments for display
+		$recentAppointments = [];
+		foreach ($recentAppointmentsRaw as $apt) {
+			$patient = $patientModel->find($apt['patient_id']);
+			$recentAppointments[] = [
+				'id' => $apt['id'],
+				'patient_name' => $patient['full_name'] ?? 'N/A',
+				'type' => $apt['appointment_type'] ?? 'Consultation',
+				'appointment_date' => $apt['appointment_date'] ?? null,
+				'appointment_time' => $apt['appointment_time'] ?? null,
+				'status' => $apt['status'] ?? 'completed',
+			];
+		}
+
 		$data = [
 			'title' => 'Doctor Dashboard - HMS',
 			'user_role' => 'doctor',
 			'user_name' => session()->get('name'),
+			'appointments' => $appointments,
+			'recentAppointments' => $recentAppointments,
+			'todayAppointments' => $todayAppointmentsCount,
+			'totalPatients' => $totalPatients,
+			'pendingReports' => $pendingReports,
+			'monthRevenue' => $monthRevenue,
 		];
 
 		return view('auth/dashboard', $data);
@@ -104,6 +189,99 @@ class Doctor extends Controller
 		];
 
 		return view('doctor/appointments', $data);
+	}
+
+	public function consultations()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'doctor') {
+			return redirect()->to('/login');
+		}
+
+		$doctorId = session()->get('user_id');
+		$appointmentModel = new AppointmentModel();
+		$patientModel = new \App\Models\PatientModel();
+		$prescriptionModel = new PrescriptionModel();
+		$db = \Config\Database::connect();
+
+		// Get filter parameters
+		$filterStatus = $this->request->getGet('status');
+		$filterDateFrom = $this->request->getGet('date_from');
+		$filterDateTo = $this->request->getGet('date_to');
+
+		// Build query for completed consultations
+		$builder = $appointmentModel
+			->where('doctor_id', $doctorId)
+			->where('status', 'completed')
+			->orderBy('appointment_date', 'DESC')
+			->orderBy('appointment_time', 'DESC');
+
+		// Apply date filters
+		if (!empty($filterDateFrom)) {
+			$builder->where('appointment_date >=', $filterDateFrom);
+		}
+		if (!empty($filterDateTo)) {
+			$builder->where('appointment_date <=', $filterDateTo);
+		}
+
+		$consultationsRaw = $builder->findAll();
+
+		// Format consultations with patient and prescription data
+		$consultations = [];
+		foreach ($consultationsRaw as $consultation) {
+			$patient = $patientModel->find($consultation['patient_id']);
+			
+			// Get prescription for this consultation if exists
+			$prescription = $prescriptionModel
+				->where('appointment_id', $consultation['id'])
+				->first();
+
+			$consultations[] = [
+				'id' => $consultation['id'],
+				'patient_id' => $consultation['patient_id'],
+				'patient_name' => $patient['full_name'] ?? 'N/A',
+				'patient_age' => $patient['age'] ?? null,
+				'patient_gender' => $patient['gender'] ?? null,
+				'appointment_date' => $consultation['appointment_date'],
+				'appointment_time' => $consultation['appointment_time'],
+				'appointment_type' => $consultation['appointment_type'] ?? 'consultation',
+				'notes' => $consultation['notes'] ?? null,
+				'prescription_id' => $prescription['id'] ?? null,
+				'prescription_status' => $prescription['status'] ?? null,
+				'created_at' => $consultation['created_at'] ?? null,
+			];
+		}
+
+		// Get statistics
+		$totalConsultations = count($consultations);
+		$monthStart = date('Y-m-01');
+		$monthEnd = date('Y-m-t');
+		$thisMonthConsultations = $appointmentModel
+			->where('doctor_id', $doctorId)
+			->where('status', 'completed')
+			->where('appointment_date >=', $monthStart)
+			->where('appointment_date <=', $monthEnd)
+			->countAllResults();
+
+		$thisWeekConsultations = $appointmentModel
+			->where('doctor_id', $doctorId)
+			->where('status', 'completed')
+			->where('appointment_date >=', date('Y-m-d', strtotime('monday this week')))
+			->countAllResults();
+
+		$data = [
+			'title' => 'Consultations - HMS',
+			'user_role' => 'doctor',
+			'user_name' => session()->get('name'),
+			'consultations' => $consultations,
+			'totalConsultations' => $totalConsultations,
+			'thisMonthConsultations' => $thisMonthConsultations,
+			'thisWeekConsultations' => $thisWeekConsultations,
+			'filterStatus' => $filterStatus,
+			'filterDateFrom' => $filterDateFrom,
+			'filterDateTo' => $filterDateTo,
+		];
+
+		return view('doctor/consultations', $data);
 	}
 
 	public function updateSchedule()
@@ -457,6 +635,144 @@ class Doctor extends Controller
             'latest_vitals' => $latestVitals,
             'vital_signs_history' => $vitalSignsHistory
         ]);
+    }
+
+    public function labRequests()
+    {
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'doctor') {
+            return redirect()->to('/login');
+        }
+
+        $doctorId = session()->get('user_id');
+        $requestModel = new LabTestRequestModel();
+        $resultModel = new LabTestResultModel();
+        
+        // Get lab requests created by this doctor
+        $requests = $requestModel->getAllWithRelations([]);
+        $myRequests = array_filter($requests, function($req) use ($doctorId) {
+            return ($req['doctor_id'] ?? 0) == $doctorId;
+        });
+        $myRequests = array_values($myRequests);
+        
+        // Attach latest result data to each request
+        if (!empty($myRequests)) {
+            $requestIds = array_column($myRequests, 'id');
+            $results = $resultModel->whereIn('request_id', $requestIds)
+                ->orderBy('released_at', 'DESC')
+                ->findAll();
+            
+            $resultsByRequest = [];
+            foreach ($results as $resultRow) {
+                $reqId = $resultRow['request_id'] ?? null;
+                if ($reqId && !isset($resultsByRequest[$reqId])) {
+                    $resultsByRequest[$reqId] = $resultRow;
+                }
+            }
+            
+            foreach ($myRequests as &$req) {
+                $reqId = $req['id'] ?? null;
+                if ($reqId && isset($resultsByRequest[$reqId])) {
+                    $req['latest_result'] = $resultsByRequest[$reqId];
+                }
+            }
+            unset($req);
+        }
+        
+        // Get patients assigned to this doctor for selection
+        $db = \Config\Database::connect();
+        $builder = $db->table('patients p');
+        $builder->select('p.id, p.full_name, p.date_of_birth, p.gender, p.patient_id');
+        $builder->join('(SELECT patient_id, doctor_id, appointment_date,
+                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                         FROM appointments WHERE status != "cancelled" AND doctor_id = ' . (int) $doctorId . ') a', 'a.patient_id = p.id AND a.rn = 1', 'inner');
+        $builder->orderBy('p.full_name', 'ASC');
+        $patientsRaw = $builder->get()->getResultArray();
+        
+        // Calculate age for each patient
+        $patients = [];
+        foreach ($patientsRaw as $pt) {
+            $age = '—';
+            if (!empty($pt['date_of_birth']) && $pt['date_of_birth'] !== '0000-00-00' && $pt['date_of_birth'] !== '') {
+                try {
+                    $dateStr = $pt['date_of_birth'];
+                    if (strpos($dateStr, '/') !== false) {
+                        $parts = explode('/', $dateStr);
+                        if (count($parts) === 3) {
+                            $dateStr = $parts[2] . '-' . $parts[0] . '-' . $parts[1];
+                        }
+                    }
+                    $birthDate = new \DateTime($dateStr);
+                    $today = new \DateTime();
+                    $ageDiff = $today->diff($birthDate);
+                    $age = $ageDiff->y;
+                } catch (\Exception $e) {
+                    $age = '—';
+                }
+            }
+            $pt['age'] = $age;
+            $patients[] = $pt;
+        }
+
+        $data = [
+            'title' => 'Lab Requests - HMS',
+            'user_role' => 'doctor',
+            'user_name' => session()->get('name'),
+            'requests' => $myRequests,
+            'patients' => $patients,
+        ];
+
+        return view('doctor/lab_request', $data);
+    }
+
+    public function createLabRequest()
+    {
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'doctor') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        $this->response->setContentType('application/json');
+
+        try {
+            $requestModel = new LabTestRequestModel();
+            $doctorId = session()->get('user_id');
+            
+            $patientId = $this->request->getPost('patient_id');
+            $testType = $this->request->getPost('test_type');
+            $priority = $this->request->getPost('priority') ?? 'normal';
+            $notes = $this->request->getPost('notes') ?? '';
+            
+            // Validation
+            if (empty($patientId) || empty($testType)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Please fill in all required fields (Patient, Test Type).'
+                ]);
+            }
+            
+            $data = [
+                'patient_id' => $patientId,
+                'doctor_id' => $doctorId,
+                'test_type' => $testType,
+                'priority' => $priority,
+                'status' => 'pending',
+                'requested_at' => date('Y-m-d H:i:s'),
+                'notes' => $notes,
+            ];
+            
+            $requestModel->insert($data);
+            
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Lab test request created successfully!'
+            ]);
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Error creating lab request: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error creating request: ' . $e->getMessage()
+            ]);
+        }
     }
 }
 

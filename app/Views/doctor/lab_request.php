@@ -1,0 +1,400 @@
+<?= $this->extend('template') ?>
+
+<?= $this->section('content') ?>
+
+<!-- Header Section -->
+<section class="panel">
+    <header class="panel-header">
+        <div class="page-header-content">
+            <div>
+                <h2 class="page-title">
+                    <span>🔬</span>
+                    Lab Test Requests
+                </h2>
+                <p class="page-subtitle">
+                    Welcome, <?= esc($user_name ?? 'Dr. ' . session()->get('name') ?? 'Doctor') ?>, M.D.
+                    <span class="date-text"> • Date: <?= date('F j, Y') ?></span>
+                </p>
+            </div>
+        </div>
+    </header>
+</section>
+
+<!-- New Lab Request Form Section -->
+<section class="panel panel-spaced">
+    <header class="panel-header">
+        <h2>📋 New Lab Test Request</h2>
+    </header>
+    
+    <div class="stack">
+        <div class="card prescription-form-card">
+            <form id="createLabRequestForm">
+                <!-- Patient Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Patient Information</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Select Patient <span class="req">*</span></label>
+                            <select id="lab_patient_id" name="patient_id" class="form-input" required>
+                                <option value="">Select patient...</option>
+                                <?php foreach (($patients ?? []) as $pt): ?>
+                                    <option value="<?= (int) $pt['id'] ?>" 
+                                            data-age="<?= esc($pt['age'] ?? '') ?>"
+                                            data-gender="<?= esc($pt['gender'] ?? '') ?>"
+                                            data-name="<?= esc($pt['full_name']) ?>">
+                                        <?= esc($pt['full_name']) ?>
+                                        <?php if (!empty($pt['patient_id'])): ?>
+                                            (ID: <?= esc($pt['patient_id']) ?>)
+                                        <?php endif; ?>
+                                        <?php if (!empty($pt['age']) && $pt['age'] !== '—'): ?>
+                                            - Age: <?= esc($pt['age']) ?>
+                                        <?php endif; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Age</label>
+                            <input type="text" id="lab_patient_age" class="form-input" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <input type="text" id="lab_patient_gender" class="form-input" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Test Information</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Test Type <span class="req">*</span></label>
+                            <select id="test_type" name="test_type" class="form-input" required>
+                                <option value="">Select test type...</option>
+                                <optgroup label="Blood Tests">
+                                    <option value="Complete Blood Count (CBC)">Complete Blood Count (CBC)</option>
+                                    <option value="Blood Glucose">Blood Glucose</option>
+                                    <option value="Lipid Profile">Lipid Profile</option>
+                                    <option value="Liver Function Test (LFT)">Liver Function Test (LFT)</option>
+                                    <option value="Kidney Function Test (KFT)">Kidney Function Test (KFT)</option>
+                                    <option value="Thyroid Function Test">Thyroid Function Test</option>
+                                    <option value="Hemoglobin A1C">Hemoglobin A1C</option>
+                                    <option value="Blood Culture">Blood Culture</option>
+                                    <option value="Blood Typing">Blood Typing</option>
+                                    <option value="Coagulation Profile">Coagulation Profile</option>
+                                </optgroup>
+                                <optgroup label="Urine Tests">
+                                    <option value="Urine Analysis">Urine Analysis</option>
+                                    <option value="Urine Culture">Urine Culture</option>
+                                    <option value="24-Hour Urine Collection">24-Hour Urine Collection</option>
+                                    <option value="Urine Pregnancy Test">Urine Pregnancy Test</option>
+                                </optgroup>
+                                <optgroup label="Imaging Tests">
+                                    <option value="X-Ray">X-Ray</option>
+                                    <option value="CT Scan">CT Scan</option>
+                                    <option value="MRI">MRI</option>
+                                    <option value="Ultrasound">Ultrasound</option>
+                                    <option value="Echocardiogram">Echocardiogram</option>
+                                    <option value="Mammography">Mammography</option>
+                                </optgroup>
+                                <optgroup label="Microbiology">
+                                    <option value="Sputum Culture">Sputum Culture</option>
+                                    <option value="Stool Culture">Stool Culture</option>
+                                    <option value="Throat Swab">Throat Swab</option>
+                                    <option value="Wound Culture">Wound Culture</option>
+                                </optgroup>
+                                <optgroup label="Other Tests">
+                                    <option value="ECG (Electrocardiogram)">ECG (Electrocardiogram)</option>
+                                    <option value="Pulmonary Function Test">Pulmonary Function Test</option>
+                                    <option value="Bone Density Scan">Bone Density Scan</option>
+                                    <option value="Pap Smear">Pap Smear</option>
+                                    <option value="Biopsy">Biopsy</option>
+                                    <option value="Other">Other (Specify in Notes)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Priority</label>
+                            <select id="priority" name="priority" class="form-input">
+                                <option value="normal" selected>Normal</option>
+                                <option value="low">Low</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Notes / Instructions (Optional)</label>
+                            <textarea id="notes" name="notes" class="form-input" rows="3" 
+                                      placeholder="Additional notes or special instructions for the lab staff..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="lab-form-actions">
+                    <button type="reset" class="lab-btn lab-btn-secondary">Clear Form</button>
+                    <button type="submit" class="lab-btn lab-btn-primary">
+                        <span>📤</span> Create Lab Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- My Lab Requests Table -->
+<section class="panel panel-spaced">
+    <header class="panel-header">
+        <h2>📊 My Lab Test Requests</h2>
+    </header>
+    
+    <div class="stack">
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>Patient</th>
+                        <th>Test Type</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Requested Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($requests)): ?>
+                        <?php foreach ($requests as $request): ?>
+                            <?php
+                            $priority = $request['priority'] ?? 'normal';
+                            $status = $request['status'] ?? 'pending';
+                            
+                            $priorityClass = match($priority) {
+                                'low' => 'bg-secondary',
+                                'normal' => 'bg-info',
+                                'high' => 'bg-warning',
+                                'critical' => 'bg-danger',
+                                default => 'bg-secondary'
+                            };
+                            
+                            $statusClass = match($status) {
+                                'pending' => 'bg-warning',
+                                'in_progress' => 'bg-info',
+                                'completed' => 'bg-success',
+                                'cancelled' => 'bg-secondary',
+                                default => 'bg-secondary'
+                            };
+                            ?>
+                            <tr>
+                                <td><strong>#<?= str_pad((string)($request['id'] ?? 0), 6, '0', STR_PAD_LEFT) ?></strong></td>
+                                <td><?= esc($request['patient_name'] ?? 'N/A') ?></td>
+                                <td><?= esc($request['test_type'] ?? '—') ?></td>
+                                <td>
+                                    <span class="badge <?= $priorityClass ?>"><?= ucfirst($priority) ?></span>
+                                </td>
+                                <td>
+                                    <span class="badge <?= $statusClass ?>"><?= ucfirst(str_replace('_', ' ', $status)) ?></span>
+                                </td>
+                                <td><?= !empty($request['requested_at']) ? date('M j, Y g:i A', strtotime($request['requested_at'])) : '—' ?></td>
+                                <?php $latestResult = $request['latest_result'] ?? null; ?>
+                                <td>
+                                    <?php if (!empty($latestResult)): ?>
+                                        <?php
+                                            $resultSummary = $latestResult['result_summary'] ?? '—';
+                                            $resultDetails = $latestResult['detailed_report_path'] ?? '';
+                                            $releasedDate = !empty($latestResult['released_at']) ? date('M j, Y g:i A', strtotime($latestResult['released_at'])) : '—';
+                                            $criticalFlag = (int)($latestResult['critical_flag'] ?? 0);
+                                            $resultStatus = ucfirst($latestResult['status'] ?? 'completed');
+                                        ?>
+                                        <button type="button"
+                                            class="lab-btn lab-btn-outline"
+                                            data-result-button="true"
+                                            data-result-test="<?= esc($request['test_type'] ?? '—', 'attr') ?>"
+                                            data-result-patient="<?= esc($request['patient_name'] ?? '—', 'attr') ?>"
+                                            data-result-status="<?= esc($resultStatus, 'attr') ?>"
+                                            data-result-date="<?= esc($releasedDate, 'attr') ?>"
+                                            data-result-summary="<?= esc($resultSummary, 'attr') ?>"
+                                            data-result-detail="<?= esc($resultDetails, 'attr') ?>"
+                                            data-result-critical="<?= $criticalFlag ?>"
+                                            onclick="openDoctorResultModal(this)">
+                                            View Result
+                                        </button>
+                                    <?php elseif ($status === 'completed'): ?>
+                                        <span class="text-muted small">Awaiting release</span>
+                                    <?php else: ?>
+                                        <span class="text-muted small">Processing</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">No lab test requests found. Create your first request above.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update patient age and gender when patient is selected
+    const patientSelect = document.getElementById('lab_patient_id');
+    const ageInput = document.getElementById('lab_patient_age');
+    const genderInput = document.getElementById('lab_patient_gender');
+    
+    if (patientSelect) {
+        patientSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption && selectedOption.value) {
+                ageInput.value = selectedOption.getAttribute('data-age') || '—';
+                genderInput.value = selectedOption.getAttribute('data-gender') || '—';
+            } else {
+                ageInput.value = '';
+                genderInput.value = '';
+            }
+        });
+    }
+    
+    // Handle form submission
+    const form = document.getElementById('createLabRequestForm');
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating...';
+            
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('<?= base_url('doctor/createLabRequest') ?>', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(result.message || 'Lab test request created successfully!');
+                    // Reset form
+                    form.reset();
+                    ageInput.value = '';
+                    genderInput.value = '';
+                    // Reload page to show new request
+                    window.location.reload();
+                } else {
+                    alert(result.message || 'Error creating request. Please try again.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+    }
+});
+</script>
+
+<!-- View Result Modal -->
+<div class="modal" id="doctorResultModal" style="display: none;">
+    <div class="doctor-result-dialog">
+        <div class="doctor-result-card">
+            <div class="doctor-result-header">
+                <div>
+                    <h3>Lab Result Details</h3>
+                    <p id="doc_result_status">Status —</p>
+                </div>
+                <button type="button" class="modal-close" onclick="closeDoctorResultModal()" aria-label="Close">&times;</button>
+            </div>
+            <div class="doctor-result-info">
+                <div class="info-row">
+                    <span>Patient</span>
+                    <strong id="doc_result_patient">—</strong>
+                </div>
+                <div class="info-row">
+                    <span>Test Type</span>
+                    <strong id="doc_result_test">—</strong>
+                </div>
+                <div class="info-row">
+                    <span>Released Date</span>
+                    <strong id="doc_result_date">—</strong>
+                </div>
+                <div class="info-row">
+                    <span>Critical Flag</span>
+                    <strong id="doc_result_critical">No</strong>
+                </div>
+            </div>
+            <div class="doctor-result-body">
+                <div class="result-block">
+                    <h4>Result Summary</h4>
+                    <p id="doc_result_summary">—</p>
+                </div>
+                <div class="result-block">
+                    <h4>Detailed Report</h4>
+                    <p id="doc_result_detail">—</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openDoctorResultModal(button) {
+    if (!button) return;
+    const modal = document.getElementById('doctorResultModal');
+    if (!modal) return;
+    
+    const testType = button.getAttribute('data-result-test') || '—';
+    const patient = button.getAttribute('data-result-patient') || '—';
+    const status = button.getAttribute('data-result-status') || '—';
+    const date = button.getAttribute('data-result-date') || '—';
+    const summary = button.getAttribute('data-result-summary') || '—';
+    const detail = button.getAttribute('data-result-detail') || '—';
+    const critical = parseInt(button.getAttribute('data-result-critical') || '0', 10) === 1;
+    
+    document.getElementById('doc_result_test').textContent = testType;
+    document.getElementById('doc_result_patient').textContent = patient;
+    document.getElementById('doc_result_status').textContent = status;
+    document.getElementById('doc_result_date').textContent = date;
+    document.getElementById('doc_result_summary').textContent = summary || '—';
+    document.getElementById('doc_result_detail').textContent = detail || 'No additional details provided.';
+    document.getElementById('doc_result_critical').textContent = critical ? 'Yes – Critical' : 'No';
+    document.getElementById('doc_result_critical').className = critical ? 'text-critical' : '';
+    
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDoctorResultModal() {
+    const modal = document.getElementById('doctorResultModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const resultModal = document.getElementById('doctorResultModal');
+    if (resultModal) {
+        resultModal.addEventListener('click', function(e) {
+            if (e.target === resultModal) {
+                closeDoctorResultModal();
+            }
+        });
+    }
+});
+</script>
+
+<?= $this->endSection() ?>
+

@@ -5,8 +5,6 @@ namespace App\Controllers\Admin\Lab;
 use CodeIgniter\Controller;
 use App\Models\LabTestRequestModel;
 use App\Models\LabTestResultModel;
-use App\Models\LabInventoryItemModel;
-use App\Models\LabEquipmentModel;
 use App\Models\LabStaffModel;
 use Throwable;
 
@@ -14,16 +12,12 @@ class Dashboard extends Controller
 {
     protected LabTestRequestModel $requestModel;
     protected LabTestResultModel $resultModel;
-    protected LabInventoryItemModel $inventoryModel;
-    protected LabEquipmentModel $equipmentModel;
     protected LabStaffModel $staffModel;
 
     public function __construct()
     {
         $this->requestModel = new LabTestRequestModel();
         $this->resultModel = new LabTestResultModel();
-        $this->inventoryModel = new LabInventoryItemModel();
-        $this->equipmentModel = new LabEquipmentModel();
         $this->staffModel = new LabStaffModel();
     }
 
@@ -43,11 +37,6 @@ class Dashboard extends Controller
                 'completedToday' => 0,
                 'criticalResults' => 0,
                 'activeStaff' => 0,
-                'inventoryAlerts' => [
-                    'low_stock' => 0,
-                    'expiring' => 0,
-                ],
-                'equipmentAlerts' => 0,
             ],
             'recentRequests' => [],
             'recentResults' => [],
@@ -74,11 +63,6 @@ class Dashboard extends Controller
                 ->where('status', 'active')
                 ->countAllResults();
 
-            $inventoryAlerts = $this->inventoryModel->getAlerts();
-            $equipmentAlerts = (clone $this->equipmentModel)
-                ->whereIn('condition', ['maintenance_due', 'needs_repair', 'out_of_service'])
-                ->countAllResults();
-
             $recentRequests = $this->requestModel->getAllWithRelations([
                 'date_from' => date('Y-m-d', strtotime('-7 days')),
             ]);
@@ -92,8 +76,6 @@ class Dashboard extends Controller
                 'completedToday' => $completedToday,
                 'criticalResults' => $criticalResults,
                 'activeStaff' => $activeStaff,
-                'inventoryAlerts' => $inventoryAlerts,
-                'equipmentAlerts' => $equipmentAlerts,
             ];
             $data['recentRequests'] = $recentRequests;
             $data['recentResults'] = $recentResults;

@@ -51,7 +51,10 @@ $routes->get('reception/schedule', 'Reception::schedule');
 
 // Lab Routes
 $routes->get('lab/requests', 'Lab::requests');
+$routes->post('lab/createRequest', 'Lab::createRequest');
+$routes->post('lab/updateRequestStatus', 'Lab::updateRequestStatus');
 $routes->get('lab/results', 'Lab::results');
+$routes->post('lab/results/save', 'Lab::saveResult');
 $routes->get('lab/equipment', 'Lab::equipment');
 $routes->get('lab/inventory', 'Lab::inventory');
 $routes->get('lab/reports', 'Lab::reports');
@@ -91,10 +94,15 @@ $routes->get('doctor/schedule', 'Doctor::schedule');
 $routes->post('doctor/updateSchedule', 'Doctor::updateSchedule');
 $routes->get('doctor/getAvailableSlots', 'Doctor::getAvailableSlots');
 $routes->get('doctor/appointments', 'Doctor::appointments');
+$routes->get('doctor/consultations', 'Doctor::consultations');
+$routes->get('doctor/consultations/view/(:num)', 'Doctor::viewConsultation/$1');
 $routes->get('doctor/patients', 'Doctor::patients');
 $routes->get('doctor/patients/show/(:num)', 'Doctor::getPatientDetails/$1');
 $routes->get('doctor/prescriptions', 'Doctor::prescriptions');
 $routes->post('doctor/prescriptions/create', 'Doctor::createPrescription');
+$routes->get('doctor/labs', 'Doctor::labRequests');
+$routes->get('doctor/labRequests', 'Doctor::labRequests');
+$routes->post('doctor/createLabRequest', 'Doctor::createLabRequest');
 
 // Admin Routes (expanded, no group)
 $routes->get('admin/dashboard', 'Admin\\Dashboard::index');
