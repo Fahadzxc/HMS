@@ -224,11 +224,11 @@
                 </div>
                 <div class="form-field">
                     <label>Select Doctor <span class="req">*</span></label>
-                    <select name="doctor_id" required>
+                    <select name="doctor_id" id="doctor_select" required onchange="loadDoctorScheduleCalendar()">
                         <option value="">Choose a doctor...</option>
                         <?php if (isset($doctors) && is_array($doctors)): ?>
                             <?php foreach ($doctors as $doctor): ?>
-                                <option value="<?= $doctor['id'] ?>"><?= htmlspecialchars($doctor['name']) ?></option>
+                                <option value="<?= $doctor['id'] ?>" data-doctor-name="<?= htmlspecialchars($doctor['name']) ?>"><?= htmlspecialchars($doctor['name']) ?></option>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </select>
@@ -242,8 +242,14 @@
                                 </a>
                             <?php endforeach; ?>
                         <?php endif; ?>
-                        <br><em>Click on a doctor's name to view their schedule</em>
+                        <br><em>Click on a doctor's name to view their full schedule</em>
                     </small>
+                </div>
+                <div class="form-field form-field--full" id="doctor_schedule_calendar_container" style="display: none;">
+                    <label>Doctor's Schedule Calendar</label>
+                    <div id="doctor_schedule_calendar" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1rem; margin-top: 0.5rem;">
+                        <p style="color: #64748b; margin: 0; text-align: center;">Select a doctor to view their schedule</p>
+                    </div>
                 </div>
                 <div class="form-field">
                     <label>Appointment Type <span class="req">*</span></label>
@@ -261,10 +267,13 @@
                 </div>
                 <div class="form-field">
                     <label>Appointment Date <span class="req">*</span></label>
-                    <input type="date" name="appointment_date" id="appointment_date" required min="<?= date('Y-m-d') ?>">
+                    <input type="date" name="appointment_date" id="appointment_date" required min="<?= date('Y-m-d') ?>" onchange="checkDoctorAvailability()">
                     <div class="error" data-error-for="appointment_date"></div>
                     <div id="date_availability_warning" style="display: none; color: #e53e3e; font-size: 0.875rem; margin-top: 0.25rem;">
                         <i class="fas fa-exclamation-triangle"></i> Selected doctor is not available on this date.
+                    </div>
+                    <div id="date_availability_info" style="display: none; color: #10b981; font-size: 0.875rem; margin-top: 0.25rem;">
+                        <i class="fas fa-check-circle"></i> <span id="availability_times"></span>
                     </div>
                 </div>
                 <div class="form-field">
@@ -576,6 +585,115 @@ function editAppointment(id) {
         #addAppointmentModal .modal-header {
             flex-shrink: 0;
         }
+
+        /* Reception Calendar Styles */
+        .reception-calendar-container {
+            background: white;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .reception-calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .reception-calendar-day-header {
+            padding: 0.75rem;
+            text-align: center;
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .reception-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e2e8f0;
+        }
+
+        .reception-calendar-day {
+            min-height: 80px;
+            background: white;
+            padding: 0.5rem;
+            position: relative;
+        }
+
+        .reception-calendar-day.empty {
+            background: #f8fafc;
+        }
+
+        .reception-calendar-day.today {
+            background: #eff6ff;
+            border: 2px solid #3b82f6;
+        }
+
+        .reception-calendar-day.today .reception-calendar-day-number {
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .reception-calendar-day-number {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .reception-calendar-day-schedules {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .reception-calendar-schedule-item {
+            padding: 0.25rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            line-height: 1.2;
+        }
+
+        .reception-calendar-schedule-item.available {
+            background: #dcfce7;
+            color: #166534;
+            border-left: 2px solid #22c55e;
+        }
+
+        .reception-calendar-schedule-item.unavailable {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 2px solid #ef4444;
+        }
+
+        .reception-schedule-time {
+            font-weight: 500;
+        }
+
+        .reception-calendar-schedule-more {
+            font-size: 0.65rem;
+            color: #64748b;
+            font-style: italic;
+            padding: 0.2rem 0.4rem;
+        }
+
+        .reception-calendar-no-schedule {
+            font-size: 0.65rem;
+            color: #94a3b8;
+            font-style: italic;
+            padding: 0.2rem 0.4rem;
+        }
 </style>
 
 <!-- Doctor Schedule Modal -->
@@ -602,14 +720,19 @@ function showDoctorSchedule(doctorId) {
     content.innerHTML = '<div class="no-schedule">Loading schedule...</div>';
     title.textContent = 'Doctor Schedule';
     
-    // Fetch doctor schedule
-    fetch(`<?= site_url('reception/getDoctorSchedule') ?>/${doctorId}`)
+    // Get current month for calendar
+    const today = new Date();
+    const currentMonth = today.getMonth() + 1;
+    const currentYear = today.getFullYear();
+    
+    // Fetch doctor schedule with current month
+    fetch(`<?= site_url('reception/getDoctorSchedule') ?>/${doctorId}?date=${currentYear}-${String(currentMonth).padStart(2, '0')}-01`)
         .then(response => response.json())
         .then(data => {
-            console.log('Doctor schedule data:', data); // Debug log
+            console.log('Doctor schedule data:', data);
             if (data.status === 'success') {
                 title.textContent = `${data.doctor.name}'s Schedule`;
-                displaySchedule(data.schedule);
+                displayScheduleCalendar(data, currentMonth, currentYear);
             } else {
                 content.innerHTML = `<div class="no-schedule">Error: ${data.message}</div>`;
             }
@@ -620,46 +743,222 @@ function showDoctorSchedule(doctorId) {
         });
 }
 
-function displaySchedule(schedule) {
+function displayScheduleCalendar(data, month, year) {
     const content = document.getElementById('doctorScheduleContent');
-    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    const dayNames = {
-        'monday': 'Monday',
-        'tuesday': 'Tuesday', 
-        'wednesday': 'Wednesday',
-        'thursday': 'Thursday',
-        'friday': 'Friday',
-        'saturday': 'Saturday',
-        'sunday': 'Sunday'
-    };
     
-    let html = '<div class="schedule-grid">';
+    // Calculate calendar
+    const firstDay = new Date(year, month - 1, 1);
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const startDay = firstDay.getDay(); // 0 = Sunday
+    const startDayMonday = startDay === 0 ? 6 : startDay - 1; // Convert to Monday = 0
     
-    days.forEach(day => {
-        html += `<div class="schedule-day">`;
-        html += `<h4>${dayNames[day]}</h4>`;
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    
+    let html = `
+        <div style="margin-bottom: 1rem; text-align: center;">
+            <h3 style="margin: 0; color: #1e293b;">${monthNames[month - 1]} ${year}</h3>
+        </div>
+        <div class="reception-calendar-container">
+            <div class="reception-calendar-header">
+    `;
+    
+    dayNames.forEach(day => {
+        html += `<div class="reception-calendar-day-header">${day}</div>`;
+    });
+    
+    html += `</div><div class="reception-calendar-grid">`;
+    
+    // Empty cells before first day
+    for (let i = 0; i < startDayMonday; i++) {
+        html += `<div class="reception-calendar-day empty"></div>`;
+    }
+    
+    // Calendar days
+    const today = new Date();
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month - 1, day);
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][date.getDay()];
+        const isToday = date.toDateString() === today.toDateString();
         
-        if (schedule[day] && schedule[day].length > 0) {
-            schedule[day].forEach(slot => {
-                const availableClass = slot.is_available ? '' : ' unavailable';
-                const statusText = slot.is_available ? 'Available' : 'Not Available';
-                html += `<div class="schedule-slot${availableClass}">`;
-                html += `<strong>${slot.start_time} - ${slot.end_time}</strong><br>`;
-                html += `<small style="color: ${slot.is_available ? '#22543d' : '#e53e3e'}; font-weight: 600;">${statusText}</small>`;
-                if (slot.notes) {
-                    html += `<br><em style="color: #4a5568;">${slot.notes}</em>`;
-                }
+        // Get schedules for this date
+        let daySchedules = [];
+        if (data.scheduleByDate && data.scheduleByDate[dateStr]) {
+            daySchedules = data.scheduleByDate[dateStr];
+        } else if (data.schedule && data.schedule[dayOfWeek]) {
+            daySchedules = data.schedule[dayOfWeek];
+        }
+        
+        html += `<div class="reception-calendar-day ${isToday ? 'today' : ''}">`;
+        html += `<div class="reception-calendar-day-number">${day}</div>`;
+        html += `<div class="reception-calendar-day-schedules">`;
+        
+        if (daySchedules.length > 0) {
+            daySchedules.slice(0, 2).forEach(sched => {
+                const availableClass = sched.is_available ? 'available' : 'unavailable';
+                html += `<div class="reception-calendar-schedule-item ${availableClass}">`;
+                html += `<div class="reception-schedule-time">${sched.start_time} - ${sched.end_time}</div>`;
+                html += `</div>`;
+            });
+            if (daySchedules.length > 2) {
+                html += `<div class="reception-calendar-schedule-more">+${daySchedules.length - 2}</div>`;
+            }
+        } else {
+            html += `<div class="reception-calendar-no-schedule">No schedule</div>`;
+        }
+        
+        html += `</div></div>`;
+    }
+    
+    html += `</div></div>`;
+    content.innerHTML = html;
+}
+
+function loadDoctorScheduleCalendar() {
+    const doctorSelect = document.getElementById('doctor_select');
+    const container = document.getElementById('doctor_schedule_calendar_container');
+    const calendarDiv = document.getElementById('doctor_schedule_calendar');
+    
+    if (!doctorSelect || !doctorSelect.value) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    const doctorId = doctorSelect.value;
+    const doctorName = doctorSelect.options[doctorSelect.selectedIndex].getAttribute('data-doctor-name');
+    const appointmentDate = document.getElementById('appointment_date')?.value;
+    
+    container.style.display = 'block';
+    calendarDiv.innerHTML = '<p style="color: #64748b; margin: 0; text-align: center;">Loading schedule...</p>';
+    
+    // Get month from appointment date or use current month
+    let currentMonth, currentYear;
+    if (appointmentDate) {
+        const dateObj = new Date(appointmentDate + 'T00:00:00');
+        currentMonth = dateObj.getMonth() + 1;
+        currentYear = dateObj.getFullYear();
+    } else {
+        const today = new Date();
+        currentMonth = today.getMonth() + 1;
+        currentYear = today.getFullYear();
+    }
+    const dateParam = appointmentDate || `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
+    
+    fetch(`<?= site_url('reception/getDoctorSchedule') ?>/${doctorId}?date=${dateParam}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                displayDoctorScheduleInForm(data, currentMonth, currentYear, doctorName);
+                checkDoctorAvailability();
+            } else {
+                calendarDiv.innerHTML = `<p style="color: #e53e3e; margin: 0;">Error: ${data.message}</p>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            calendarDiv.innerHTML = '<p style="color: #e53e3e; margin: 0;">Failed to load schedule</p>';
+        });
+}
+
+function displayDoctorScheduleInForm(data, month, year, doctorName) {
+    const calendarDiv = document.getElementById('doctor_schedule_calendar');
+    
+    const firstDay = new Date(year, month - 1, 1);
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const startDay = firstDay.getDay();
+    const startDayMonday = startDay === 0 ? 6 : startDay - 1;
+    
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    
+    let html = `
+        <div style="margin-bottom: 0.75rem;">
+            <strong style="color: #1e293b;">${doctorName}'s Schedule - ${monthNames[month - 1]} ${year}</strong>
+        </div>
+        <div class="reception-calendar-container">
+            <div class="reception-calendar-header">
+    `;
+    
+    dayNames.forEach(day => {
+        html += `<div class="reception-calendar-day-header">${day}</div>`;
+    });
+    
+    html += `</div><div class="reception-calendar-grid">`;
+    
+    for (let i = 0; i < startDayMonday; i++) {
+        html += `<div class="reception-calendar-day empty"></div>`;
+    }
+    
+    const today = new Date();
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month - 1, day);
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][date.getDay()];
+        const isToday = date.toDateString() === today.toDateString();
+        
+        let daySchedules = [];
+        if (data.scheduleByDate && data.scheduleByDate[dateStr]) {
+            daySchedules = data.scheduleByDate[dateStr];
+        } else if (data.schedule && data.schedule[dayOfWeek]) {
+            daySchedules = data.schedule[dayOfWeek];
+        }
+        
+        html += `<div class="reception-calendar-day ${isToday ? 'today' : ''}">`;
+        html += `<div class="reception-calendar-day-number">${day}</div>`;
+        html += `<div class="reception-calendar-day-schedules">`;
+        
+        if (daySchedules.length > 0) {
+            daySchedules.slice(0, 1).forEach(sched => {
+                const availableClass = sched.is_available ? 'available' : 'unavailable';
+                html += `<div class="reception-calendar-schedule-item ${availableClass}">`;
+                html += `<div class="reception-schedule-time">${sched.start_time} - ${sched.end_time}</div>`;
                 html += `</div>`;
             });
         } else {
-            html += '<div class="no-schedule">No schedule set</div>';
+            html += `<div class="reception-calendar-no-schedule">—</div>`;
         }
         
-        html += `</div>`;
-    });
+        html += `</div></div>`;
+    }
     
-    html += '</div>';
-    content.innerHTML = html;
+    html += `</div></div>`;
+    calendarDiv.innerHTML = html;
+}
+
+function checkDoctorAvailability() {
+    const doctorId = document.getElementById('doctor_select')?.value;
+    const appointmentDate = document.getElementById('appointment_date')?.value;
+    const warning = document.getElementById('date_availability_warning');
+    const info = document.getElementById('date_availability_info');
+    const availabilityTimes = document.getElementById('availability_times');
+    
+    if (!doctorId || !appointmentDate) {
+        if (warning) warning.style.display = 'none';
+        if (info) info.style.display = 'none';
+        return;
+    }
+    
+    fetch(`<?= site_url('reception/getDoctorSchedule') ?>/${doctorId}?date=${appointmentDate}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success' && data.selectedDateAvailability && data.selectedDateAvailability.length > 0) {
+                // Doctor is available
+                if (warning) warning.style.display = 'none';
+                if (info) {
+                    const times = data.selectedDateAvailability.map(s => `${s.start_time} - ${s.end_time}`).join(', ');
+                    availabilityTimes.textContent = `Available: ${times}`;
+                    info.style.display = 'block';
+                }
+            } else {
+                // Doctor is not available
+                if (warning) warning.style.display = 'block';
+                if (info) info.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
 }
 
 function closeDoctorScheduleModal() {
@@ -745,7 +1044,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Date selection change handler
     const dateInput = document.getElementById('appointment_date');
     if (dateInput) {
-        dateInput.addEventListener('change', updateDateAvailabilityWarning);
+        dateInput.addEventListener('change', function() {
+            updateDateAvailabilityWarning();
+            checkDoctorAvailability();
+            // Reload calendar if doctor is selected
+            const doctorSelect = document.getElementById('doctor_select');
+            if (doctorSelect && doctorSelect.value) {
+                loadDoctorScheduleCalendar();
+            }
+        });
     }
     
     // Close modal when clicking outside

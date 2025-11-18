@@ -154,14 +154,83 @@ class Doctor extends Controller
 		$scheduleModel = new DoctorScheduleModel();
 		$doctorId = session()->get('user_id');
 		
-		// Get doctor's current schedule
+		// Get current month and year from query params or use current
+		$month = (int)($this->request->getGet('month') ?? date('n'));
+		$year = (int)($this->request->getGet('year') ?? date('Y'));
+		
+		// Validate month and year
+		if ($month < 1 || $month > 12) $month = (int)date('n');
+		if ($year < 2020 || $year > 2100) $year = (int)date('Y');
+		
+		// Calculate calendar dates first
+		$firstDay = mktime(0, 0, 0, $month, 1, $year);
+		$daysInMonth = date('t', $firstDay);
+		
+		// Get doctor's schedules for this month (date-specific and weekly)
+		$monthStart = sprintf('%04d-%02d-01', $year, $month);
+		$monthEnd = sprintf('%04d-%02d-%02d', $year, $month, $daysInMonth);
+		
+		// Get date-specific schedules for this month
+		$dateSpecificSchedules = $scheduleModel
+			->where('doctor_id', $doctorId)
+			->where('schedule_date >=', $monthStart)
+			->where('schedule_date <=', $monthEnd)
+			->findAll();
+		
+		// Get weekly schedules (for backward compatibility)
 		$weeklySchedule = $scheduleModel->getDoctorWeeklySchedule($doctorId);
+		
+		// Group schedules by date
+		$scheduleByDate = [];
+		foreach ($dateSpecificSchedules as $sched) {
+			$date = $sched['schedule_date'];
+			$scheduleByDate[$date][] = $sched;
+		}
+		
+		// Also group weekly schedules by day of week (for days without date-specific schedules)
+		$scheduleByDay = [];
+		foreach ($weeklySchedule as $sched) {
+			// Only include if no schedule_date (weekly recurring)
+			if (empty($sched['schedule_date'])) {
+				$scheduleByDay[$sched['day_of_week']][] = $sched;
+			}
+		}
+		$dayOfWeek = date('w', $firstDay); // 0 = Sunday, 1 = Monday, etc.
+		
+		// Convert to Monday = 0 format
+		$startDay = ($dayOfWeek == 0) ? 6 : $dayOfWeek - 1;
+		
+		// Get previous and next month/year
+		$prevMonth = $month - 1;
+		$prevYear = $year;
+		if ($prevMonth < 1) {
+			$prevMonth = 12;
+			$prevYear--;
+		}
+		
+		$nextMonth = $month + 1;
+		$nextYear = $year;
+		if ($nextMonth > 12) {
+			$nextMonth = 1;
+			$nextYear++;
+		}
 		
 		$data = [
 			'title' => 'My Schedule - HMS',
 			'user_role' => 'doctor',
 			'user_name' => session()->get('name'),
-			'schedule' => $weeklySchedule
+			'schedule' => $weeklySchedule,
+			'scheduleByDay' => $scheduleByDay,
+			'scheduleByDate' => $scheduleByDate,
+			'currentMonth' => $month,
+			'currentYear' => $year,
+			'prevMonth' => $prevMonth,
+			'prevYear' => $prevYear,
+			'nextMonth' => $nextMonth,
+			'nextYear' => $nextYear,
+			'daysInMonth' => $daysInMonth,
+			'startDay' => $startDay,
+			'monthName' => date('F', $firstDay),
 		];
 
 		return view('doctor/schedule', $data);
@@ -208,10 +277,12 @@ class Doctor extends Controller
 		$filterDateFrom = $this->request->getGet('date_from');
 		$filterDateTo = $this->request->getGet('date_to');
 
-		// Build query for completed consultations
+		// Build query for consultations (show all except cancelled and no-show)
+		// Include completed, confirmed, and scheduled appointments
 		$builder = $appointmentModel
 			->where('doctor_id', $doctorId)
-			->where('status', 'completed')
+			->where('status !=', 'cancelled')
+			->where('status !=', 'no-show')
 			->orderBy('appointment_date', 'DESC')
 			->orderBy('appointment_time', 'DESC');
 
@@ -230,10 +301,36 @@ class Doctor extends Controller
 		foreach ($consultationsRaw as $consultation) {
 			$patient = $patientModel->find($consultation['patient_id']);
 			
-			// Get prescription for this consultation if exists
+			// Get prescription for this consultation
+			// First try by appointment_id, then by patient_id and doctor_id if appointment_id is null
 			$prescription = $prescriptionModel
 				->where('appointment_id', $consultation['id'])
 				->first();
+			
+			// If not found by appointment_id, try to find by patient_id and doctor_id
+			// First try within the appointment date range, then fallback to most recent
+			if (!$prescription) {
+				$appointmentDate = $consultation['appointment_date'];
+				$dateStart = date('Y-m-d 00:00:00', strtotime($appointmentDate));
+				$dateEnd = date('Y-m-d 23:59:59', strtotime($appointmentDate . ' +1 day'));
+				
+				$prescription = $prescriptionModel
+					->where('patient_id', $consultation['patient_id'])
+					->where('doctor_id', $doctorId)
+					->where('created_at >=', $dateStart)
+					->where('created_at <=', $dateEnd)
+					->orderBy('created_at', 'DESC')
+					->first();
+				
+				// If still not found, get the most recent prescription for this patient by this doctor
+				if (!$prescription) {
+					$prescription = $prescriptionModel
+						->where('patient_id', $consultation['patient_id'])
+						->where('doctor_id', $doctorId)
+						->orderBy('created_at', 'DESC')
+						->first();
+				}
+			}
 
 			$consultations[] = [
 				'id' => $consultation['id'],
@@ -244,6 +341,7 @@ class Doctor extends Controller
 				'appointment_date' => $consultation['appointment_date'],
 				'appointment_time' => $consultation['appointment_time'],
 				'appointment_type' => $consultation['appointment_type'] ?? 'consultation',
+				'status' => $consultation['status'] ?? 'scheduled',
 				'notes' => $consultation['notes'] ?? null,
 				'prescription_id' => $prescription['id'] ?? null,
 				'prescription_status' => $prescription['status'] ?? null,
@@ -251,20 +349,22 @@ class Doctor extends Controller
 			];
 		}
 
-		// Get statistics
+		// Get statistics (all consultations except cancelled/no-show)
 		$totalConsultations = count($consultations);
 		$monthStart = date('Y-m-01');
 		$monthEnd = date('Y-m-t');
 		$thisMonthConsultations = $appointmentModel
 			->where('doctor_id', $doctorId)
-			->where('status', 'completed')
+			->where('status !=', 'cancelled')
+			->where('status !=', 'no-show')
 			->where('appointment_date >=', $monthStart)
 			->where('appointment_date <=', $monthEnd)
 			->countAllResults();
 
 		$thisWeekConsultations = $appointmentModel
 			->where('doctor_id', $doctorId)
-			->where('status', 'completed')
+			->where('status !=', 'cancelled')
+			->where('status !=', 'no-show')
 			->where('appointment_date >=', date('Y-m-d', strtotime('monday this week')))
 			->countAllResults();
 
@@ -307,9 +407,14 @@ class Doctor extends Controller
 		$scheduleModel = new DoctorScheduleModel();
 		$doctorId = session()->get('user_id');
 
+		$scheduleDate = $this->request->getPost('schedule_date');
+		$dayOfWeek = $this->request->getPost('day_of_week');
+		
+		// If schedule_date is provided, use it; otherwise use day_of_week for weekly schedule
 		$data = [
 			'doctor_id' => $doctorId,
-			'day_of_week' => $this->request->getPost('day_of_week'),
+			'day_of_week' => $dayOfWeek,
+			'schedule_date' => $scheduleDate ?: null,
 			'start_time' => $this->request->getPost('start_time'),
 			'end_time' => $this->request->getPost('end_time'),
 			'is_available' => $this->request->getPost('is_available') ? true : false,
@@ -319,10 +424,22 @@ class Doctor extends Controller
 		// Debug logging
 		log_message('info', 'Schedule data: ' . json_encode($data));
 
-		// Check if schedule already exists for this day
-		$existingSchedule = $scheduleModel->where('doctor_id', $doctorId)
-										 ->where('day_of_week', $data['day_of_week'])
-										 ->first();
+		// Check if schedule already exists
+		$existingSchedule = null;
+		if ($scheduleDate) {
+			// Check for date-specific schedule
+			$existingSchedule = $scheduleModel->where('doctor_id', $doctorId)
+											 ->where('schedule_date', $scheduleDate)
+											 ->where('start_time', $data['start_time'])
+											 ->where('end_time', $data['end_time'])
+											 ->first();
+		} else {
+			// Check for weekly schedule
+			$existingSchedule = $scheduleModel->where('doctor_id', $doctorId)
+											 ->where('day_of_week', $dayOfWeek)
+											 ->where('schedule_date IS NULL')
+											 ->first();
+		}
 
 		if ($existingSchedule) {
 			// Update existing schedule

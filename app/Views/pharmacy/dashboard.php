@@ -1,52 +1,65 @@
-<!-- Pharmacist dashboard partial (inner content only) -->
+<!-- Pharmacy dashboard partial (inner content only) -->
+
 <section class="panel">
     <header class="panel-header">
-        <h2>Pharmacy Dashboard</h2>
-        <p>Welcome back, <?= session()->get('name') ?>. Here's your pharmacy overview for today.</p>
+        <div class="page-header-content">
+            <div>
+                <h2 class="page-title">
+                    <span>💊</span>
+                    Pharmacy Dashboard
+                </h2>
+                <p class="page-subtitle">
+                    Welcome back, <?= esc($user_name ?? 'Pharmacist') ?>. Here's your pharmacy overview for today.
+                    <span class="date-text"> • Date: <?= date('F j, Y') ?></span>
+                </p>
+            </div>
+        </div>
     </header>
-    <div class="stack">
-        <div class="actions-grid">
-            <div class="action-tile">
-                <span>Pending Prescriptions</span>
-                <strong>12</strong>
+</section>
+
+<!-- KPI Cards -->
+<section class="panel panel-spaced">
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-content">
+                <div class="kpi-label">Pending Prescriptions</div>
+                <div class="kpi-value"><?= number_format($pendingPrescriptions ?? 0) ?></div>
+                <div class="kpi-change kpi-warning">Awaiting dispense</div>
             </div>
-            <div class="action-tile">
-                <span>Dispensed Today</span>
-                <strong>18</strong>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-content">
+                <div class="kpi-label">Dispensed Today</div>
+                <div class="kpi-value"><?= number_format($dispensedToday ?? 0) ?></div>
+                <div class="kpi-change kpi-positive">Today</div>
             </div>
-            <div class="action-tile">
-                <span>Low Stock Items</span>
-                <strong>5</strong>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-content">
+                <div class="kpi-label">Low Stock Items</div>
+                <div class="kpi-value"><?= number_format($lowStockItems ?? 0) ?></div>
+                <div class="kpi-change kpi-warning">Needs attention</div>
             </div>
-            <div class="action-tile">
-                <span>Expiring Soon</span>
-                <strong>3</strong>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-content">
+                <div class="kpi-label">Expiring Soon</div>
+                <div class="kpi-value"><?= number_format($expiringSoon ?? 0) ?></div>
+                <div class="kpi-change kpi-warning">Within 30 days</div>
             </div>
         </div>
     </div>
 </section>
 
-<section class="panel">
+<!-- Pending Prescriptions -->
+<section class="panel panel-spaced">
     <header class="panel-header">
-        <h3>Quick Actions</h3>
-    </header>
-    <div class="stack">
-        <div class="button-group">
-            <a href="/pharmacy/prescriptions" class="button button-primary">View Prescriptions</a>
-            <a href="/pharmacy/inventory" class="button button-secondary">Inventory Management</a>
-            <a href="/pharmacy/dispense" class="button button-secondary">Dispense Medicine</a>
-            <a href="/pharmacy/orders" class="button button-secondary">Place Orders</a>
-        </div>
-    </div>
-</section>
-
-<section class="panel">
-    <header class="panel-header">
-        <h3>Pending Prescriptions</h3>
+        <h2>Pending Prescriptions</h2>
+        <a href="<?= base_url('pharmacy/prescriptions') ?>" style="color: #3b82f6; text-decoration: none; font-weight: 500;">View all</a>
     </header>
     <div class="stack">
         <div class="table-container">
-            <table class="table">
+            <table class="data-table">
                 <thead>
                     <tr>
                         <th>Prescription ID</th>
@@ -59,77 +72,35 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>RX001234</td>
-                        <td>Juan Dela Cruz</td>
-                        <td>Dr. Santos</td>
-                        <td>Paracetamol 500mg</td>
-                        <td>30 tablets</td>
-                        <td><span class="badge badge-warning">Pending</span></td>
-                        <td><a href="#" class="button button-small">Dispense</a></td>
-                    </tr>
-                    <tr>
-                        <td>RX001235</td>
-                        <td>Maria Garcia</td>
-                        <td>Dr. Lopez</td>
-                        <td>Amoxicillin 250mg</td>
-                        <td>21 capsules</td>
-                        <td><span class="badge badge-warning">Pending</span></td>
-                        <td><a href="#" class="button button-small">Dispense</a></td>
-                    </tr>
-                    <tr>
-                        <td>RX001236</td>
-                        <td>Pedro Rodriguez</td>
-                        <td>Dr. Santos</td>
-                        <td>Ibuprofen 400mg</td>
-                        <td>20 tablets</td>
-                        <td><span class="badge badge-success">Ready</span></td>
-                        <td><a href="#" class="button button-small">Dispense</a></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</section>
-
-<section class="panel">
-    <header class="panel-header">
-        <h3>Low Stock Alert</h3>
-    </header>
-    <div class="stack">
-        <div class="table-container">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Medicine</th>
-                        <th>Current Stock</th>
-                        <th>Minimum Level</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Paracetamol 500mg</td>
-                        <td>15</td>
-                        <td>50</td>
-                        <td><span class="badge badge-danger">Low</span></td>
-                        <td><a href="#" class="button button-small">Order</a></td>
-                    </tr>
-                    <tr>
-                        <td>Amoxicillin 250mg</td>
-                        <td>8</td>
-                        <td>30</td>
-                        <td><span class="badge badge-danger">Critical</span></td>
-                        <td><a href="#" class="button button-small">Order</a></td>
-                    </tr>
-                    <tr>
-                        <td>Ibuprofen 400mg</td>
-                        <td>25</td>
-                        <td>40</td>
-                        <td><span class="badge badge-warning">Low</span></td>
-                        <td><a href="#" class="button button-small">Order</a></td>
-                    </tr>
+                    <?php if (!empty($prescriptions)): ?>
+                        <?php foreach (array_slice($prescriptions, 0, 5) as $rx): ?>
+                            <tr>
+                                <td><strong><?= esc($rx['rx_number'] ?? 'N/A') ?></strong></td>
+                                <td><?= esc($rx['patient_name'] ?? 'N/A') ?></td>
+                                <td><?= esc($rx['doctor_name'] ?? 'N/A') ?></td>
+                                <td><?= esc($rx['medication'] ?? 'N/A') ?></td>
+                                <td><strong><?= number_format($rx['quantity'] ?? 0) ?></strong></td>
+                                <td>
+                                    <?php
+                                    $status = strtolower($rx['status'] ?? 'pending');
+                                    $badgeClass = $status === 'pending' ? 'badge-warning' : 'badge-success';
+                                    ?>
+                                    <span class="badge <?= $badgeClass ?>" style="padding: 0.35rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; background: <?= $status === 'pending' ? '#fef3c7' : '#dcfce7' ?>; color: <?= $status === 'pending' ? '#b45309' : '#15803d' ?>;">
+                                        <?= strtoupper($status) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="<?= base_url('pharmacy/prescriptions') ?>" style="color: #3b82f6; text-decoration: none; font-size: 0.9rem; font-weight: 500;">Dispense</a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7" style="padding: 2rem; text-align: center; color: #64748b;">
+                                No pending prescriptions
+                            </td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>

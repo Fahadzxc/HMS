@@ -660,10 +660,25 @@ class Reception extends Controller
 			return $this->response->setJSON(['status' => 'error', 'message' => 'Doctor not found']);
 		}
 
-		// Get doctor's weekly schedule
+		// Get selected date if provided
+		$selectedDate = $this->request->getGet('date');
+		
+		// Get doctor's weekly schedule (for recurring schedules)
 		$weeklySchedule = $scheduleModel->getDoctorWeeklySchedule($doctorId);
 		
-		// Format schedule by day
+		// Get date-specific schedules for current month if date is provided
+		$dateSpecificSchedules = [];
+		if ($selectedDate) {
+			$monthStart = date('Y-m-01', strtotime($selectedDate));
+			$monthEnd = date('Y-m-t', strtotime($selectedDate));
+			$dateSpecificSchedules = $scheduleModel
+				->where('doctor_id', $doctorId)
+				->where('schedule_date >=', $monthStart)
+				->where('schedule_date <=', $monthEnd)
+				->findAll();
+		}
+		
+		// Format schedule by day (weekly recurring)
 		$scheduleByDay = [
 			'monday' => [],
 			'tuesday' => [],
@@ -675,12 +690,39 @@ class Reception extends Controller
 		];
 
 		foreach ($weeklySchedule as $schedule) {
-			$scheduleByDay[$schedule['day_of_week']][] = [
+			// Only include weekly schedules (no schedule_date)
+			if (empty($schedule['schedule_date'])) {
+				$scheduleByDay[$schedule['day_of_week']][] = [
+					'start_time' => date('g:i A', strtotime($schedule['start_time'])),
+					'end_time' => date('g:i A', strtotime($schedule['end_time'])),
+					'is_available' => (bool) $schedule['is_available'],
+					'notes' => $schedule['notes'] ?? ''
+				];
+			}
+		}
+		
+		// Format date-specific schedules
+		$scheduleByDate = [];
+		foreach ($dateSpecificSchedules as $schedule) {
+			$date = $schedule['schedule_date'];
+			$scheduleByDate[$date][] = [
 				'start_time' => date('g:i A', strtotime($schedule['start_time'])),
 				'end_time' => date('g:i A', strtotime($schedule['end_time'])),
-				'is_available' => (bool) $schedule['is_available'], // Ensure boolean conversion
+				'is_available' => (bool) $schedule['is_available'],
 				'notes' => $schedule['notes'] ?? ''
 			];
+		}
+		
+		// Get availability for selected date
+		$selectedDateAvailability = null;
+		if ($selectedDate) {
+			$dayOfWeek = strtolower(date('l', strtotime($selectedDate)));
+			// Check date-specific first
+			if (isset($scheduleByDate[$selectedDate])) {
+				$selectedDateAvailability = $scheduleByDate[$selectedDate];
+			} elseif (isset($scheduleByDay[$dayOfWeek])) {
+				$selectedDateAvailability = $scheduleByDay[$dayOfWeek];
+			}
 		}
 
 		return $this->response->setJSON([
@@ -690,7 +732,10 @@ class Reception extends Controller
 				'name' => $doctor['name'],
 				'email' => $doctor['email']
 			],
-			'schedule' => $scheduleByDay
+			'schedule' => $scheduleByDay,
+			'scheduleByDate' => $scheduleByDate,
+			'selectedDateAvailability' => $selectedDateAvailability,
+			'selectedDate' => $selectedDate
 		]);
 	}
 

@@ -15,6 +15,7 @@ class DoctorScheduleModel extends Model
     protected $allowedFields = [
         'doctor_id',
         'day_of_week',
+        'schedule_date',
         'start_time',
         'end_time',
         'is_available',

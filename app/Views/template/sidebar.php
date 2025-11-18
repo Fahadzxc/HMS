@@ -57,6 +57,7 @@ $menus = [
         ['label' => 'Prescriptions', 'url' => base_url('pharmacy/prescriptions')],
         ['label' => 'Inventory', 'url' => base_url('pharmacy/inventory')],
         ['label' => 'Dispense', 'url' => base_url('pharmacy/dispense')],
+        ['label' => 'Stock Movement', 'url' => base_url('pharmacy/stockMovement')],
         ['label' => 'Orders', 'url' => base_url('pharmacy/orders')],
         ['label' => 'Reports', 'url' => base_url('pharmacy/reports')],
         ['label' => 'Settings', 'url' => base_url('settings')],

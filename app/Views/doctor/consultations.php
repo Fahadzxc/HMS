@@ -46,27 +46,6 @@
     </div>
 </section>
 
-<!-- Filters -->
-<section class="panel panel-spaced">
-    <header class="panel-header">
-        <h2>Filter Consultations</h2>
-    </header>
-    <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
-        <div style="flex: 1; min-width: 200px;">
-            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #475569;">Date From</label>
-            <input type="date" id="date_from" value="<?= esc($filterDateFrom ?? '') ?>" style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;">
-        </div>
-        <div style="flex: 1; min-width: 200px;">
-            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #475569;">Date To</label>
-            <input type="date" id="date_to" value="<?= esc($filterDateTo ?? '') ?>" style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;">
-        </div>
-        <div>
-            <button onclick="applyFilters()" style="padding: 0.5rem 1.5rem; background: #3b82f6; color: white; border: none; border-radius: 0.5rem; font-weight: 500; cursor: pointer;">Apply Filters</button>
-            <button onclick="clearFilters()" style="padding: 0.5rem 1.5rem; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-weight: 500; cursor: pointer; margin-left: 0.5rem;">Clear</button>
-        </div>
-    </div>
-</section>
-
 <!-- Consultations List -->
 <section class="panel panel-spaced">
     <header class="panel-header">
@@ -81,6 +60,7 @@
                         <th>Date & Time</th>
                         <th>Patient</th>
                         <th>Type</th>
+                        <th>Status</th>
                         <th>Notes</th>
                         <th>Prescription</th>
                         <th>Actions</th>
@@ -109,6 +89,22 @@
                                     <span style="text-transform: capitalize;"><?= esc($consultation['appointment_type'] ?? 'consultation') ?></span>
                                 </td>
                                 <td>
+                                    <?php
+                                    $status = strtolower($consultation['status'] ?? 'scheduled');
+                                    $statusBadgeClass = '';
+                                    if ($status === 'completed') {
+                                        $statusBadgeClass = 'badge-success';
+                                    } elseif ($status === 'confirmed') {
+                                        $statusBadgeClass = 'badge-warning';
+                                    } else {
+                                        $statusBadgeClass = 'badge-info';
+                                    }
+                                    ?>
+                                    <span class="badge <?= $statusBadgeClass ?>" style="padding: 0.35rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
+                                        <?= strtoupper(str_replace('_', ' ', $status)) ?>
+                                    </span>
+                                </td>
+                                <td>
                                     <?php if (!empty($consultation['notes'])): ?>
                                         <span style="color: #475569;"><?= esc(substr($consultation['notes'], 0, 50)) ?><?= strlen($consultation['notes']) > 50 ? '...' : '' ?></span>
                                     <?php else: ?>
@@ -134,7 +130,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" style="padding: 2rem; text-align: center; color: #64748b;">
+                            <td colspan="7" style="padding: 2rem; text-align: center; color: #64748b;">
                                 No consultations found
                             </td>
                         </tr>
@@ -145,30 +141,23 @@
     </div>
 </section>
 
-<script>
-function applyFilters() {
-    const dateFrom = document.getElementById('date_from').value;
-    const dateTo = document.getElementById('date_to').value;
-    
-    const url = new URL(window.location.href);
-    if (dateFrom) {
-        url.searchParams.set('date_from', dateFrom);
-    } else {
-        url.searchParams.delete('date_from');
-    }
-    if (dateTo) {
-        url.searchParams.set('date_to', dateTo);
-    } else {
-        url.searchParams.delete('date_to');
-    }
-    
-    window.location.href = url.toString();
+<style>
+.badge-success {
+    background: #dcfce7;
+    color: #15803d;
 }
 
-function clearFilters() {
-    window.location.href = '<?= base_url('doctor/consultations') ?>';
+.badge-warning {
+    background: #fef3c7;
+    color: #b45309;
 }
-</script>
+
+.badge-info {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+</style>
+
 
 <?= $this->endSection() ?>
 

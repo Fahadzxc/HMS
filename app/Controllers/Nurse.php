@@ -215,6 +215,15 @@ class Nurse extends Controller
                             }
                         }
                     }
+
+                    $pendingPrescriptions = $pendingPrescriptions ?? [];
+                    $completedPrescriptions = $completedPrescriptions ?? [];
+
+                    $allForStock = array_merge($pendingPrescriptions, $completedPrescriptions);
+                    $medicationStockMap = $this->buildMedicationStockMap($allForStock);
+                    $this->attachStockInfoToPrescriptions($pendingPrescriptions, $medicationStockMap);
+                    $this->attachStockInfoToPrescriptions($completedPrescriptions, $medicationStockMap);
+
                 } catch (\Exception $e) {
                     log_message('error', 'Error fetching prescriptions: ' . $e->getMessage());
                     // Continue without prescriptions
@@ -384,6 +393,140 @@ class Nurse extends Controller
             'success' => false,
             'message' => 'Invalid request method. Expected POST, got: ' . $this->request->getMethod()
         ]);
+    }
+
+    protected function buildMedicationStockMap(array $prescriptions): array
+    {
+        if (empty($prescriptions)) {
+            return [];
+        }
+
+        $db = \Config\Database::connect();
+        if (!$db->tableExists('pharmacy_inventory')) {
+            return [];
+        }
+
+        $medicationIds = [];
+        $medicationNames = [];
+
+        foreach ($prescriptions as $rx) {
+            $items = json_decode($rx['items_json'] ?? '[]', true) ?: [];
+            foreach ($items as $item) {
+                if (!empty($item['med_id'])) {
+                    $medicationIds[] = (int) $item['med_id'];
+                }
+                if (!empty($item['name'])) {
+                    $medicationNames[] = trim($item['name']);
+                }
+            }
+        }
+
+        $medicationIds = array_values(array_unique(array_filter($medicationIds)));
+        $medicationNames = array_values(array_unique(array_filter($medicationNames)));
+
+        if (empty($medicationIds) && empty($medicationNames)) {
+            return [];
+        }
+
+        $stockMap = [];
+
+        if (!empty($medicationIds)) {
+            $records = $db->table('pharmacy_inventory')
+                ->whereIn('medication_id', $medicationIds)
+                ->get()
+                ->getResultArray();
+
+            foreach ($records as $record) {
+                $formatted = $this->formatStockRecord($record);
+                if (!empty($record['medication_id'])) {
+                    $stockMap['id:' . (int)$record['medication_id']] = $formatted;
+                }
+                if (!empty($record['name'])) {
+                    $stockMap['name:' . strtolower(trim($record['name']))] = $formatted;
+                }
+            }
+        }
+
+        if (!empty($medicationNames)) {
+            $remainingNames = array_filter($medicationNames, function ($name) use ($stockMap) {
+                return !isset($stockMap['name:' . strtolower($name)]);
+            });
+
+            if (!empty($remainingNames)) {
+                $nameRecords = $db->table('pharmacy_inventory')
+                    ->whereIn('name', $remainingNames)
+                    ->get()
+                    ->getResultArray();
+
+                foreach ($nameRecords as $record) {
+                    if (empty($record['name'])) {
+                        continue;
+                    }
+                    $key = 'name:' . strtolower(trim($record['name']));
+                    if (!isset($stockMap[$key])) {
+                        $stockMap[$key] = $this->formatStockRecord($record);
+                    }
+                }
+            }
+        }
+
+        return $stockMap;
+    }
+
+    protected function formatStockRecord(array $record): array
+    {
+        $quantity = (int)($record['stock_quantity'] ?? 0);
+        $reorderLevel = (int)($record['reorder_level'] ?? 0);
+        $status = 'unknown';
+
+        if ($quantity <= 0) {
+            $status = 'out_of_stock';
+        } elseif ($reorderLevel > 0 && $quantity <= $reorderLevel) {
+            $status = 'low_stock';
+        } else {
+            $status = 'in_stock';
+        }
+
+        return [
+            'quantity' => $quantity,
+            'reorder_level' => $reorderLevel,
+            'status' => $status,
+        ];
+    }
+
+    protected function attachStockInfoToPrescriptions(array &$prescriptions, array $stockMap): void
+    {
+        if (empty($prescriptions)) {
+            return;
+        }
+
+        foreach ($prescriptions as &$rx) {
+            $items = json_decode($rx['items_json'] ?? '[]', true) ?: [];
+            foreach ($items as &$item) {
+                $item['stock'] = $this->resolveStockForItem($item, $stockMap);
+            }
+            $rx['items_with_stock'] = $items;
+            $rx['first_item_stock'] = $items[0]['stock'] ?? null;
+        }
+    }
+
+    protected function resolveStockForItem(array $item, array $stockMap): ?array
+    {
+        if (!empty($item['med_id'])) {
+            $key = 'id:' . (int)$item['med_id'];
+            if (isset($stockMap[$key])) {
+                return $stockMap[$key];
+            }
+        }
+
+        if (!empty($item['name'])) {
+            $key = 'name:' . strtolower(trim($item['name']));
+            if (isset($stockMap[$key])) {
+                return $stockMap[$key];
+            }
+        }
+
+        return null;
     }
 
     public function updateTreatment()
@@ -753,6 +896,248 @@ class Nurse extends Controller
         }
         
         $result = $builder->update($updateData);
+
+        // Deduct stock from pharmacy_inventory when nurse marks prescription as given
+        // (Only if prescription hasn't been dispensed yet to avoid double deduction)
+        // Check if stock was already deducted by looking for STOCK_DEDUCTED flag in notes
+        $shouldDeductStock = $result && $currentStatus !== 'dispensed' && $db->tableExists('pharmacy_inventory');
+        
+        // Check if stock was already deducted for this prescription
+        $notes = $prescription['notes'] ?? '';
+        $stockAlreadyDeducted = strpos($notes, 'STOCK_DEDUCTED:') !== false;
+        
+        if ($shouldDeductStock) {
+            if ($stockAlreadyDeducted) {
+                $shouldDeductStock = false;
+                log_message('info', "Skipping stock deduction - already deducted for prescription #{$prescriptionId}");
+            } else {
+                log_message('info', "Will deduct FULL prescription quantity - first time marking prescription #{$prescriptionId}");
+            }
+        }
+        
+        if ($shouldDeductStock) {
+            log_message('info', "Starting stock deduction for prescription #{$prescriptionId}");
+            $items = json_decode($prescription['items_json'] ?? '[]', true);
+            $medicationModel = new \App\Models\MedicationModel();
+            
+            foreach ($items as $item) {
+                $medicineName = $item['name'] ?? '';
+                
+                if (empty($medicineName)) {
+                    continue;
+                }
+                
+                // Calculate quantity - check if quantity field exists, otherwise calculate from dosage/frequency/duration
+                $quantity = 0;
+                if (isset($item['quantity']) && $item['quantity'] > 0) {
+                    $quantity = (int)$item['quantity'];
+                } else {
+                    // Try to calculate quantity from duration and frequency
+                    $durationStr = $item['duration'] ?? '';
+                    $frequency = $item['frequency'] ?? '';
+                    
+                    if (!empty($durationStr)) {
+                        preg_match('/(\d+)/', $durationStr, $matches);
+                        if (!empty($matches[1])) {
+                            $durationDays = (int)$matches[1];
+                            
+                            // Estimate quantity based on frequency
+                            if (strpos(strtolower($frequency), '2x') !== false || 
+                                strpos(strtolower($frequency), 'twice') !== false ||
+                                strpos(strtolower($frequency), '2') !== false) {
+                                $quantity = $durationDays * 2;
+                            } elseif (strpos(strtolower($frequency), '3x') !== false || 
+                                     strpos(strtolower($frequency), 'thrice') !== false ||
+                                     strpos(strtolower($frequency), '3') !== false) {
+                                $quantity = $durationDays * 3;
+                            } elseif (strpos(strtolower($frequency), 'every 6 hours') !== false) {
+                                $quantity = $durationDays * 4; // 4 times per day
+                            } elseif (strpos(strtolower($frequency), 'every 8 hours') !== false) {
+                                $quantity = $durationDays * 3; // 3 times per day
+                            } else {
+                                $quantity = $durationDays; // Once a day (default)
+                            }
+                        }
+                    }
+                    
+                    // If still no quantity, default to 1 (single dose)
+                    if ($quantity <= 0) {
+                        $quantity = 1;
+                    }
+                }
+                
+                log_message('info', "Processing stock deduction for: {$medicineName}, Quantity: {$quantity}");
+                
+                // Extract base medication name (remove strength/dosage like "500mg", "400mg")
+                // e.g., "Amoxicillin 500mg" -> "Amoxicillin"
+                $baseMedicineName = preg_replace('/\s+\d+.*?(mg|ml|g|tablet|capsule).*$/i', '', $medicineName);
+                $baseMedicineName = trim($baseMedicineName);
+                
+                log_message('info', "Looking for medication: '{$medicineName}' (base: '{$baseMedicineName}')");
+                
+                // Try to find medication by exact name first
+                $medication = $medicationModel->where('name', $medicineName)->first();
+                
+                // If not found, try base name
+                if (!$medication && !empty($baseMedicineName)) {
+                    $medication = $medicationModel->where('name', $baseMedicineName)->first();
+                    log_message('info', "Trying medication by base name: '{$baseMedicineName}'");
+                }
+                
+                // If still not found, try LIKE match
+                if (!$medication && !empty($baseMedicineName)) {
+                    $medication = $medicationModel->like('name', $baseMedicineName, 'both')->first();
+                    log_message('info', "Trying medication by LIKE match: '{$baseMedicineName}'");
+                }
+                
+                $inventoryRecord = null;
+                
+                // Try to find inventory record by medication_id first
+                if ($medication && !empty($medication['id'])) {
+                    $inventoryRecord = $db->table('pharmacy_inventory')
+                        ->where('medication_id', $medication['id'])
+                        ->get()
+                        ->getRowArray();
+                    log_message('info', "Found inventory by medication_id ({$medication['id']}): " . ($inventoryRecord ? 'YES' : 'NO'));
+                }
+                
+                // If not found by medication_id, try by exact name match
+                if (!$inventoryRecord) {
+                    $inventoryRecord = $db->table('pharmacy_inventory')
+                        ->where('name', $medicineName)
+                        ->get()
+                        ->getRowArray();
+                    log_message('info', "Trying inventory by exact name '{$medicineName}': " . ($inventoryRecord ? 'YES' : 'NO'));
+                }
+                
+                // If still not found, try base name match
+                if (!$inventoryRecord && !empty($baseMedicineName)) {
+                    $inventoryRecord = $db->table('pharmacy_inventory')
+                        ->where('name', $baseMedicineName)
+                        ->get()
+                        ->getRowArray();
+                    log_message('info', "Trying inventory by base name '{$baseMedicineName}': " . ($inventoryRecord ? 'YES' : 'NO'));
+                }
+                
+                // If still not found, try LIKE match
+                if (!$inventoryRecord && !empty($baseMedicineName)) {
+                    $inventoryRecord = $db->table('pharmacy_inventory')
+                        ->like('name', $baseMedicineName, 'both')
+                        ->get()
+                        ->getRowArray();
+                    log_message('info', "Trying inventory by LIKE match '{$baseMedicineName}': " . ($inventoryRecord ? 'YES' : 'NO'));
+                }
+                
+                // Last resort: Get all inventory and find by case-insensitive partial match
+                if (!$inventoryRecord && !empty($baseMedicineName)) {
+                    $allInventory = $db->table('pharmacy_inventory')
+                        ->select('id, name, medication_id, stock_quantity')
+                        ->get()
+                        ->getResultArray();
+                    
+                    foreach ($allInventory as $inv) {
+                        $invName = strtolower(trim($inv['name'] ?? ''));
+                        $searchName = strtolower($baseMedicineName);
+                        if (strpos($invName, $searchName) !== false || strpos($searchName, $invName) !== false) {
+                            $inventoryRecord = $inv;
+                            log_message('info', "Found inventory by case-insensitive partial match: '{$inv['name']}'");
+                            break;
+                        }
+                    }
+                }
+                
+                if ($inventoryRecord) {
+                    $currentStock = (int)($inventoryRecord['stock_quantity'] ?? 0);
+                    $newStock = max(0, $currentStock - $quantity); // Don't go below 0
+                    
+                    log_message('info', "Stock update: {$medicineName} - Current: {$currentStock}, Deduct: {$quantity}, New: {$newStock}");
+                    log_message('info', "Inventory record ID: {$inventoryRecord['id']}, Name: {$inventoryRecord['name']}");
+                    
+                    // Update stock using direct SQL to ensure it works
+                    $updateResult = false;
+                    try {
+                        $updateResult = $db->table('pharmacy_inventory')
+                            ->where('id', $inventoryRecord['id'])
+                            ->update([
+                                'stock_quantity' => $newStock,
+                                'updated_at' => date('Y-m-d H:i:s'),
+                            ]);
+                        
+                        // Verify the update
+                        $verifyRecord = $db->table('pharmacy_inventory')
+                            ->where('id', $inventoryRecord['id'])
+                            ->get()
+                            ->getRowArray();
+                        $verifiedStock = (int)($verifyRecord['stock_quantity'] ?? 0);
+                        
+                        log_message('info', "Stock update result: " . ($updateResult ? 'SUCCESS' : 'FAILED'));
+                        log_message('info', "Verified stock after update: {$verifiedStock} (expected: {$newStock})");
+                        
+                        if ($verifiedStock !== $newStock) {
+                            log_message('error', "Stock update verification FAILED! Expected {$newStock} but got {$verifiedStock}");
+                            // Try direct SQL update as fallback
+                            $db->query("UPDATE pharmacy_inventory SET stock_quantity = {$newStock}, updated_at = NOW() WHERE id = {$inventoryRecord['id']}");
+                            log_message('info', "Attempted direct SQL update as fallback");
+                        }
+                    } catch (\Exception $e) {
+                        log_message('error', "Error updating stock: " . $e->getMessage());
+                        // Try direct SQL as fallback
+                        try {
+                            $db->query("UPDATE pharmacy_inventory SET stock_quantity = {$newStock}, updated_at = NOW() WHERE id = {$inventoryRecord['id']}");
+                            $updateResult = true;
+                            log_message('info', "Direct SQL update succeeded");
+                        } catch (\Exception $e2) {
+                            log_message('error', "Direct SQL update also failed: " . $e2->getMessage());
+                        }
+                    }
+                    
+                    if ($updateResult) {
+                        // Mark stock as deducted in prescription notes to prevent double deduction
+                        $currentNotes = $prescription['notes'] ?? '';
+                        if (strpos($currentNotes, 'STOCK_DEDUCTED:') === false) {
+                            $deductedFlag = 'STOCK_DEDUCTED:' . date('Y-m-d H:i:s') . ':' . $medicineName . ':' . $quantity;
+                            $newNotes = trim($currentNotes);
+                            if (!empty($newNotes) && !str_contains($newNotes, 'STOCK_DEDUCTED:')) {
+                                $newNotes .= "\n" . $deductedFlag;
+                            } elseif (empty($newNotes)) {
+                                $newNotes = $deductedFlag;
+                            }
+                            
+                            // Update prescription notes with deduction flag
+                            $db->table('prescriptions')
+                                ->where('id', $prescriptionId)
+                                ->update(['notes' => $newNotes]);
+                            log_message('info', "Marked stock as deducted in prescription notes");
+                        }
+                    }
+                    
+                    // Log stock movement
+                    if ($db->tableExists('pharmacy_stock_movements')) {
+                        $movementResult = $db->table('pharmacy_stock_movements')->insert([
+                            'medication_id' => $medication['id'] ?? null,
+                            'medicine_name' => $medicineName,
+                            'movement_type' => 'dispense',
+                            'quantity_change' => -$quantity,
+                            'previous_stock' => $currentStock,
+                            'new_stock' => $newStock,
+                            'action_by' => session()->get('user_id'),
+                            'notes' => 'Given to patient via prescription RX#' . str_pad((string)$prescriptionId, 6, '0', STR_PAD_LEFT) . ' by nurse',
+                            'created_at' => date('Y-m-d H:i:s'),
+                        ]);
+                        log_message('info', "Stock movement log result: " . ($movementResult ? 'SUCCESS' : 'FAILED'));
+                    }
+                } else {
+                    log_message('warning', "No inventory record found for medication: {$medicineName}");
+                    // Debug: Show available inventory records
+                    $allInventory = $db->table('pharmacy_inventory')->select('id, name, medication_id, stock_quantity')->get()->getResultArray();
+                    log_message('debug', "Available inventory records: " . json_encode($allInventory));
+                }
+            }
+            
+            log_message('info', "Completed stock deduction process for prescription #{$prescriptionId}");
+        } else {
+            log_message('info', "Skipping stock deduction - conditions not met (result: " . ($result ? 'true' : 'false') . ", status: {$currentStatus}, table exists: " . ($db->tableExists('pharmacy_inventory') ? 'true' : 'false') . ")");
+        }
 
         if ($result && !$wasCompleted) {
             // Auto-create bill for prescription medications (first time only)

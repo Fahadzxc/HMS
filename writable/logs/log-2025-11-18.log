@@ -1,0 +1,136 @@
+ERROR - 2025-11-18 17:18:33 --> mysqli_sql_exception: Duplicate column name 'progress_days' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE pre...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE pre...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE pre...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(826): CodeIgniter\Database\BaseConnection->query('ALTER TABLE pre...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}
+ERROR - 2025-11-18 17:18:41 --> mysqli_sql_exception: Duplicate column name 'progress_days' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE pre...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE pre...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE pre...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(826): CodeIgniter\Database\BaseConnection->query('ALTER TABLE pre...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}
+ERROR - 2025-11-18 17:49:23 --> mysqli_sql_exception: Table 'hms.medicine_orders' doesn't exist in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `medicin...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `medicin...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `medicin...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `medicin...', Array, false)
+#4 C:\xampp\htdocs\HMS\system\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\BaseModel.php(677): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp\htdocs\HMS\app\Models\MedicineOrderModel.php(44): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp\htdocs\HMS\app\Controllers\Pharmacy.php(560): App\Models\MedicineOrderModel->getAllWithPharmacist()
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Pharmacy->orders()
+#9 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Pharmacy))
+#10 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#12 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#13 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#14 {main}
+CRITICAL - 2025-11-18 17:49:23 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.medicine_orders' doesn't exist
+[Method: GET, Route: pharmacy/orders]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `medicine_orders`.*, `users`.`name` as `received_by_name`
+FROM `medicine_orders`
+LEFT JOIN `users` ON `users`.`id` = `medicine_orders`.`received_by`
+WHERE `medicine_orders`.`deleted_at` IS NULL
+ORDER BY `medicine_orders`.`order_date` DESC, `medicine_orders`.`created_at` DESC', [], false)
+ 2 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\MedicineOrderModel.php(44): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\Pharmacy.php(560): App\Models\MedicineOrderModel->getAllWithPharmacist()
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Pharmacy->orders()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Pharmacy))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-18 17:49:23 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.medicine_orders' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `medicine_orders`.*, `users`.`name` as `received_by_name`
+FROM `medicine_orders`
+LEFT JOIN `users` ON `users`.`id` = `medicine_orders`.`received_by`
+WHERE `medicine_orders`.`deleted_at` IS NULL
+ORDER BY `medicine_orders`.`order_date` DESC, `medicine_orders`.`created_at` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `medicine_orders`.*, `users`.`name` as `received_by_name`
+FROM `medicine_orders`
+LEFT JOIN `users` ON `users`.`id` = `medicine_orders`.`received_by`
+WHERE `medicine_orders`.`deleted_at` IS NULL
+ORDER BY `medicine_orders`.`order_date` DESC, `medicine_orders`.`created_at` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `medicine_orders`.*, `users`.`name` as `received_by_name`
+FROM `medicine_orders`
+LEFT JOIN `users` ON `users`.`id` = `medicine_orders`.`received_by`
+WHERE `medicine_orders`.`deleted_at` IS NULL
+ORDER BY `medicine_orders`.`order_date` DESC, `medicine_orders`.`created_at` DESC', [], false)
+ 4 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\MedicineOrderModel.php(44): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\Pharmacy.php(560): App\Models\MedicineOrderModel->getAllWithPharmacist()
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Pharmacy->orders()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Pharmacy))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-18 17:49:24 --> [Caused by] mysqli_sql_exception: Table 'hms.medicine_orders' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `medicine_orders`.*, `users`.`name` as `received_by_name`
+FROM `medicine_orders`
+LEFT JOIN `users` ON `users`.`id` = `medicine_orders`.`received_by`
+WHERE `medicine_orders`.`deleted_at` IS NULL
+ORDER BY `medicine_orders`.`order_date` DESC, `medicine_orders`.`created_at` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `medicine_orders`.*, `users`.`name` as `received_by_name`
+FROM `medicine_orders`
+LEFT JOIN `users` ON `users`.`id` = `medicine_orders`.`received_by`
+WHERE `medicine_orders`.`deleted_at` IS NULL
+ORDER BY `medicine_orders`.`order_date` DESC, `medicine_orders`.`created_at` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `medicine_orders`.*, `users`.`name` as `received_by_name`
+FROM `medicine_orders`
+LEFT JOIN `users` ON `users`.`id` = `medicine_orders`.`received_by`
+WHERE `medicine_orders`.`deleted_at` IS NULL
+ORDER BY `medicine_orders`.`order_date` DESC, `medicine_orders`.`created_at` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `medicine_orders`.*, `users`.`name` as `received_by_name`
+FROM `medicine_orders`
+LEFT JOIN `users` ON `users`.`id` = `medicine_orders`.`received_by`
+WHERE `medicine_orders`.`deleted_at` IS NULL
+ORDER BY `medicine_orders`.`order_date` DESC, `medicine_orders`.`created_at` DESC', [], false)
+ 5 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\MedicineOrderModel.php(44): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\Pharmacy.php(560): App\Models\MedicineOrderModel->getAllWithPharmacist()
+ 9 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Pharmacy->orders()
+10 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Pharmacy))
+11 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+13 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+14 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-18 17:50:29 --> mysqli_sql_exception: Duplicate key name 'order_number' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('CREATE TABLE `m...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('CREATE TABLE `m...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('CREATE TABLE `m...')
+#3 C:\xampp\htdocs\HMS\system\Database\Forge.php(570): CodeIgniter\Database\BaseConnection->query('CREATE TABLE `m...')
+#4 C:\xampp\htdocs\HMS\app\Database\Migrations\2025-11-18-174605_CreateMedicineOrdersTable.php(92): CodeIgniter\Database\Forge->createTable('medicine_orders', true)
+#5 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(876): App\Database\Migrations\CreateMedicineOrdersTable->up()
+#6 C:\xampp\htdocs\HMS\system\Database\MigrationRunner.php(182): CodeIgniter\Database\MigrationRunner->migrate('up', Object(stdClass))
+#7 C:\xampp\htdocs\HMS\system\Commands\Database\Migrate.php(85): CodeIgniter\Database\MigrationRunner->latest(NULL)
+#8 C:\xampp\htdocs\HMS\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Migrate->run(Array)
+#9 C:\xampp\htdocs\HMS\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate', Array)
+#10 C:\xampp\htdocs\HMS\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 C:\xampp\htdocs\HMS\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 C:\xampp\htdocs\HMS\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}

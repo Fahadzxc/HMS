@@ -2829,6 +2829,52 @@
             font-weight: 600;
         }
 
+        .stock-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .stock-indicator .stock-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            display: inline-flex;
+        }
+
+        .stock-indicator.stock-in {
+            background: rgba(16, 185, 129, 0.12);
+            color: #047857;
+        }
+
+        .stock-indicator.stock-low {
+            background: rgba(251, 191, 36, 0.18);
+            color: #92400e;
+        }
+
+        .stock-indicator.stock-out {
+            background: rgba(248, 113, 113, 0.18);
+            color: #b91c1c;
+        }
+
+        .stock-indicator.stock-unknown {
+            background: rgba(148, 163, 184, 0.18);
+            color: #475569;
+        }
+
+        .stock-indicator.stock-muted {
+            background: rgba(148, 163, 184, 0.12);
+            color: #475569;
+            font-weight: 500;
+        }
+
         /* Responsive for Prescriptions */
         @media (max-width: 1024px) {
             .prescriptions-table {
@@ -3245,6 +3291,11 @@
         .badge-secondary {
             background-color: #e2e8f0;
             color: #475569;
+        }
+
+        .badge-danger {
+            background-color: #fee2e2;
+            color: #b91c1c;
         }
 
         /* Unified Page Header Styles */
@@ -3726,6 +3777,31 @@
 
             .lab-context-text {
                 font-size: 0.85rem;
+            }
+        }
+
+        /* Pharmacy Dispense Transaction Log Styling */
+        .data-table tbody tr[style*="border-left"] {
+            transition: all 0.2s ease;
+            background: #ffffff;
+        }
+
+        .data-table tbody tr[style*="border-left"]:hover {
+            background: #f0fdf4;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+        }
+
+        /* Prescription "Awaiting Dispense" Badge Enhancement */
+        .badge-warning {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
             }
         }
     </style>

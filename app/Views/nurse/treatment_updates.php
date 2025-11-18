@@ -210,6 +210,7 @@
                             <th>Frequency</th>
                             <th>Meal Instruction</th>
                             <th>Duration</th>
+                            <th>Pharmacy Stock</th>
                             <th>Status</th>
                             <th>Action</th>
                         </tr>
@@ -217,12 +218,40 @@
                     <tbody>
                         <?php foreach ($pending_prescriptions as $rx): ?>
                             <?php 
-                            $items = json_decode($rx['items_json'] ?? '[]', true) ?: [];
+                            $items = $rx['items_with_stock'] ?? (json_decode($rx['items_json'] ?? '[]', true) ?: []);
                             $firstItem = $items[0] ?? [];
                             $durationDays = $rx['duration_days'] ?? 0;
                             $isDailyTracking = $rx['is_daily_tracking'] ?? false;
                             $currentDay = $rx['current_day'] ?? 1;
                             $daysRemaining = $rx['days_remaining'] ?? 0;
+                            $stockInfo = $rx['first_item_stock'] ?? ($firstItem['stock'] ?? null);
+                            
+                            $stockStatus = $stockInfo['status'] ?? 'unknown';
+                            $stockQuantity = $stockInfo['quantity'] ?? null;
+                            $stockReorder = $stockInfo['reorder_level'] ?? null;
+                            $stockClass = 'stock-indicator';
+                            $stockText = 'No stock data';
+                            
+                            if ($stockStatus === 'in_stock') {
+                                $stockClass .= ' stock-in';
+                                $stockText = 'In stock' . ($stockQuantity !== null ? ' • ' . $stockQuantity . ' units' : '');
+                            } elseif ($stockStatus === 'low_stock') {
+                                $stockClass .= ' stock-low';
+                                $labelQuantity = $stockQuantity !== null ? $stockQuantity . ' units' : 'Low quantity';
+                                $stockText = 'Low stock • ' . $labelQuantity;
+                                if ($stockReorder !== null) {
+                                    $stockText .= ' (reorder at ' . $stockReorder . ')';
+}
+                            } elseif ($stockStatus === 'out_of_stock') {
+                                $stockClass .= ' stock-out';
+                                $stockText = 'Out of stock';
+                            } elseif ($stockStatus === 'unknown') {
+                                $stockClass .= ' stock-unknown';
+                                $stockText = 'No stock data';
+                            } else {
+                                $stockClass .= ' stock-muted';
+                                $stockText = 'Not tracked';
+}
                             ?>
                             <tr>
                                 <td><strong>RX#<?= str_pad((string)$rx['id'], 3, '0', STR_PAD_LEFT) ?></strong></td>
@@ -248,6 +277,12 @@
                                             <div class="wizard-text">Day <?= $currentDay ?>/<?= $durationDays ?> (<?= $daysRemaining ?> days left)</div>
                                         </div>
                                     <?php endif; ?>
+                                </td>
+                                <td>
+                                    <span class="<?= $stockClass ?>">
+                                        <span class="stock-dot"></span>
+                                        <?= esc($stockText) ?>
+                                    </span>
                                 </td>
                                 <td>
                                     <?php if ($isDailyTracking): ?>
@@ -297,6 +332,7 @@
                             <th>Patient</th>
                             <th>Medication</th>
                             <th>Duration</th>
+                            <th>Pharmacy Stock</th>
                             <th>Progress</th>
                             <th>Date Completed</th>
                         </tr>
@@ -304,18 +340,52 @@
                     <tbody>
                         <?php foreach ($completed_prescriptions as $rx): ?>
                             <?php 
-                            $items = json_decode($rx['items_json'] ?? '[]', true) ?: [];
+                            $items = $rx['items_with_stock'] ?? (json_decode($rx['items_json'] ?? '[]', true) ?: []);
                             $firstItem = $items[0] ?? [];
                             $durationDays = $rx['duration_days'] ?? 0;
                             $currentDay = $rx['current_day'] ?? 0;
                             $daysRemaining = $rx['days_remaining'] ?? 0;
                             $isCompleted = $rx['is_completed_duration'] ?? false;
+                            $stockInfo = $rx['first_item_stock'] ?? ($firstItem['stock'] ?? null);
+                            
+                            $stockStatus = $stockInfo['status'] ?? 'unknown';
+                            $stockQuantity = $stockInfo['quantity'] ?? null;
+                            $stockReorder = $stockInfo['reorder_level'] ?? null;
+                            $stockClass = 'stock-indicator';
+                            $stockText = 'No stock data';
+                            
+                            if ($stockStatus === 'in_stock') {
+                                $stockClass .= ' stock-in';
+                                $stockText = 'In stock' . ($stockQuantity !== null ? ' • ' . $stockQuantity . ' units' : '');
+                            } elseif ($stockStatus === 'low_stock') {
+                                $stockClass .= ' stock-low';
+                                $labelQuantity = $stockQuantity !== null ? $stockQuantity . ' units' : 'Low quantity';
+                                $stockText = 'Low stock • ' . $labelQuantity;
+                                if ($stockReorder !== null) {
+                                    $stockText .= ' (reorder at ' . $stockReorder . ')';
+}
+                            } elseif ($stockStatus === 'out_of_stock') {
+                                $stockClass .= ' stock-out';
+                                $stockText = 'Out of stock';
+                            } elseif ($stockStatus === 'unknown') {
+                                $stockClass .= ' stock-unknown';
+                                $stockText = 'No stock data';
+                            } else {
+                                $stockClass .= ' stock-muted';
+                                $stockText = 'Not tracked';
+                            }
                             ?>
                             <tr>
                                 <td><strong>RX#<?= str_pad((string)$rx['id'], 3, '0', STR_PAD_LEFT) ?></strong></td>
                                 <td><?= esc($rx['patient_name'] ?? 'N/A') ?></td>
                                 <td><?= esc($firstItem['name'] ?? 'N/A') ?></td>
                                 <td><?= esc($firstItem['duration'] ?? '—') ?></td>
+                                <td>
+                                    <span class="<?= $stockClass ?>">
+                                        <span class="stock-dot"></span>
+                                        <?= esc($stockText) ?>
+                                    </span>
+                                </td>
                                 <td>
                                     <?php if ($durationDays > 0): ?>
                                         <div class="wizard-progress">

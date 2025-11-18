@@ -61,9 +61,18 @@ $routes->get('lab/reports', 'Lab::reports');
 
 // Pharmacy Routes
 $routes->get('pharmacy/prescriptions', 'Pharmacy::prescriptions');
+$routes->get('pharmacy/prescriptions/view/(:num)', 'Pharmacy::viewPrescription/$1');
+$routes->post('pharmacy/dispensePrescription', 'Pharmacy::dispensePrescription');
 $routes->get('pharmacy/inventory', 'Pharmacy::inventory');
+$routes->post('pharmacy/inventory/save', 'Pharmacy::saveInventory');
+$routes->get('pharmacy/inventory/get/(:num)', 'Pharmacy::getInventory/$1');
+$routes->post('pharmacy/inventory/adjustStock', 'Pharmacy::adjustStock');
 $routes->get('pharmacy/dispense', 'Pharmacy::dispense');
+$routes->get('pharmacy/stock-movement', 'Pharmacy::stockMovement');
+$routes->get('pharmacy/stockMovement', 'Pharmacy::stockMovement');
 $routes->get('pharmacy/orders', 'Pharmacy::orders');
+$routes->post('pharmacy/orders/create', 'Pharmacy::createOrder');
+$routes->post('pharmacy/orders/updateStatus', 'Pharmacy::updateOrderStatus');
 $routes->get('pharmacy/reports', 'Pharmacy::reports');
 
 // Accounts Routes
