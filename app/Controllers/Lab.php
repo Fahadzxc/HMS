@@ -312,4 +312,91 @@ class Lab extends Controller
 			]);
 		}
 	}
+
+	public function reports()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'lab') {
+			return redirect()->to('/login');
+		}
+
+		$requestModel = new LabTestRequestModel();
+		$resultModel = new LabTestResultModel();
+		
+		// Get filters
+		$reportType = $this->request->getGet('type') ?? 'test_requests';
+		$dateFrom = $this->request->getGet('date_from') ?? date('Y-m-01');
+		$dateTo = $this->request->getGet('date_to') ?? date('Y-m-d');
+
+		$data = [
+			'title' => 'Laboratory Reports - HMS',
+			'user_role' => 'lab',
+			'user_name' => session()->get('name'),
+			'report_type' => $reportType,
+			'date_from' => $dateFrom,
+			'date_to' => $dateTo,
+			'test_requests' => [],
+			'test_results' => [],
+			'critical_results' => [],
+			'summary' => [
+				'total_requests' => 0,
+				'total_results' => 0,
+				'critical_count' => 0,
+				'completion_rate' => 0,
+			]
+		];
+
+		try {
+			// Test Requests Report
+			$requests = $requestModel
+				->select('lab_test_requests.*, patients.full_name as patient_name, patients.patient_id as patient_code, users.name as doctor_name')
+				->join('patients', 'patients.id = lab_test_requests.patient_id', 'left')
+				->join('users', 'users.id = lab_test_requests.doctor_id', 'left')
+				->where('DATE(lab_test_requests.requested_at) >=', $dateFrom)
+				->where('DATE(lab_test_requests.requested_at) <=', $dateTo)
+				->orderBy('lab_test_requests.requested_at', 'DESC')
+				->findAll();
+			
+			$data['test_requests'] = $requests;
+			$data['summary']['total_requests'] = count($requests);
+
+			// Test Results Report
+			$db = \Config\Database::connect();
+			if ($db->tableExists('lab_test_results')) {
+				try {
+					$results = $resultModel
+						->select('lab_test_results.*, lab_test_requests.test_type, patients.full_name as patient_name, patients.patient_id as patient_code')
+						->join('lab_test_requests', 'lab_test_requests.id = lab_test_results.request_id', 'left')
+						->join('patients', 'patients.id = lab_test_requests.patient_id', 'left')
+						->where('DATE(lab_test_results.released_at) >=', $dateFrom)
+						->where('DATE(lab_test_results.released_at) <=', $dateTo)
+						->orderBy('lab_test_results.released_at', 'DESC')
+						->findAll();
+					
+					$data['test_results'] = $results;
+					$data['summary']['total_results'] = count($results);
+					
+					// Critical Results
+					$critical = array_filter($results, function($r) {
+						return !empty($r['critical_flag']) && $r['critical_flag'] == 1;
+					});
+					$data['critical_results'] = array_values($critical);
+					$data['summary']['critical_count'] = count($critical);
+					
+					// Completion Rate
+					$data['summary']['completion_rate'] = count($requests) > 0 
+						? round((count($results) / count($requests)) * 100, 2) 
+						: 0;
+				} catch (\Exception $e) {
+					log_message('error', 'Error fetching lab results in reports: ' . $e->getMessage());
+					$data['test_results'] = [];
+				}
+			} else {
+				$data['test_results'] = [];
+			}
+		} catch (\Exception $e) {
+			log_message('error', 'Error fetching laboratory reports: ' . $e->getMessage());
+		}
+
+		return view('lab/reports', $data);
+	}
 }

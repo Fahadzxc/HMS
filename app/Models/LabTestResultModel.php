@@ -30,12 +30,35 @@ class LabTestResultModel extends Model
 
     public function getAllWithRelations(array $filters = [])
     {
-        $builder = $this->select('lab_test_results.*, patients.full_name AS patient_name, lab_test_requests.test_type, staff_user.name AS released_by_name, auditors.name AS audited_by_name')
+        $db = \Config\Database::connect();
+
+        // Ensure required base tables exist
+        $requiredExist = $db->tableExists('lab_test_results') &&
+                         $db->tableExists('lab_test_requests') &&
+                         $db->tableExists('patients') &&
+                         $db->tableExists('users');
+        if (!$requiredExist) {
+            return [];
+        }
+
+        // Build select dynamically depending on available optional tables
+        $select = 'lab_test_results.*, patients.full_name AS patient_name, lab_test_requests.test_type, auditors.name AS audited_by_name';
+        $joinStaff = $db->tableExists('lab_staff');
+        if ($joinStaff) {
+            $select .= ', staff_user.name AS released_by_name';
+        }
+
+        $builder = $this->select($select)
             ->join('lab_test_requests', 'lab_test_requests.id = lab_test_results.request_id', 'left')
             ->join('patients', 'patients.id = lab_test_requests.patient_id', 'left')
-            ->join('lab_staff', 'lab_staff.id = lab_test_results.released_by', 'left')
-            ->join('users AS staff_user', 'staff_user.id = lab_staff.user_id', 'left')
             ->join('users AS auditors', 'auditors.id = lab_test_results.audited_by', 'left');
+
+        // Only join lab_staff if it exists (it may have been removed)
+        if ($joinStaff) {
+            $builder
+                ->join('lab_staff', 'lab_staff.id = lab_test_results.released_by', 'left')
+                ->join('users AS staff_user', 'staff_user.id = lab_staff.user_id', 'left');
+        }
 
         if (!empty($filters['status'])) {
             $builder->where('lab_test_results.status', $filters['status']);

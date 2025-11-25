@@ -136,6 +136,9 @@
                                 </td>
                                 <td>
                                     <a href="/accounts/billing?bill_id=<?= $payment['bill_id'] ?>" class="btn-xs btn-primary">View Bill</a>
+                                    <?php if ($payment['status'] === 'completed'): ?>
+                                        <button class="btn-xs btn-danger" onclick="voidPayment(<?= $payment['id'] ?>, '<?= esc($payment['payment_number'], 'js') ?>')" style="margin-left: 0.25rem;">Void</button>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -389,6 +392,30 @@ document.getElementById('recordPaymentForm').addEventListener('submit', async fu
         }
     }
 });
+
+function voidPayment(paymentId, paymentNumber) {
+    if (!confirm(`Are you sure you want to void payment ${paymentNumber}? This will adjust the bill balance.`)) {
+        return;
+    }
+    
+    fetch('<?= base_url('accounts/voidPayment') ?>', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ payment_id: paymentId })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('Payment voided successfully!');
+            location.reload();
+        } else {
+            alert('Error: ' + result.message);
+        }
+    })
+    .catch(error => {
+        alert('Error voiding payment: ' + error.message);
+    });
+}
 </script>
 
 <style>

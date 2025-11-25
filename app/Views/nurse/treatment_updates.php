@@ -115,6 +115,20 @@
                                     <label>Oxygen Saturation</label>
                                     <input type="text" class="vital-input" placeholder="98%" data-patient="<?= $p['id'] ?>" data-field="o2">
                                 </div>
+                                <?php if (strtolower($p['patient_type'] ?? 'outpatient') === 'inpatient'): ?>
+                                <div class="vital-item">
+                                    <label>Height (cm) <span class="req">*</span></label>
+                                    <input type="number" class="vital-input" placeholder="170" data-patient="<?= $p['id'] ?>" data-field="height" step="0.1" min="50" max="250" required>
+                                </div>
+                                <div class="vital-item">
+                                    <label>Weight (kg) <span class="req">*</span></label>
+                                    <input type="number" class="vital-input" placeholder="70" data-patient="<?= $p['id'] ?>" data-field="weight" step="0.1" min="10" max="500" required>
+                                </div>
+                                <div class="vital-item">
+                                    <label>BMI (Auto-calculated)</label>
+                                    <input type="text" class="vital-input" id="bmi-display-<?= $p['id'] ?>" data-patient="<?= $p['id'] ?>" data-field="bmi" readonly placeholder="—" style="background-color: #f3f4f6;">
+                                </div>
+                                <?php endif; ?>
                                 <div class="vital-item vital-actions-right">
                                     <label>&nbsp;</label>
                                     <button class="btn btn-primary btn-small" onclick="saveVitalTime(<?= $p['id'] ?>)">Save Time</button>
@@ -126,6 +140,11 @@
                             <div class="vital-history">
                                 <div class="vh-grid vh-header">
                                     <div>Time</div>
+                                    <?php if (strtolower($p['patient_type'] ?? 'outpatient') === 'inpatient'): ?>
+                                    <div>Height</div>
+                                    <div>Weight</div>
+                                    <div>BMI</div>
+                                    <?php endif; ?>
                                     <div>Blood Pressure</div>
                                     <div>Heart Rate</div>
                                     <div>Temperature</div>
@@ -147,6 +166,11 @@
                                     ?>
                                         <div class="vh-row">
                                             <div><?= esc($update['time'] ?? '—') ?></div>
+                                            <?php if (strtolower($p['patient_type'] ?? 'outpatient') === 'inpatient'): ?>
+                                            <div><?= !empty($update['height']) ? esc($update['height']) . ' cm' : '—' ?></div>
+                                            <div><?= !empty($update['weight']) ? esc($update['weight']) . ' kg' : '—' ?></div>
+                                            <div><?= esc($update['bmi'] ?? '—') ?></div>
+                                            <?php endif; ?>
                                             <div><?= esc($update['blood_pressure'] ?? '—') ?></div>
                                             <div><?= esc($update['heart_rate'] ?? '—') ?></div>
                                             <div><?= esc($update['temperature'] ?? '—') ?></div>
@@ -431,6 +455,44 @@
 // Get nurse name from PHP - must be defined before functions use it
 const nurseName = '<?= esc($user_name ?? session()->get('name') ?? 'Unknown') ?>';
 
+// BMI Calculation Function
+function calculateBMI(height, weight) {
+    if (!height || !weight || height <= 0 || weight <= 0) {
+        return '';
+    }
+    // Convert height from cm to meters
+    const heightInMeters = height / 100;
+    // Calculate BMI: weight (kg) / height (m)²
+    const bmi = weight / (heightInMeters * heightInMeters);
+    // Round to 1 decimal place
+    return bmi.toFixed(1) + ' kg/m²';
+}
+
+// Auto-calculate BMI when height or weight changes
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners to all height and weight inputs
+    document.querySelectorAll('.vital-input[data-field="height"], .vital-input[data-field="weight"]').forEach(input => {
+        input.addEventListener('input', function() {
+            const patientId = this.getAttribute('data-patient');
+            const heightInput = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="height"]`);
+            const weightInput = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="weight"]`);
+            const bmiDisplay = document.getElementById(`bmi-display-${patientId}`);
+            
+            if (heightInput && weightInput && bmiDisplay) {
+                const height = parseFloat(heightInput.value);
+                const weight = parseFloat(weightInput.value);
+                
+                if (height > 0 && weight > 0) {
+                    const bmi = calculateBMI(height, weight);
+                    bmiDisplay.value = bmi;
+                } else {
+                    bmiDisplay.value = '';
+                }
+            }
+        });
+    });
+});
+
 // NEW SIMPLE SAVE FUNCTION - Directly saves to database
 function saveTreatmentUpdate(patientId) {
     // Get time input
@@ -449,7 +511,41 @@ function saveTreatmentUpdate(patientId) {
     const hrInput = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="hr"]`);
     const tempInput = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="temp"]`);
     const o2Input = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="o2"]`);
+    const heightInput = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="height"]`);
+    const weightInput = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="weight"]`);
+    const bmiInput = document.getElementById(`bmi-display-${patientId}`);
     const notesTextarea = document.querySelector(`.treatment-textarea[data-patient="${patientId}"]`);
+    
+    // Check if patient is inpatient (has height/weight fields)
+    const isInpatient = heightInput !== null && weightInput !== null;
+    
+    // Validate height and weight for inpatients
+    if (isInpatient) {
+        if (!heightInput || !heightInput.value.trim()) {
+            alert('Height is required for inpatient patients.');
+            return;
+        }
+        if (!weightInput || !weightInput.value.trim()) {
+            alert('Weight is required for inpatient patients.');
+            return;
+        }
+        const height = parseFloat(heightInput.value);
+        const weight = parseFloat(weightInput.value);
+        if (height <= 0 || weight <= 0) {
+            alert('Please enter valid height and weight values.');
+            return;
+        }
+    }
+    
+    // Calculate BMI if height and weight are provided
+    let calculatedBMI = '';
+    if (isInpatient && heightInput && weightInput) {
+        const height = parseFloat(heightInput.value);
+        const weight = parseFloat(weightInput.value);
+        if (height > 0 && weight > 0) {
+            calculatedBMI = calculateBMI(height, weight);
+        }
+    }
     
     // Prepare simple data structure
     const data = {
@@ -459,12 +555,15 @@ function saveTreatmentUpdate(patientId) {
         heart_rate: hrInput ? hrInput.value.trim() : '',
         temperature: tempInput ? tempInput.value.trim() : '',
         oxygen_saturation: o2Input ? o2Input.value.trim() : '',
+        height: heightInput ? heightInput.value.trim() : '',
+        weight: weightInput ? weightInput.value.trim() : '',
+        bmi: calculatedBMI,
         nurse_name: nurseName,
         notes: notesTextarea ? notesTextarea.value.trim() : ''
     };
     
     // Validate - at least one vital sign or notes
-    if (!data.blood_pressure && !data.heart_rate && !data.temperature && !data.oxygen_saturation && !data.notes) {
+    if (!data.blood_pressure && !data.heart_rate && !data.temperature && !data.oxygen_saturation && !data.height && !data.weight && !data.notes) {
         alert('Please enter at least one vital sign or treatment notes.');
         return;
     }
@@ -525,6 +624,10 @@ function clearForm(patientId) {
     const vitalInputs = document.querySelectorAll(`.vital-input[data-patient="${patientId}"]`);
     vitalInputs.forEach(input => input.value = '');
     
+    // Clear BMI display
+    const bmiDisplay = document.getElementById(`bmi-display-${patientId}`);
+    if (bmiDisplay) bmiDisplay.value = '';
+    
     // Clear treatment notes
     const notesTextarea = document.querySelector(`.treatment-textarea[data-patient="${patientId}"]`);
     if (notesTextarea) notesTextarea.value = '';
@@ -571,7 +674,41 @@ function saveVitalTime(patientId) {
     const hrInput = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="hr"]`);
     const tempInput = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="temp"]`);
     const o2Input = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="o2"]`);
+    const heightInput = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="height"]`);
+    const weightInput = document.querySelector(`.vital-input[data-patient="${patientId}"][data-field="weight"]`);
+    const bmiInput = document.getElementById(`bmi-display-${patientId}`);
     const notesTextarea = document.querySelector(`.treatment-textarea[data-patient="${patientId}"]`);
+    
+    // Check if patient is inpatient (has height/weight fields)
+    const isInpatient = heightInput !== null && weightInput !== null;
+    
+    // Validate height and weight for inpatients
+    if (isInpatient) {
+        if (!heightInput || !heightInput.value.trim()) {
+            alert('Height is required for inpatient patients.');
+            return;
+        }
+        if (!weightInput || !weightInput.value.trim()) {
+            alert('Weight is required for inpatient patients.');
+            return;
+        }
+        const height = parseFloat(heightInput.value);
+        const weight = parseFloat(weightInput.value);
+        if (height <= 0 || weight <= 0) {
+            alert('Please enter valid height and weight values.');
+            return;
+        }
+    }
+    
+    // Calculate BMI if height and weight are provided
+    let calculatedBMI = '';
+    if (isInpatient && heightInput && weightInput) {
+        const height = parseFloat(heightInput.value);
+        const weight = parseFloat(weightInput.value);
+        if (height > 0 && weight > 0) {
+            calculatedBMI = calculateBMI(height, weight);
+        }
+    }
     
     // Prepare data to save
     const data = {
@@ -581,6 +718,9 @@ function saveVitalTime(patientId) {
         heart_rate: hrInput ? hrInput.value.trim() : '',
         temperature: tempInput ? tempInput.value.trim() : '',
         oxygen_saturation: o2Input ? o2Input.value.trim() : '',
+        height: heightInput ? heightInput.value.trim() : '',
+        weight: weightInput ? weightInput.value.trim() : '',
+        bmi: calculatedBMI,
         nurse_name: nurseName,
         notes: notesTextarea ? notesTextarea.value.trim() : ''
     };
@@ -646,8 +786,14 @@ function saveVitalTime(patientId) {
                 gridRow.className = 'vh-row';
                 const displayNurseName = nurseName && nurseName.trim() !== '' ? nurseName : 'Unknown';
                 
+                const heightWeightBmiCells = isInpatient ? `
+                    <div>${data.height ? data.height + ' cm' : '—'}</div>
+                    <div>${data.weight ? data.weight + ' kg' : '—'}</div>
+                    <div>${data.bmi || '—'}</div>
+                ` : '';
                 gridRow.innerHTML = `
                     <div>${display}</div>
+                    ${heightWeightBmiCells}
                     <div>${data.blood_pressure || '—'}</div>
                     <div>${data.heart_rate || '—'}</div>
                     <div>${data.temperature || '—'}</div>
@@ -727,8 +873,14 @@ function addToVitalHistory(patientId, time, vitals, nurse) {
     
     const gridRow = document.createElement('div');
     gridRow.className = 'vh-row';
+    const heightWeightBmiCells = vitals.height || vitals.weight || vitals.bmi ? `
+        <div>${vitals.height ? vitals.height + ' cm' : '—'}</div>
+        <div>${vitals.weight ? vitals.weight + ' kg' : '—'}</div>
+        <div>${vitals.bmi || '—'}</div>
+    ` : '';
     gridRow.innerHTML = `
         <div>${time || '—'}</div>
+        ${heightWeightBmiCells}
         <div>${vitals.blood_pressure || '—'}</div>
         <div>${vitals.heart_rate || '—'}</div>
         <div>${vitals.temperature || '—'}</div>

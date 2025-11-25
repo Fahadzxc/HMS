@@ -208,7 +208,7 @@
                 <div id="approvedFields" style="display: none;">
                     <div class="form-group">
                         <label>Approved Amount *</label>
-                        <input type="number" name="approved_amount" id="update_approved_amount" class="form-input" step="0.01" required>
+                        <input type="number" name="approved_amount" id="update_approved_amount" class="form-input" step="0.01">
                     </div>
                     <div class="form-group">
                         <label>
@@ -220,7 +220,7 @@
                 <div id="rejectedFields" style="display: none;">
                     <div class="form-group">
                         <label>Rejection Reason *</label>
-                        <textarea name="rejection_reason" id="update_rejection_reason" class="form-textarea" rows="3" required></textarea>
+                        <textarea name="rejection_reason" id="update_rejection_reason" class="form-textarea" rows="3"></textarea>
                     </div>
                 </div>
                 <div class="form-actions">
@@ -390,18 +390,68 @@ function updateProviderDefaults() {
     document.getElementById('claim_copay').value = copay;
 }
 
-function updateClaim(claimId, status) {
+async function updateClaim(claimId, status) {
     document.getElementById('update_claim_id').value = claimId;
     document.getElementById('update_status').value = status;
     document.getElementById('updateClaimTitle').textContent = status === 'approved' ? 'Approve Insurance Claim' : 'Reject Insurance Claim';
-    document.getElementById('approvedFields').style.display = status === 'approved' ? 'block' : 'none';
-    document.getElementById('rejectedFields').style.display = status === 'rejected' ? 'block' : 'none';
+    
+    const approvedFields = document.getElementById('approvedFields');
+    const rejectedFields = document.getElementById('rejectedFields');
+    const approvedAmountInput = document.getElementById('update_approved_amount');
+    const rejectionReasonInput = document.getElementById('update_rejection_reason');
+    
+    // Show/hide fields based on status
+    if (status === 'approved') {
+        approvedFields.style.display = 'block';
+        rejectedFields.style.display = 'none';
+        // Set required attribute only on visible fields
+        if (approvedAmountInput) {
+            approvedAmountInput.required = true;
+        }
+        if (rejectionReasonInput) {
+            rejectionReasonInput.required = false;
+        }
+    } else if (status === 'rejected') {
+        approvedFields.style.display = 'none';
+        rejectedFields.style.display = 'block';
+        // Set required attribute only on visible fields
+        if (approvedAmountInput) {
+            approvedAmountInput.required = false;
+        }
+        if (rejectionReasonInput) {
+            rejectionReasonInput.required = true;
+        }
+    }
+    
+    // Fetch claim data to pre-fill approved amount
+    if (status === 'approved') {
+        try {
+            const response = await fetch(`<?= base_url('accounts/getClaimDetails') ?>/${claimId}`);
+            const result = await response.json();
+            
+            if (result.success && result.claim) {
+                // Pre-fill approved amount with claim amount
+                if (approvedAmountInput) {
+                    approvedAmountInput.value = parseFloat(result.claim.claim_amount || 0).toFixed(2);
+                }
+            }
+        } catch (error) {
+            console.log('Error fetching claim details:', error);
+            // Still open modal even if fetch fails
+        }
+    }
+    
     document.getElementById('updateClaimModal').style.display = 'flex';
 }
 
 function closeUpdateClaimModal() {
     document.getElementById('updateClaimModal').style.display = 'none';
     document.getElementById('updateClaimForm').reset();
+    // Reset required attributes
+    const approvedAmountInput = document.getElementById('update_approved_amount');
+    const rejectionReasonInput = document.getElementById('update_rejection_reason');
+    if (approvedAmountInput) approvedAmountInput.required = false;
+    if (rejectionReasonInput) rejectionReasonInput.required = false;
 }
 
 function viewClaim(claimId) {
@@ -485,21 +535,54 @@ document.getElementById('updateClaimForm').addEventListener('submit', async func
     const data = Object.fromEntries(formData);
     data.auto_create_payment = document.getElementById('auto_payment').checked;
     
+    // Convert numeric fields
+    if (data.approved_amount) {
+        data.approved_amount = parseFloat(data.approved_amount) || 0;
+    }
+    if (data.claim_id) {
+        data.claim_id = parseInt(data.claim_id) || 0;
+    }
+    
+    // Disable submit button
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Updating...';
+    }
+    
     try {
-        const response = await fetch('/accounts/updateInsuranceClaim', {
+        const response = await fetch('<?= base_url('accounts/updateInsuranceClaim') ?>', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
         });
+        
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('Non-JSON response:', text.substring(0, 500));
+            throw new Error('Server returned non-JSON response. Please check server logs.');
+        }
+        
         const result = await response.json();
         if (result.success) {
             alert('Insurance claim updated successfully!');
             location.reload();
         } else {
-            alert('Error: ' + result.message);
+            alert('Error: ' + (result.message || 'Unknown error'));
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Update Claim';
+            }
         }
     } catch (error) {
+        console.error('Error updating claim:', error);
         alert('Error updating claim: ' + error.message);
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Update Claim';
+        }
     }
 });
 </script>

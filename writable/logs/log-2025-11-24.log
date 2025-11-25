@@ -1,0 +1,1367 @@
+DEBUG - 2025-11-24 14:15:46 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2025-11-24 14:15:47 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+ERROR - 2025-11-24 14:16:05 --> mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT *\nFROM `...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *\nFROM `...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *\nFROM `...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *\nFROM `...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Auth.php(41): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Auth->processLogin()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Auth))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+CRITICAL - 2025-11-24 14:16:06 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'status' in 'where clause'
+[Method: POST, Route: login]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `users`
+WHERE `email` = :email:
+AND `status` = :status:', [...], false)
+ 2 APPPATH\Controllers\Auth.php(41): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Auth->processLogin()
+ 4 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Auth))
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 14:16:06 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'status' in 'where clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `users`
+WHERE `email` = \'accounts@hms.com\'
+AND `status` = \'active\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `users`
+WHERE `email` = \'accounts@hms.com\'
+AND `status` = \'active\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `users`
+WHERE `email` = :email:
+AND `status` = :status:', [...], false)
+ 4 APPPATH\Controllers\Auth.php(41): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Auth->processLogin()
+ 6 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Auth))
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 14:16:06 --> [Caused by] mysqli_sql_exception: Unknown column 'status' in 'where clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT *
+FROM `users`
+WHERE `email` = \'accounts@hms.com\'
+AND `status` = \'active\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT *
+FROM `users`
+WHERE `email` = \'accounts@hms.com\'
+AND `status` = \'active\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT *
+FROM `users`
+WHERE `email` = \'accounts@hms.com\'
+AND `status` = \'active\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT *
+FROM `users`
+WHERE `email` = :email:
+AND `status` = :status:', [...], false)
+ 5 APPPATH\Controllers\Auth.php(41): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Auth->processLogin()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Auth))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+DEBUG - 2025-11-24 14:16:32 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+CRITICAL - 2025-11-24 14:17:23 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: GET, Route: accounts/getPatientBillableItems/2]
+in APPPATH\Controllers\Accounts.php on line 534.
+ 1 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('2')
+ 2 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+ 3 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-24 14:20:52 --> mysqli_sql_exception: Table 'hms.lab_staff' doesn't exist in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `lab_tes...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `lab_tes...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `lab_tes...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `lab_tes...', Array, false)
+#4 C:\xampp\htdocs\HMS\system\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\BaseModel.php(677): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp\htdocs\HMS\app\Models\LabTestResultModel.php(56): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp\htdocs\HMS\app\Controllers\Lab.php(27): App\Models\LabTestResultModel->getAllWithRelations(Array)
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Lab->dashboard()
+#9 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Lab))
+#10 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#12 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#13 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#14 {main}
+CRITICAL - 2025-11-24 14:20:52 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.lab_staff' doesn't exist
+[Method: GET, Route: lab/dashboard]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC', [], false)
+ 2 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\LabTestResultModel.php(56): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\Lab.php(27): App\Models\LabTestResultModel->getAllWithRelations([])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Lab->dashboard()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Lab))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 14:20:52 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.lab_staff' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC', [], false)
+ 4 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\LabTestResultModel.php(56): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\Lab.php(27): App\Models\LabTestResultModel->getAllWithRelations([])
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Lab->dashboard()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Lab))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 14:20:52 --> [Caused by] mysqli_sql_exception: Table 'hms.lab_staff' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC', [], false)
+ 5 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\LabTestResultModel.php(56): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\Lab.php(27): App\Models\LabTestResultModel->getAllWithRelations([])
+ 9 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Lab->dashboard()
+10 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Lab))
+11 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+13 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+14 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-24 14:20:56 --> mysqli_sql_exception: Table 'hms.lab_staff' doesn't exist in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `lab_tes...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `lab_tes...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `lab_tes...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `lab_tes...', Array, false)
+#4 C:\xampp\htdocs\HMS\system\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\BaseModel.php(677): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp\htdocs\HMS\app\Models\LabTestResultModel.php(56): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp\htdocs\HMS\app\Controllers\Lab.php(27): App\Models\LabTestResultModel->getAllWithRelations(Array)
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Lab->dashboard()
+#9 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Lab))
+#10 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#12 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#13 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#14 {main}
+CRITICAL - 2025-11-24 14:20:56 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.lab_staff' doesn't exist
+[Method: GET, Route: lab/dashboard]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC', [], false)
+ 2 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\LabTestResultModel.php(56): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\Lab.php(27): App\Models\LabTestResultModel->getAllWithRelations([])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Lab->dashboard()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Lab))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 14:20:56 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.lab_staff' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC', [], false)
+ 4 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\LabTestResultModel.php(56): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\Lab.php(27): App\Models\LabTestResultModel->getAllWithRelations([])
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Lab->dashboard()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Lab))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 14:20:56 --> [Caused by] mysqli_sql_exception: Table 'hms.lab_staff' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC', [], false)
+ 5 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\LabTestResultModel.php(56): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\Lab.php(27): App\Models\LabTestResultModel->getAllWithRelations([])
+ 9 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Lab->dashboard()
+10 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Lab))
+11 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+13 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+14 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-24 14:24:17 --> mysqli_sql_exception: Table 'hms.lab_staff' doesn't exist in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `lab_tes...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `lab_tes...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `lab_tes...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `lab_tes...', Array, false)
+#4 C:\xampp\htdocs\HMS\system\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\BaseModel.php(677): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp\htdocs\HMS\app\Models\LabTestResultModel.php(56): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp\htdocs\HMS\app\Controllers\Lab.php(27): App\Models\LabTestResultModel->getAllWithRelations(Array)
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Lab->dashboard()
+#9 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Lab))
+#10 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#12 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#13 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#14 {main}
+CRITICAL - 2025-11-24 14:24:17 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.lab_staff' doesn't exist
+[Method: GET, Route: lab/dashboard]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC', [], false)
+ 2 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\LabTestResultModel.php(56): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\Lab.php(27): App\Models\LabTestResultModel->getAllWithRelations([])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Lab->dashboard()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Lab))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 14:24:17 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'hms.lab_staff' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC', [], false)
+ 4 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\LabTestResultModel.php(56): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\Lab.php(27): App\Models\LabTestResultModel->getAllWithRelations([])
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Lab->dashboard()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Lab))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 14:24:17 --> [Caused by] mysqli_sql_exception: Table 'hms.lab_staff' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `lab_test_results`.*, `patients`.`full_name` AS `patient_name`, `lab_test_requests`.`test_type`, `staff_user`.`name` AS `released_by_name`, `auditors`.`name` AS `audited_by_name`
+FROM `lab_test_results`
+LEFT JOIN `lab_test_requests` ON `lab_test_requests`.`id` = `lab_test_results`.`request_id`
+LEFT JOIN `patients` ON `patients`.`id` = `lab_test_requests`.`patient_id`
+LEFT JOIN `lab_staff` ON `lab_staff`.`id` = `lab_test_results`.`released_by`
+LEFT JOIN `users` AS `staff_user` ON `staff_user`.`id` = `lab_staff`.`user_id`
+LEFT JOIN `users` AS `auditors` ON `auditors`.`id` = `lab_test_results`.`audited_by`
+ORDER BY `lab_test_results`.`released_at` DESC', [], false)
+ 5 SYSTEMPATH\Model.php(286): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(677): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\LabTestResultModel.php(56): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\Lab.php(27): App\Models\LabTestResultModel->getAllWithRelations([])
+ 9 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Lab->dashboard()
+10 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Lab))
+11 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+13 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+14 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 16:59:12 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: GET, Route: accounts/getPatientBillableItems/2]
+in APPPATH\Controllers\Accounts.php on line 534.
+ 1 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('2')
+ 2 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+ 3 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 16:59:22 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: GET, Route: accounts/getPatientBillableItems/1]
+in APPPATH\Controllers\Accounts.php on line 534.
+ 1 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('1')
+ 2 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+ 3 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 16:59:26 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: GET, Route: accounts/getPatientBillableItems/4]
+in APPPATH\Controllers\Accounts.php on line 652.
+ 1 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('4')
+ 2 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+ 3 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 16:59:30 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: GET, Route: accounts/getPatientBillableItems/2]
+in APPPATH\Controllers\Accounts.php on line 534.
+ 1 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('2')
+ 2 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+ 3 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 17:09:47 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: GET, Route: accounts/getPatientBillableItems/4]
+in APPPATH\Controllers\Accounts.php on line 653.
+ 1 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('4')
+ 2 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+ 3 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-24 17:24:12 --> mysqli_sql_exception: Unknown column 'r.patient_id' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `r`.`id`...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `r`.`id`...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `r`.`id`...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `r`.`id`...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(494): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('2')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-24 18:14:16 --> mysqli_sql_exception: Unknown column 'r.patient_id' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `r`.`id`...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `r`.`id`...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `r`.`id`...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `r`.`id`...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(699): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('2')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-24 18:18:18 --> mysqli_sql_exception: Unknown column 'r.patient_id' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `r`.`id`...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `r`.`id`...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `r`.`id`...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `r`.`id`...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(699): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('3')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-24 18:18:27 --> mysqli_sql_exception: Unknown column 'r.patient_id' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `r`.`id`...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `r`.`id`...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `r`.`id`...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `r`.`id`...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(699): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('4')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+CRITICAL - 2025-11-24 18:18:27 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: GET, Route: accounts/getPatientBillableItems/4]
+in APPPATH\Controllers\Accounts.php on line 998.
+ 1 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('4')
+ 2 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+ 3 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-24 18:18:32 --> mysqli_sql_exception: Unknown column 'r.patient_id' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `r`.`id`...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `r`.`id`...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `r`.`id`...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `r`.`id`...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(699): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('2')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-24 18:18:56 --> mysqli_sql_exception: Unknown column 'r.patient_id' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `r`.`id`...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `r`.`id`...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `r`.`id`...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `r`.`id`...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(699): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('4')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+CRITICAL - 2025-11-24 18:18:56 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: GET, Route: accounts/getPatientBillableItems/4]
+in APPPATH\Controllers\Accounts.php on line 998.
+ 1 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('4')
+ 2 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+ 3 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-24 18:18:58 --> mysqli_sql_exception: Unknown column 'r.patient_id' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `r`.`id`...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `r`.`id`...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `r`.`id`...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `r`.`id`...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(699): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('1')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-24 18:19:12 --> mysqli_sql_exception: Unknown column 'r.patient_id' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `r`.`id`...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `r`.`id`...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `r`.`id`...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `r`.`id`...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(699): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('2')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+DEBUG - 2025-11-24 18:21:30 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+DEBUG - 2025-11-24 18:21:33 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+ERROR - 2025-11-24 18:24:31 --> mysqli_sql_exception: Unknown column 'r.patient_id' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `r`.`id`...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `r`.`id`...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `r`.`id`...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `r`.`id`...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(699): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('2')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-24 18:28:25 --> mysqli_sql_exception: Table 'hms.lab_staff' doesn't exist in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT COUNT(*)...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT COUNT(*)...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*)...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*)...', Array, false)
+#4 C:\xampp\htdocs\HMS\system\Model.php(675): CodeIgniter\Database\BaseBuilder->countAllResults(true)
+#5 C:\xampp\htdocs\HMS\app\Controllers\Admin\Lab\Dashboard.php(64): CodeIgniter\Model->countAllResults()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Lab\Dashboard->index()
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Lab\Dashboard))
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#11 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-24 18:28:25 --> Failed to load lab dashboard data: Table 'hms.lab_staff' doesn't exist
+ERROR - 2025-11-24 18:29:41 --> mysqli_sql_exception: Table 'hms.lab_staff' doesn't exist in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT COUNT(*)...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT COUNT(*)...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*)...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*)...', Array, false)
+#4 C:\xampp\htdocs\HMS\system\Model.php(675): CodeIgniter\Database\BaseBuilder->countAllResults(true)
+#5 C:\xampp\htdocs\HMS\app\Controllers\Admin\Lab\Dashboard.php(64): CodeIgniter\Model->countAllResults()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Lab\Dashboard->index()
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Lab\Dashboard))
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#11 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-24 18:29:41 --> Failed to load lab dashboard data: Table 'hms.lab_staff' doesn't exist
+CRITICAL - 2025-11-24 18:31:39 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: GET, Route: accounts/getPatientBillableItems/4]
+in APPPATH\Controllers\Accounts.php on line 1019.
+ 1 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('4')
+ 2 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+ 3 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 18:35:00 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: GET, Route: accounts/getPatientBillableItems/4]
+in APPPATH\Controllers\Accounts.php on line 1019.
+ 1 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('4')
+ 2 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+ 3 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-24 18:40:15 --> mysqli_sql_exception: Duplicate column name 'progress_days' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE pre...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE pre...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE pre...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(906): CodeIgniter\Database\BaseConnection->query('ALTER TABLE pre...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}
+ERROR - 2025-11-24 18:42:37 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(1012): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('4')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-24 18:43:06 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(1011): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('4')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-24 18:44:55 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(1011): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('4')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-24 18:45:33 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(1011): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('4')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-24 18:48:17 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(1011): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('4')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-24 18:48:54 --> mysqli_sql_exception: Table 'hms.lab_staff' doesn't exist in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT COUNT(*)...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT COUNT(*)...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT COUNT(*)...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1733): CodeIgniter\Database\BaseConnection->query('SELECT COUNT(*)...', Array, false)
+#4 C:\xampp\htdocs\HMS\system\Model.php(675): CodeIgniter\Database\BaseBuilder->countAllResults(true)
+#5 C:\xampp\htdocs\HMS\app\Controllers\Admin\Lab\Dashboard.php(64): CodeIgniter\Model->countAllResults()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Lab\Dashboard->index()
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Lab\Dashboard))
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#9 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#10 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#11 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#12 {main}
+ERROR - 2025-11-24 18:48:54 --> Failed to load lab dashboard data: Table 'hms.lab_staff' doesn't exist
+ERROR - 2025-11-24 18:53:51 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(1011): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('4')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+CRITICAL - 2025-11-24 19:04:10 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(68): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 19:07:02 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(68): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 19:10:55 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 104.
+ 1 APPPATH\Views\admin\reports.php(104): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(116): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 19:11:00 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 104.
+ 1 APPPATH\Views\admin\reports.php(104): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(116): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 19:12:45 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 104.
+ 1 APPPATH\Views\admin\reports.php(104): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(116): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 19:15:39 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 104.
+ 1 APPPATH\Views\admin\reports.php(104): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(116): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-24 19:30:08 --> mysqli_sql_exception: Unknown column 'tu.nurse_id' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `tu`.*, ...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tu`.*, ...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tu`.*, ...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `tu`.*, ...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(1550): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->reports()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-24 19:30:08 --> Error fetching nurse reports: Unknown column 'tu.nurse_id' in 'where clause'
+ERROR - 2025-11-24 19:30:24 --> mysqli_sql_exception: Unknown column 'tu.nurse_id' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `tu`.*, ...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tu`.*, ...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tu`.*, ...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `tu`.*, ...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(1550): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->reports()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-24 19:30:24 --> Error fetching nurse reports: Unknown column 'tu.nurse_id' in 'where clause'
+ERROR - 2025-11-24 19:36:38 --> mysqli_sql_exception: Unknown column 'tu.nurse_id' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `tu`.*, ...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tu`.*, ...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tu`.*, ...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `tu`.*, ...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(1550): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->reports()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-24 19:36:38 --> Error fetching nurse reports: Unknown column 'tu.nurse_id' in 'where clause'
+CRITICAL - 2025-11-24 19:44:34 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "accounts/reports.php"
+[Method: GET, Route: accounts/reports]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 39.
+ 1 SYSTEMPATH\View\View.php(214): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('accounts/reports.php')
+ 2 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('accounts/reports', [], true)
+ 3 APPPATH\Controllers\Accounts.php(1798): view('accounts/reports', [...])
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Accounts->reports()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 19:45:29 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "accounts/reports.php"
+[Method: GET, Route: accounts/reports]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 39.
+ 1 SYSTEMPATH\View\View.php(214): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('accounts/reports.php')
+ 2 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('accounts/reports', [], true)
+ 3 APPPATH\Controllers\Accounts.php(1798): view('accounts/reports', [...])
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Accounts->reports()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 19:56:20 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(68): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 19:56:31 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(68): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:00:44 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(104): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:00:46 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(104): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:01:44 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(104): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:01:50 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(104): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-24 20:04:35 --> Admin Reports Error: number_format(): Argument #1 ($num) must be of type float, string given
+ERROR - 2025-11-24 20:04:35 --> File: C:\xampp\htdocs\HMS\app\Views\admin\reports.php Line: 100
+ERROR - 2025-11-24 20:04:35 --> Stack trace: #0 C:\xampp\htdocs\HMS\app\Views\admin\reports.php(100): number_format('20.8 kg/m\xC2\xB2', 1)
+#1 C:\xampp\htdocs\HMS\system\View\View.php(226): include('C:\\xampp\\htdocs...')
+#2 C:\xampp\htdocs\HMS\system\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+#3 C:\xampp\htdocs\HMS\system\Common.php(1167): CodeIgniter\View\View->render('admin/reports', Array, true)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Admin\Reports.php(76): view('admin/reports', Array)
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+CRITICAL - 2025-11-24 20:04:35 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(90): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-24 20:04:44 --> Admin Reports Error: number_format(): Argument #1 ($num) must be of type float, string given
+ERROR - 2025-11-24 20:04:44 --> File: C:\xampp\htdocs\HMS\app\Views\admin\reports.php Line: 100
+ERROR - 2025-11-24 20:04:44 --> Stack trace: #0 C:\xampp\htdocs\HMS\app\Views\admin\reports.php(100): number_format('20.8 kg/m\xC2\xB2', 1)
+#1 C:\xampp\htdocs\HMS\system\View\View.php(226): include('C:\\xampp\\htdocs...')
+#2 C:\xampp\htdocs\HMS\system\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+#3 C:\xampp\htdocs\HMS\system\Common.php(1167): CodeIgniter\View\View->render('admin/reports', Array, true)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Admin\Reports.php(76): view('admin/reports', Array)
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+CRITICAL - 2025-11-24 20:04:44 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(90): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:07:52 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(56): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:07:58 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(56): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:08:05 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(56): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-24 20:15:38 --> Admin Reports Fatal Error: number_format(): Argument #1 ($num) must be of type float, string given
+ERROR - 2025-11-24 20:15:38 --> File: C:\xampp\htdocs\HMS\app\Views\admin\reports.php Line: 100
+ERROR - 2025-11-24 20:15:38 --> Trace: #0 C:\xampp\htdocs\HMS\app\Views\admin\reports.php(100): number_format('20.8 kg/m\xC2\xB2', 1)
+#1 C:\xampp\htdocs\HMS\system\View\View.php(226): include('C:\\xampp\\htdocs...')
+#2 C:\xampp\htdocs\HMS\system\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+#3 C:\xampp\htdocs\HMS\system\Common.php(1167): CodeIgniter\View\View->render('admin/reports', Array, true)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Admin\Reports.php(81): view('admin/reports', Array)
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+CRITICAL - 2025-11-24 20:15:38 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(81): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:18:24 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(80): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:18:27 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(80): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:18:27 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(80): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:18:28 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(80): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:18:29 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(80): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:18:30 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(80): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:21:19 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(61): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:21:26 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 100.
+ 1 APPPATH\Views\admin\reports.php(100): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(61): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:27:29 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 94.
+ 1 APPPATH\Views\admin\reports.php(94): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(50): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:28:09 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 94.
+ 1 APPPATH\Views\admin\reports.php(94): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(50): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:30:39 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 94.
+ 1 APPPATH\Views\admin\reports.php(94): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(80): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:30:46 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 94.
+ 1 APPPATH\Views\admin\reports.php(94): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(80): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-24 20:33:52 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: admin/reports]
+in APPPATH\Views\admin\reports.php on line 94.
+ 1 APPPATH\Views\admin\reports.php(94): number_format('20.8 kg/m²', 1)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\HMS\\app\\Views\\admin\\reports.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin/reports', [], true)
+ 5 APPPATH\Controllers\Admin\Reports.php(51): view('admin/reports', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-24 20:35:48 --> Reports controller fatal error: number_format(): Argument #1 ($num) must be of type float, string given
+ERROR - 2025-11-24 20:35:48 --> File: C:\xampp\htdocs\HMS\app\Views\admin\reports.php Line: 94
+ERROR - 2025-11-24 20:35:48 --> Trace: #0 C:\xampp\htdocs\HMS\app\Views\admin\reports.php(94): number_format('20.8 kg/m\xC2\xB2', 1)
+#1 C:\xampp\htdocs\HMS\system\View\View.php(226): include('C:\\xampp\\htdocs...')
+#2 C:\xampp\htdocs\HMS\system\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+#3 C:\xampp\htdocs\HMS\system\Common.php(1167): CodeIgniter\View\View->render('admin/reports', Array, true)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Admin\Reports.php(76): view('admin/reports', Array)
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-24 20:36:34 --> Reports controller fatal error: number_format(): Argument #1 ($num) must be of type float, string given
+ERROR - 2025-11-24 20:36:34 --> File: C:\xampp\htdocs\HMS\app\Views\admin\reports.php Line: 94
+ERROR - 2025-11-24 20:36:34 --> Trace: #0 C:\xampp\htdocs\HMS\app\Views\admin\reports.php(94): number_format('20.8 kg/m\xC2\xB2', 1)
+#1 C:\xampp\htdocs\HMS\system\View\View.php(226): include('C:\\xampp\\htdocs...')
+#2 C:\xampp\htdocs\HMS\system\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+#3 C:\xampp\htdocs\HMS\system\Common.php(1167): CodeIgniter\View\View->render('admin/reports', Array, true)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Admin\Reports.php(76): view('admin/reports', Array)
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Reports->index()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Reports))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}

@@ -36,7 +36,7 @@ class Nurses extends Controller
         if ($db->tableExists('treatment_updates')) {
             try {
                 $updates = $db->table('treatment_updates')
-                    ->select('nurse_name, patient_id, time, blood_pressure, heart_rate, temperature, oxygen_saturation, notes, created_at')
+                    ->select('nurse_name, patient_id, time, blood_pressure, heart_rate, temperature, oxygen_saturation, height, weight, bmi, notes, created_at')
                     ->where('nurse_name IS NOT NULL')
                     ->where('nurse_name !=', '')
                     ->orderBy('created_at', 'DESC')

@@ -17,74 +17,137 @@ class Pharmacy extends Controller
 			return redirect()->to('/login');
 		}
 
-		$prescriptionModel = new PrescriptionModel();
 		$db = \Config\Database::connect();
+		$medicationModel = new MedicationModel();
+		$stockMovementModel = new PharmacyStockMovementModel();
+		$orderModel = new MedicineOrderModel();
 
-		// Get statistics
-		$pendingPrescriptions = $prescriptionModel
-			->where('status', 'pending')
-			->countAllResults();
+		// Get all medications
+		$medications = $medicationModel->orderBy('name', 'ASC')->findAll();
 
-		$today = date('Y-m-d');
-		$dispensedToday = $prescriptionModel
-			->where('status', 'dispensed')
-			->where('DATE(updated_at)', $today)
-			->countAllResults();
-
-		// Get low stock items (if pharmacy_inventory table exists)
-		$lowStockItems = 0;
-		$expiringSoon = 0;
+		// Get inventory data
+		$inventory = [];
+		$inventoryByMedId = [];
+		$inventoryByName = [];
+		
 		if ($db->tableExists('pharmacy_inventory')) {
-			$lowStockItems = $db->table('pharmacy_inventory')
-				->where('stock_quantity <=', 'reorder_level')
-				->where('stock_quantity >', 0)
-				->countAllResults();
+			$inventoryRaw = $db->table('pharmacy_inventory')
+				->orderBy('name', 'ASC')
+				->get()
+				->getResultArray();
 			
-			$expiringSoon = $db->table('pharmacy_inventory')
-				->where('expiration_date >=', date('Y-m-d'))
-				->where('expiration_date <=', date('Y-m-d', strtotime('+30 days')))
-				->countAllResults();
+			foreach ($inventoryRaw as $item) {
+				if (!empty($item['medication_id'])) {
+					$inventoryByMedId[$item['medication_id']] = $item;
+				}
+				$inventoryByName[strtolower(trim($item['name']))] = $item;
+			}
 		}
 
-		// Get recent pending prescriptions
-		$recentPrescriptions = $prescriptionModel
-			->where('status', 'pending')
-			->orderBy('created_at', 'DESC')
-			->limit(10)
-			->findAll();
+		// Merge inventory with medications
+		$inventoryData = [];
+		$totalStockQuantity = 0;
+		$lowStockCount = 0;
+		$expiredCount = 0;
+		$lowStockItems = [];
+		$expiredItems = [];
+		$today = date('Y-m-d');
 
-		// Format prescriptions with patient and doctor names
-		$prescriptions = [];
-		$patientModel = new PatientModel();
-		foreach ($recentPrescriptions as $rx) {
-			$patient = $patientModel->find($rx['patient_id']);
-			$doctor = $db->table('users')->where('id', $rx['doctor_id'])->get()->getRowArray();
+		foreach ($medications as $med) {
+			$medId = $med['id'];
+			$medName = strtolower(trim($med['name']));
 			
-			$items = json_decode($rx['items_json'] ?? '[]', true);
-			$firstMedication = !empty($items) ? ($items[0]['name'] ?? 'N/A') : 'N/A';
-			$firstQuantity = !empty($items) ? ($items[0]['quantity'] ?? 'N/A') : 'N/A';
+			$invItem = null;
+			if (isset($inventoryByMedId[$medId])) {
+				$invItem = $inventoryByMedId[$medId];
+			} elseif (isset($inventoryByName[$medName])) {
+				$invItem = $inventoryByName[$medName];
+			}
 
-			$prescriptions[] = [
-				'id' => $rx['id'],
-				'rx_number' => 'RX#' . str_pad((string)$rx['id'], 6, '0', STR_PAD_LEFT),
-				'patient_name' => $patient['full_name'] ?? 'N/A',
-				'doctor_name' => $doctor['name'] ?? 'N/A',
-				'medication' => $firstMedication,
-				'quantity' => $firstQuantity,
-				'status' => $rx['status'],
-				'created_at' => $rx['created_at'],
+			$stockQty = $invItem ? (int)($invItem['stock_quantity'] ?? 0) : 0;
+			$reorderLevel = $invItem ? (int)($invItem['reorder_level'] ?? 10) : 10;
+			$expirationDate = $invItem['expiration_date'] ?? null;
+			$category = $invItem['category'] ?? 'General';
+			
+			$status = 'ok';
+			if ($expirationDate && strtotime($expirationDate) < strtotime($today)) {
+				$status = 'expired';
+				$expiredCount++;
+				$expiredItems[] = [
+					'medicine' => $med,
+					'inventory' => $invItem,
+					'stock_quantity' => $stockQty,
+					'expiration_date' => $expirationDate,
+				];
+			} elseif ($stockQty <= 0) {
+				$status = 'out_of_stock';
+			} elseif ($stockQty < $reorderLevel) {
+				$status = 'low_stock';
+				$lowStockCount++;
+				$lowStockItems[] = [
+					'medicine' => $med,
+					'inventory' => $invItem,
+					'stock_quantity' => $stockQty,
+					'reorder_level' => $reorderLevel,
+				];
+			}
+
+			$totalStockQuantity += $stockQty;
+
+			$inventoryData[] = [
+				'medicine' => $med,
+				'inventory' => $invItem,
+				'stock_quantity' => $stockQty,
+				'reorder_level' => $reorderLevel,
+				'category' => $category,
+				'expiration_date' => $expirationDate,
+				'status' => $status,
 			];
+		}
+
+		// Get last 10 stock movements
+		$stockMovements = [];
+		if ($db->tableExists('pharmacy_stock_movements')) {
+			try {
+				$stockMovements = $stockMovementModel->getAllWithUser();
+				$stockMovements = array_slice($stockMovements, 0, 10);
+			} catch (\Exception $e) {
+				log_message('error', 'Error fetching stock movements: ' . $e->getMessage());
+				$stockMovements = [];
+			}
+		}
+
+		// Get all orders
+		$orders = [];
+		if ($db->tableExists('medicine_orders')) {
+			try {
+				$orders = $orderModel
+					->select('medicine_orders.*, users.name as received_by_name')
+					->join('users', 'users.id = medicine_orders.received_by', 'left')
+					->orderBy('medicine_orders.order_date', 'DESC')
+					->orderBy('medicine_orders.created_at', 'DESC')
+					->findAll();
+			} catch (\Exception $e) {
+				log_message('error', 'Error fetching orders: ' . $e->getMessage());
+				$orders = [];
+			}
 		}
 
 		$data = [
 			'title' => 'Pharmacy Dashboard - HMS',
 			'user_role' => 'pharmacist',
 			'user_name' => session()->get('name'),
-			'pendingPrescriptions' => $pendingPrescriptions,
-			'dispensedToday' => $dispensedToday,
+			'stats' => [
+				'total_medicines' => count($medications),
+				'total_stock_quantity' => $totalStockQuantity,
+				'low_stock_alerts' => $lowStockCount,
+				'expired_medicines' => $expiredCount,
+			],
+			'inventory' => $inventoryData,
+			'stockMovements' => $stockMovements,
+			'orders' => $orders,
 			'lowStockItems' => $lowStockItems,
-			'expiringSoon' => $expiringSoon,
-			'prescriptions' => $prescriptions,
+			'expiredItems' => $expiredItems,
 		];
 
 		return view('auth/dashboard', $data);
@@ -728,12 +791,28 @@ class Pharmacy extends Controller
 		// Daily/Monthly dispensing report
 		$dispensingReport = [];
 		if ($reportType === 'daily' || $reportType === 'monthly') {
+			// Include both 'dispensed' and 'completed' statuses (completed = marked as given by nurse)
 			$builder = $prescriptionModel
-				->where('status', 'dispensed')
+				->whereIn('status', ['dispensed', 'completed'])
 				->where('DATE(updated_at) >=', $dateFrom)
 				->where('DATE(updated_at) <=', $dateTo);
 			
 			$dispensingReport = $builder->orderBy('updated_at', 'DESC')->findAll();
+			
+			// Join with patients and doctors to get names
+			if (!empty($dispensingReport)) {
+				$db = \Config\Database::connect();
+				foreach ($dispensingReport as &$rx) {
+					// Get patient name
+					$patient = $db->table('patients')->where('id', $rx['patient_id'])->get()->getRowArray();
+					$rx['patient_name'] = $patient['full_name'] ?? 'N/A';
+					
+					// Get doctor name
+					$doctor = $db->table('users')->where('id', $rx['doctor_id'])->get()->getRowArray();
+					$rx['doctor_name'] = $doctor['name'] ?? 'N/A';
+				}
+				unset($rx);
+			}
 		}
 
 		// Expiring medicines report

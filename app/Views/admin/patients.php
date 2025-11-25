@@ -172,9 +172,9 @@
                             <?php endif; ?>
                         </div>
                 <div class="col-actions">
-                    <a href="#" class="action-link">View</a>
-                    <a href="#" class="action-link">Edit</a>
-                    <a href="#" class="action-link action-delete">Delete</a>
+                    <a href="#" class="action-link" onclick="viewPatient(<?= $p['id'] ?>); return false;">View</a>
+                    <a href="#" class="action-link" onclick="editPatient(<?= $p['id'] ?>); return false;">Edit</a>
+                    <a href="#" class="action-link action-delete" onclick="deletePatient(<?= $p['id'] ?>, <?= json_encode($p['full_name']) ?>); return false;">Delete</a>
                 </div>
             </div>
         </div>
@@ -189,6 +189,442 @@
         </div>
 </section>
 
+<!-- View Patient Modal -->
+<div id="viewPatientModal" class="modal" style="display: none;">
+    <div class="modal-backdrop" onclick="closeViewModal()"></div>
+    <div class="modal-dialog" style="max-width: 1000px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-header">
+            <h3>Patient Details</h3>
+            <button class="modal-close" onclick="closeViewModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="viewPatientContent" style="padding: 1.5rem;">
+            <div style="text-align: center; padding: 2rem;">
+                <p>Loading patient information...</p>
+            </div>
+        </div>
+    </div>
+</div>
 
+<!-- Edit Patient Modal -->
+<div id="editPatientModal" class="modal" style="display: none;">
+    <div class="modal-backdrop" onclick="closeEditModal()"></div>
+    <div class="modal-dialog" style="max-width: 700px;">
+        <div class="modal-header">
+            <h3>Edit Patient</h3>
+            <button class="modal-close" onclick="closeEditModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="editPatientForm" onsubmit="updatePatient(event); return false;">
+                <input type="hidden" id="edit_patient_id" name="patient_id">
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #1e293b;">Full Name <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="edit_full_name" name="full_name" required style="width: 100%; padding: 0.625rem; border: 1px solid #e2e8f0; border-radius: 6px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #1e293b;">Date of Birth <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="edit_date_of_birth" name="date_of_birth" placeholder="MM/DD/YYYY" required style="width: 100%; padding: 0.625rem; border: 1px solid #e2e8f0; border-radius: 6px;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #1e293b;">Gender <span style="color: #ef4444;">*</span></label>
+                        <select id="edit_gender" name="gender" required style="width: 100%; padding: 0.625rem; border: 1px solid #e2e8f0; border-radius: 6px;">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #1e293b;">Blood Type</label>
+                        <select id="edit_blood_type" name="blood_type" style="width: 100%; padding: 0.625rem; border: 1px solid #e2e8f0; border-radius: 6px;">
+                            <option value="">Select Blood Type</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #1e293b;">Contact <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="edit_contact" name="contact" required style="width: 100%; padding: 0.625rem; border: 1px solid #e2e8f0; border-radius: 6px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #1e293b;">Email</label>
+                        <input type="email" id="edit_email" name="email" style="width: 100%; padding: 0.625rem; border: 1px solid #e2e8f0; border-radius: 6px;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #1e293b;">Address</label>
+                    <input type="text" id="edit_address" name="address" style="width: 100%; padding: 0.625rem; border: 1px solid #e2e8f0; border-radius: 6px;">
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #1e293b;">Status</label>
+                        <select id="edit_status" name="status" style="width: 100%; padding: 0.625rem; border: 1px solid #e2e8f0; border-radius: 6px;">
+                            <option value="active">Active</option>
+                            <option value="discharged">Discharged</option>
+                            <option value="transferred">Transferred</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #1e293b;">Patient Type</label>
+                        <select id="edit_patient_type" name="patient_type" style="width: 100%; padding: 0.625rem; border: 1px solid #e2e8f0; border-radius: 6px;">
+                            <option value="outpatient">Outpatient</option>
+                            <option value="inpatient">Inpatient</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #1e293b;">Concern</label>
+                    <textarea id="edit_concern" name="concern" rows="3" style="width: 100%; padding: 0.625rem; border: 1px solid #e2e8f0; border-radius: 6px; resize: vertical;"></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" onclick="closeEditModal()" style="padding: 0.625rem 1.25rem; background: #e2e8f0; color: #475569; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">Cancel</button>
+                    <button type="submit" style="padding: 0.625rem 1.25rem; background: #1C3F70; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">Update Patient</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewPatient(id) {
+    fetch('<?= base_url('admin/patients/view/') ?>' + id)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const patient = data.patient;
+                const pid = 'P' + String(patient.id).padStart(3, '0');
+                
+                // Build assigned staff section
+                let assignedStaffHtml = '';
+                if (patient.assigned_doctor || patient.assigned_nurse) {
+                    assignedStaffHtml = `
+                        <div style="margin-top: 1.5rem;">
+                            <h4 style="margin: 0 0 1rem 0; color: #1C3F70; border-bottom: 2px solid #1C3F70; padding-bottom: 0.5rem;">Assigned Staff</h4>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Assigned Doctor</span>
+                                    <strong style="color: #1e293b;">${patient.assigned_doctor?.doctor_name || '—'}</strong>
+                                    ${patient.assigned_doctor?.appointment_date ? `<div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.25rem;">Last Appointment: ${new Date(patient.assigned_doctor.appointment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>` : ''}
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Assigned Nurse</span>
+                                    <strong style="color: #1e293b;">${patient.assigned_nurse || '—'}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Build prescriptions section
+                let prescriptionsHtml = '';
+                if (patient.prescriptions && patient.prescriptions.length > 0) {
+                    let prescriptionsList = '';
+                    patient.prescriptions.forEach(rx => {
+                        let itemsList = '';
+                        if (rx.items && rx.items.length > 0) {
+                            itemsList = rx.items.map(item => 
+                                `${item.name || 'N/A'} - ${item.dosage || 'N/A'} (${item.frequency || 'N/A'})`
+                            ).join('<br>');
+                        } else {
+                            itemsList = 'No medications';
+                        }
+                        
+                        const statusClass = rx.status === 'completed' ? 'badge-green' : rx.status === 'dispensed' ? 'badge-blue' : 'badge-yellow';
+                        const statusText = (rx.status || 'pending').charAt(0).toUpperCase() + (rx.status || 'pending').slice(1);
+                        
+                        prescriptionsList += `
+                            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 0.75rem; border-left: 3px solid #1C3F70;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                    <div>
+                                        <strong style="color: #1e293b;">${rx.rx_number}</strong>
+                                        <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.25rem;">By: ${rx.doctor_name}</div>
+                                    </div>
+                                    <span class="badge ${statusClass}">${statusText}</span>
+                                </div>
+                                <div style="font-size: 0.875rem; color: #475569; margin-bottom: 0.5rem;">
+                                    <strong>Medications:</strong><br>
+                                    <div style="margin-top: 0.25rem; padding-left: 1rem;">${itemsList}</div>
+                                </div>
+                                ${rx.notes ? `<div style="font-size: 0.875rem; color: #475569; margin-top: 0.5rem;"><strong>Notes:</strong> ${rx.notes}</div>` : ''}
+                                <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.5rem;">${rx.created_at_formatted}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    prescriptionsHtml = `
+                        <div style="margin-top: 1.5rem;">
+                            <h4 style="margin: 0 0 1rem 0; color: #1C3F70; border-bottom: 2px solid #1C3F70; padding-bottom: 0.5rem;">Prescriptions (${patient.prescriptions.length})</h4>
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                ${prescriptionsList}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    prescriptionsHtml = `
+                        <div style="margin-top: 1.5rem;">
+                            <h4 style="margin: 0 0 1rem 0; color: #1C3F70; border-bottom: 2px solid #1C3F70; padding-bottom: 0.5rem;">Prescriptions</h4>
+                            <p style="color: #6B7280; font-style: italic;">No prescriptions found</p>
+                        </div>
+                    `;
+                }
+
+                // Build lab tests section
+                let labTestsHtml = '';
+                if (patient.lab_tests && patient.lab_tests.length > 0) {
+                    let labTestsList = '';
+                    patient.lab_tests.forEach(lab => {
+                        const statusClass = lab.has_result ? (lab.is_critical ? 'badge-danger' : 'badge-green') : 
+                                          lab.status === 'in_progress' ? 'badge-blue' : 'badge-yellow';
+                        const statusText = lab.has_result ? (lab.is_critical ? 'Critical Result' : 'Completed') : 
+                                          (lab.status || 'pending').charAt(0).toUpperCase() + (lab.status || 'pending').slice(1);
+                        const priorityClass = lab.priority === 'urgent' ? 'badge-danger' : lab.priority === 'high' ? 'badge-warning' : 'badge-info';
+                        
+                        labTestsList += `
+                            <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 0.75rem; border-left: 3px solid ${lab.is_critical ? '#ef4444' : '#1C3F70'};">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                    <div>
+                                        <strong style="color: #1e293b;">${lab.test_type}</strong>
+                                        <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.25rem;">By: ${lab.doctor_name}</div>
+                                    </div>
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <span class="badge ${priorityClass}">${(lab.priority || 'normal').toUpperCase()}</span>
+                                        <span class="badge ${statusClass}">${statusText}</span>
+                                    </div>
+                                </div>
+                                ${lab.has_result && lab.result_summary ? `
+                                    <div style="font-size: 0.875rem; color: #475569; margin-top: 0.5rem; padding: 0.75rem; background: white; border-radius: 6px;">
+                                        <strong>Result Summary:</strong><br>
+                                        ${lab.result_summary}
+                                    </div>
+                                ` : ''}
+                                <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.5rem;">${lab.created_at_formatted}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    labTestsHtml = `
+                        <div style="margin-top: 1.5rem;">
+                            <h4 style="margin: 0 0 1rem 0; color: #1C3F70; border-bottom: 2px solid #1C3F70; padding-bottom: 0.5rem;">Lab Tests (${patient.lab_tests.length})</h4>
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                ${labTestsList}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    labTestsHtml = `
+                        <div style="margin-top: 1.5rem;">
+                            <h4 style="margin: 0 0 1rem 0; color: #1C3F70; border-bottom: 2px solid #1C3F70; padding-bottom: 0.5rem;">Lab Tests</h4>
+                            <p style="color: #6B7280; font-style: italic;">No lab tests found</p>
+                        </div>
+                    `;
+                }
+
+                let html = `
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                        <div>
+                            <h4 style="margin: 0 0 1rem 0; color: #1C3F70; border-bottom: 2px solid #1C3F70; padding-bottom: 0.5rem;">Personal Information</h4>
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Patient ID</span>
+                                    <strong style="color: #1e293b;">${pid}</strong>
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Full Name</span>
+                                    <strong style="color: #1e293b;">${patient.full_name || '—'}</strong>
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Date of Birth</span>
+                                    <span style="color: #1e293b;">${patient.date_of_birth_formatted || '—'}</span>
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Age</span>
+                                    <span style="color: #1e293b;">${patient.age || '—'} ${patient.age && !isNaN(patient.age) ? 'years' : ''}</span>
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Gender</span>
+                                    <span style="color: #1e293b;">${patient.gender || '—'}</span>
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Blood Type</span>
+                                    <span style="color: #1e293b;">${patient.blood_type || '—'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="margin: 0 0 1rem 0; color: #1C3F70; border-bottom: 2px solid #1C3F70; padding-bottom: 0.5rem;">Contact Information</h4>
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Contact Number</span>
+                                    <span style="color: #1e293b;">${patient.contact || '—'}</span>
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Email</span>
+                                    <span style="color: #1e293b;">${patient.email || '—'}</span>
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Address</span>
+                                    <span style="color: #1e293b;">${patient.address || '—'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1.5rem;">
+                        <h4 style="margin: 0 0 1rem 0; color: #1C3F70; border-bottom: 2px solid #1C3F70; padding-bottom: 0.5rem;">Medical Information</h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                            <div>
+                                <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Status</span>
+                                <span class="badge ${patient.status === 'active' ? 'badge-green' : patient.status === 'discharged' ? 'badge-gray' : 'badge-yellow'}">${(patient.status || 'active').charAt(0).toUpperCase() + (patient.status || 'active').slice(1)}</span>
+                            </div>
+                            <div>
+                                <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Patient Type</span>
+                                <span style="color: #1e293b;">${(patient.patient_type || 'outpatient').charAt(0).toUpperCase() + (patient.patient_type || 'outpatient').slice(1)}</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Concern</span>
+                            <p style="color: #1e293b; margin: 0; padding: 0.75rem; background: #f8fafc; border-radius: 6px; white-space: pre-wrap;">${patient.concern || '—'}</p>
+                        </div>
+                    </div>
+                    ${assignedStaffHtml}
+                    ${prescriptionsHtml}
+                    ${labTestsHtml}
+                `;
+                
+                document.getElementById('viewPatientContent').innerHTML = html;
+                document.getElementById('viewPatientModal').style.display = 'flex';
+            } else {
+                alert('Error loading patient: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading patient information');
+        });
+}
+
+function closeViewModal() {
+    document.getElementById('viewPatientModal').style.display = 'none';
+}
+
+function editPatient(id) {
+    fetch('<?= base_url('admin/patients/edit/') ?>' + id)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const patient = data.patient;
+                document.getElementById('edit_patient_id').value = patient.id;
+                document.getElementById('edit_full_name').value = patient.full_name || '';
+                document.getElementById('edit_date_of_birth').value = patient.date_of_birth || '';
+                document.getElementById('edit_gender').value = patient.gender || '';
+                document.getElementById('edit_blood_type').value = patient.blood_type || '';
+                document.getElementById('edit_contact').value = patient.contact || '';
+                document.getElementById('edit_email').value = patient.email || '';
+                document.getElementById('edit_address').value = patient.address || '';
+                document.getElementById('edit_status').value = patient.status || 'active';
+                document.getElementById('edit_patient_type').value = patient.patient_type || 'outpatient';
+                document.getElementById('edit_concern').value = patient.concern || '';
+                
+                document.getElementById('editPatientModal').style.display = 'flex';
+            } else {
+                alert('Error loading patient: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading patient information');
+        });
+}
+
+function closeEditModal() {
+    document.getElementById('editPatientModal').style.display = 'none';
+}
+
+function updatePatient(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const patientId = document.getElementById('edit_patient_id').value;
+    
+    fetch('<?= base_url('admin/patients/update/') ?>' + patientId, {
+        method: 'POST',
+        body: formData
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Patient updated successfully!');
+                closeEditModal();
+                location.reload();
+            } else {
+                let errorMsg = 'Error updating patient';
+                if (data.errors) {
+                    errorMsg += ': ' + Object.values(data.errors).join(', ');
+                } else if (data.message) {
+                    errorMsg += ': ' + data.message;
+                }
+                alert(errorMsg);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating patient');
+        });
+}
+
+function deletePatient(id, name) {
+    if (!confirm('Are you sure you want to delete patient "' + name + '"? This action cannot be undone.')) {
+        return;
+    }
+    
+    fetch('<?= base_url('admin/patients/delete/') ?>' + id, {
+        method: 'POST'
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Patient deleted successfully!');
+                location.reload();
+            } else {
+                alert('Error deleting patient: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting patient');
+        });
+}
+
+// Close modals when clicking outside
+document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('modal-backdrop')) {
+        closeViewModal();
+        closeEditModal();
+    }
+});
+
+// Close modals with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeViewModal();
+        closeEditModal();
+    }
+});
+</script>
 
 <?= $this->endSection() ?>

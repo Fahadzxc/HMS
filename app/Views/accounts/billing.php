@@ -179,7 +179,8 @@
                 </div>
                 <div class="form-group">
                     <label>Discount (PhilHealth)</label>
-                    <input type="number" name="discount" id="bill_discount" class="form-input" value="0" step="0.01" readonly style="background-color: #f5f5f5;" title="Discount will be available when PhilHealth is configured">
+                    <input type="number" name="discount" id="bill_discount" class="form-input" value="0" step="0.01" readonly style="background-color: #f5f5f5;" title="Auto-calculated if patient has PhilHealth insurance (90% discount)">
+                    <small id="discount_info" style="color: #666; font-size: 0.875rem; display: none;"></small>
                 </div>
                 <div class="form-group">
                     <label>Tax (12%)</label>
@@ -340,6 +341,10 @@ async function loadPatientBillableItems() {
         document.getElementById('bill_amount_words').value = '';
         document.getElementById('categoryTotals').innerHTML = '';
         document.getElementById('addItemBtn').style.display = 'none';
+        const discountInfoEl = document.getElementById('discount_info');
+        if (discountInfoEl) {
+            discountInfoEl.style.display = 'none';
+        }
         return;
     }
     
@@ -689,7 +694,7 @@ function calculateCategoryTotals() {
     });
 }
 
-function calculateBillTotal() {
+async function calculateBillTotal() {
     let subtotal = 0;
     document.querySelectorAll('.bill-amount').forEach(input => {
         if (input.value) {
@@ -697,13 +702,45 @@ function calculateBillTotal() {
         }
     });
     
-    // Discount is always 0 (no PhilHealth yet)
-    const discount = 0;
-    document.getElementById('bill_discount').value = '0.00';
+    // Check for PhilHealth discount
+    const patientId = document.getElementById('bill_patient_id').value;
+    let discount = 0;
+    let discountInfo = '';
     
-    // Tax is automatically 12% of subtotal
-    const tax = subtotal * 0.12;
-    const total = subtotal + tax;
+    if (patientId && subtotal > 0) {
+        try {
+            const response = await fetch(`<?= base_url('accounts/getPatientInsuranceDiscount') ?>/${patientId}`);
+            const result = await response.json();
+            
+            if (result.success && result.has_philhealth) {
+                // Calculate discount: PhilHealth covers 90%
+                discount = subtotal * (result.discount_percentage / 100);
+                discountInfo = `PhilHealth discount (${result.discount_percentage}%): Patient pays ${result.copay_percentage}%`;
+            } else {
+                discount = 0;
+                discountInfo = '';
+            }
+        } catch (error) {
+            console.log('Error checking insurance:', error);
+            discount = 0;
+        }
+    }
+    
+    document.getElementById('bill_discount').value = discount.toFixed(2);
+    const discountInfoEl = document.getElementById('discount_info');
+    if (discountInfoEl) {
+        if (discountInfo) {
+            discountInfoEl.textContent = discountInfo;
+            discountInfoEl.style.display = 'block';
+        } else {
+            discountInfoEl.style.display = 'none';
+        }
+    }
+    
+    // Tax is automatically 12% of (subtotal - discount)
+    const taxableAmount = subtotal - discount;
+    const tax = taxableAmount * 0.12;
+    const total = taxableAmount + tax;
     
     document.getElementById('bill_subtotal').value = subtotal.toFixed(2);
     document.getElementById('bill_tax').value = tax.toFixed(2);

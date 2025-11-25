@@ -1,0 +1,13 @@
+ERROR - 2025-11-23 06:25:21 --> mysqli_sql_exception: Duplicate column name 'progress_days' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE pre...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE pre...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE pre...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(864): CodeIgniter\Database\BaseConnection->query('ALTER TABLE pre...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}

@@ -1,0 +1,252 @@
+ERROR - 2025-11-19 06:13:41 --> mysqli_sql_exception: Duplicate column name 'progress_days' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE pre...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE pre...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE pre...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(826): CodeIgniter\Database\BaseConnection->query('ALTER TABLE pre...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}
+ERROR - 2025-11-19 06:13:53 --> mysqli_sql_exception: Duplicate column name 'progress_days' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE pre...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE pre...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE pre...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(826): CodeIgniter\Database\BaseConnection->query('ALTER TABLE pre...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}
+ERROR - 2025-11-19 07:27:28 --> mysqli_sql_exception: Unknown column 'DISTINCT' in 'field list' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `DISTINC...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `DISTINC...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `DISTINC...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `DISTINC...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Admin\Doctors.php(48): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Doctors->index()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Doctors))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+CRITICAL - 2025-11-19 07:27:28 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'DISTINCT' in 'field list'
+[Method: GET, Route: admin/doctors]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = :doctor_id:
+AND `status` != :status:', [...], false)
+ 2 APPPATH\Controllers\Admin\Doctors.php(48): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Doctors->index()
+ 4 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Doctors))
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-19 07:27:28 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'DISTINCT' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = \'2\'
+AND `status` != \'cancelled\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = \'2\'
+AND `status` != \'cancelled\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = :doctor_id:
+AND `status` != :status:', [...], false)
+ 4 APPPATH\Controllers\Admin\Doctors.php(48): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Doctors->index()
+ 6 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Doctors))
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-19 07:27:28 --> [Caused by] mysqli_sql_exception: Unknown column 'DISTINCT' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = \'2\'
+AND `status` != \'cancelled\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = \'2\'
+AND `status` != \'cancelled\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = \'2\'
+AND `status` != \'cancelled\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = :doctor_id:
+AND `status` != :status:', [...], false)
+ 5 APPPATH\Controllers\Admin\Doctors.php(48): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Doctors->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Doctors))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-19 07:27:29 --> mysqli_sql_exception: Unknown column 'DISTINCT' in 'field list' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `DISTINC...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `DISTINC...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `DISTINC...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `DISTINC...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Admin\Doctors.php(48): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Doctors->index()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Doctors))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+CRITICAL - 2025-11-19 07:27:29 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'DISTINCT' in 'field list'
+[Method: GET, Route: admin/doctors]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = :doctor_id:
+AND `status` != :status:', [...], false)
+ 2 APPPATH\Controllers\Admin\Doctors.php(48): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Doctors->index()
+ 4 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Doctors))
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-19 07:27:29 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'DISTINCT' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = \'2\'
+AND `status` != \'cancelled\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = \'2\'
+AND `status` != \'cancelled\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = :doctor_id:
+AND `status` != :status:', [...], false)
+ 4 APPPATH\Controllers\Admin\Doctors.php(48): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Doctors->index()
+ 6 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Doctors))
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-19 07:27:29 --> [Caused by] mysqli_sql_exception: Unknown column 'DISTINCT' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = \'2\'
+AND `status` != \'cancelled\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = \'2\'
+AND `status` != \'cancelled\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = \'2\'
+AND `status` != \'cancelled\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = :doctor_id:
+AND `status` != :status:', [...], false)
+ 5 APPPATH\Controllers\Admin\Doctors.php(48): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Doctors->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Doctors))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-19 07:27:30 --> mysqli_sql_exception: Unknown column 'DISTINCT' in 'field list' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `DISTINC...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `DISTINC...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `DISTINC...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `DISTINC...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Admin\Doctors.php(48): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Doctors->index()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Doctors))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+CRITICAL - 2025-11-19 07:27:30 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'DISTINCT' in 'field list'
+[Method: GET, Route: admin/doctors]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = :doctor_id:
+AND `status` != :status:', [...], false)
+ 2 APPPATH\Controllers\Admin\Doctors.php(48): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Doctors->index()
+ 4 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Doctors))
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-19 07:27:30 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'DISTINCT' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = \'2\'
+AND `status` != \'cancelled\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = \'2\'
+AND `status` != \'cancelled\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = :doctor_id:
+AND `status` != :status:', [...], false)
+ 4 APPPATH\Controllers\Admin\Doctors.php(48): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Doctors->index()
+ 6 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Doctors))
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-19 07:27:30 --> [Caused by] mysqli_sql_exception: Unknown column 'DISTINCT' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = \'2\'
+AND `status` != \'cancelled\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = \'2\'
+AND `status` != \'cancelled\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = \'2\'
+AND `status` != \'cancelled\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `DISTINCT` `patient_id`
+FROM `appointments`
+WHERE `doctor_id` = :doctor_id:
+AND `status` != :status:', [...], false)
+ 5 APPPATH\Controllers\Admin\Doctors.php(48): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Doctors->index()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Doctors))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-19 07:39:08 --> Failed to insert appointment. Errors: {"appointment_type":"Appointment type is required"}
+ERROR - 2025-11-19 07:39:34 --> Failed to insert appointment. Errors: {"appointment_type":"Appointment type is required"}
+ERROR - 2025-11-19 07:40:12 --> Failed to insert appointment. Errors: {"appointment_type":"Appointment type is required"}
+ERROR - 2025-11-19 07:51:29 --> Failed to insert appointment. Errors: {"appointment_type":"Appointment type is required"}

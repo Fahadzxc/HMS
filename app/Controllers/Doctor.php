@@ -215,6 +215,30 @@ class Doctor extends Controller
 			$nextYear++;
 		}
 		
+		// Get appointments for this doctor for the current month with patient names
+		$appointmentModel = new \App\Models\AppointmentModel();
+		$db = \Config\Database::connect();
+		$builder = $db->table('appointments a');
+		$builder->select('a.*, p.full_name as patient_name');
+		$builder->join('patients p', 'p.id = a.patient_id', 'left');
+		$builder->where('a.doctor_id', $doctorId);
+		$builder->where('a.appointment_date >=', $monthStart);
+		$builder->where('a.appointment_date <=', $monthEnd);
+		$builder->where('a.status !=', 'cancelled');
+		$builder->orderBy('a.appointment_date', 'ASC');
+		$builder->orderBy('a.appointment_time', 'ASC');
+		$appointments = $builder->get()->getResultArray();
+		
+		// Group appointments by date
+		$appointmentsByDate = [];
+		foreach ($appointments as $appointment) {
+			$date = $appointment['appointment_date'];
+			if (!isset($appointmentsByDate[$date])) {
+				$appointmentsByDate[$date] = [];
+			}
+			$appointmentsByDate[$date][] = $appointment;
+		}
+		
 		$data = [
 			'title' => 'My Schedule - HMS',
 			'user_role' => 'doctor',
@@ -222,6 +246,7 @@ class Doctor extends Controller
 			'schedule' => $weeklySchedule,
 			'scheduleByDay' => $scheduleByDay,
 			'scheduleByDate' => $scheduleByDate,
+			'appointmentsByDate' => $appointmentsByDate,
 			'currentMonth' => $month,
 			'currentYear' => $year,
 			'prevMonth' => $prevMonth,
@@ -890,6 +915,99 @@ class Doctor extends Controller
                 'message' => 'Error creating request: ' . $e->getMessage()
             ]);
         }
+    }
+
+    public function reports()
+    {
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'doctor') {
+            return redirect()->to('/login');
+        }
+
+        $doctorId = session()->get('user_id');
+        $appointmentModel = new AppointmentModel();
+        $prescriptionModel = new PrescriptionModel();
+        $labRequestModel = new LabTestRequestModel();
+        $patientModel = new \App\Models\PatientModel();
+        
+        // Get filters
+        $reportType = $this->request->getGet('type') ?? 'appointments';
+        $dateFrom = $this->request->getGet('date_from') ?? date('Y-m-01');
+        $dateTo = $this->request->getGet('date_to') ?? date('Y-m-d');
+
+        $data = [
+            'title' => 'Medical Reports - HMS',
+            'user_role' => 'doctor',
+            'user_name' => session()->get('name'),
+            'report_type' => $reportType,
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
+            'appointments' => [],
+            'prescriptions' => [],
+            'lab_requests' => [],
+            'summary' => [
+                'total_appointments' => 0,
+                'total_prescriptions' => 0,
+                'total_lab_requests' => 0,
+                'total_patients' => 0,
+            ]
+        ];
+
+        try {
+            // Appointments Report
+            $appointments = $appointmentModel
+                ->select('appointments.*, patients.full_name as patient_name, patients.patient_id as patient_code')
+                ->join('patients', 'patients.id = appointments.patient_id', 'left')
+                ->where('appointments.doctor_id', $doctorId)
+                ->where('DATE(appointments.appointment_date) >=', $dateFrom)
+                ->where('DATE(appointments.appointment_date) <=', $dateTo)
+                ->where('appointments.status !=', 'cancelled')
+                ->orderBy('appointments.appointment_date', 'DESC')
+                ->orderBy('appointments.appointment_time', 'DESC')
+                ->findAll();
+            
+            $data['appointments'] = $appointments;
+            $data['summary']['total_appointments'] = count($appointments);
+
+            // Prescriptions Report
+            $prescriptions = $prescriptionModel
+                ->select('prescriptions.*, patients.full_name as patient_name, patients.patient_id as patient_code')
+                ->join('patients', 'patients.id = prescriptions.patient_id', 'left')
+                ->where('prescriptions.doctor_id', $doctorId)
+                ->where('DATE(prescriptions.created_at) >=', $dateFrom)
+                ->where('DATE(prescriptions.created_at) <=', $dateTo)
+                ->where('prescriptions.status !=', 'cancelled')
+                ->orderBy('prescriptions.created_at', 'DESC')
+                ->findAll();
+            
+            $data['prescriptions'] = $prescriptions;
+            $data['summary']['total_prescriptions'] = count($prescriptions);
+
+            // Lab Requests Report
+            $labRequests = $labRequestModel
+                ->select('lab_test_requests.*, patients.full_name as patient_name, patients.patient_id as patient_code')
+                ->join('patients', 'patients.id = lab_test_requests.patient_id', 'left')
+                ->where('lab_test_requests.doctor_id', $doctorId)
+                ->where('DATE(lab_test_requests.requested_at) >=', $dateFrom)
+                ->where('DATE(lab_test_requests.requested_at) <=', $dateTo)
+                ->orderBy('lab_test_requests.requested_at', 'DESC')
+                ->findAll();
+            
+            $data['lab_requests'] = $labRequests;
+            $data['summary']['total_lab_requests'] = count($labRequests);
+
+            // Get unique patients count
+            $patientIds = array_unique(array_merge(
+                array_column($appointments, 'patient_id'),
+                array_column($prescriptions, 'patient_id'),
+                array_column($labRequests, 'patient_id')
+            ));
+            $data['summary']['total_patients'] = count($patientIds);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Error fetching doctor reports: ' . $e->getMessage());
+        }
+
+        return view('doctor/reports', $data);
     }
 }
 

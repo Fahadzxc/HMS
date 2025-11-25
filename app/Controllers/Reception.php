@@ -230,9 +230,14 @@ class Reception extends Controller
 
 		$todaysAppointments   = $appointmentModel->getAppointmentsByDate(date('Y-m-d'));
 		$upcomingAppointments = $appointmentModel->getUpcomingAppointments(50);
-		$patients             = $patientModel->orderBy('id', 'DESC')->findAll();
-		$doctors              = $userModel->getDoctors();
-		$rooms                = $roomModel->getAvailableRooms();
+		
+		// Get ALL patients (both outpatient and inpatient)
+		$patients = $patientModel->orderBy('id', 'DESC')->findAll();
+		
+		$doctors = $userModel->getDoctors();
+		
+		// Initial rooms - will be loaded dynamically based on patient type
+		$rooms = [];
 
 		$data = [
 			'title'                 => 'Reception Appointments - HMS',
@@ -462,45 +467,108 @@ class Reception extends Controller
         ]);
     }
 
-    public function createAppointment()
+	public function createAppointment()
 	{
-		// Debug logging
-		$sessionData = [
-			'isLoggedIn' => session()->get('isLoggedIn'),
-			'role' => session()->get('role'),
-			'user_id' => session()->get('user_id'),
-			'name' => session()->get('name'),
-			'all_session' => session()->get()
-		];
-		log_message('info', 'CreateAppointment called. Session data: ' . json_encode($sessionData));
+		try {
+			// Always return JSON for this endpoint
+			$this->response->setContentType('application/json');
+			
+			if (!session()->get('isLoggedIn') || session()->get('role') !== 'receptionist') {
+				return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized - not logged in as receptionist']);
+			}
 
-		if (!session()->get('isLoggedIn') || session()->get('role') !== 'receptionist') {
-			return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized - not logged in as receptionist']);
-		}
-
-		$method = strtolower($this->request->getMethod());
-		log_message('info', 'Request method: ' . $method);
-		
-		// Temporarily disable method check for debugging
-		// if ($method !== 'post') {
-		// 	return $this->response->setJSON(['status' => 'error', 'message' => 'Invalid request method. Received: ' . $method]);
-		// }
-
-		$appointmentModel = new \App\Models\AppointmentModel();
+			$appointmentModel = new \App\Models\AppointmentModel();
+			$patientModel = new PatientModel();
+			$roomModel = new \App\Models\RoomModel();
 
 		$userId = session()->get('user_id');
 		if (!$userId) {
-			log_message('warning', 'No user_id in session, using default value 1');
 			$userId = 1; // Fallback to admin user
 		}
 		
+		$patientId = $this->request->getPost('patient_id');
+		
+		// Validate patient exists
+		$patient = $patientModel->find($patientId);
+		if (!$patient) {
+			return $this->response->setJSON([
+				'status' => 'error',
+				'message' => 'Patient not found',
+				'errors' => ['patient_id' => 'Patient not found']
+			]);
+		}
+		
+		$patientType = $patient['patient_type'] ?? 'outpatient';
+		$appointmentType = $this->request->getPost('appointment_type');
+		$roomId = $this->request->getPost('room_id') ?: null;
+		
+		// Validate based on patient type
+		if ($patientType === 'inpatient') {
+			// For inpatient: room is REQUIRED, appointment_type is NOT required
+			if (empty($roomId)) {
+				return $this->response->setJSON([
+					'status' => 'error',
+					'message' => 'Room selection is required for inpatient admission',
+					'errors' => ['room_id' => 'Room is required for inpatient patients']
+				]);
+			}
+		} else {
+			// For outpatient: appointment_type is REQUIRED, room is optional
+			if (empty($appointmentType)) {
+				return $this->response->setJSON([
+					'status' => 'error',
+					'message' => 'Appointment type is required for outpatient appointments',
+					'errors' => ['appointment_type' => 'Appointment type is required']
+				]);
+			}
+		}
+		
+		// Validate room if selected
+		if (!empty($roomId)) {
+			$room = $roomModel->find($roomId);
+			
+			if (!$room) {
+				return $this->response->setJSON([
+					'status' => 'error',
+					'message' => 'Selected room not found',
+					'errors' => ['room_id' => 'Invalid room selection']
+				]);
+			}
+			
+			// Validate room type matches patient type
+			if ($patientType === 'inpatient' && $room['room_type'] !== 'inpatient') {
+				return $this->response->setJSON([
+					'status' => 'error',
+					'message' => 'Inpatient patients must be assigned to hospital admission rooms, not OPD clinic rooms',
+					'errors' => ['room_id' => 'Invalid room type for inpatient']
+				]);
+			}
+			
+			if ($patientType === 'outpatient' && $room['room_type'] !== 'outpatient') {
+				return $this->response->setJSON([
+					'status' => 'error',
+					'message' => 'Outpatient appointments can only use OPD clinic rooms, not hospital admission rooms',
+					'errors' => ['room_id' => 'Invalid room type for outpatient']
+				]);
+			}
+			
+			// Check room availability
+			if ($room['current_occupancy'] >= $room['capacity']) {
+				return $this->response->setJSON([
+					'status' => 'error',
+					'message' => 'Selected room is full. Please choose another room.',
+					'errors' => ['room_id' => 'Room is full']
+				]);
+			}
+		}
+		
 		$data = [
-			'patient_id' => $this->request->getPost('patient_id'),
+			'patient_id' => $patientId,
 			'doctor_id' => $this->request->getPost('doctor_id'),
-			'room_id' => $this->request->getPost('room_id') ?: null,
+			'room_id' => $roomId,
 			'appointment_date' => $this->request->getPost('appointment_date'),
 			'appointment_time' => $this->request->getPost('appointment_time'),
-			'appointment_type' => $this->request->getPost('appointment_type'),
+			'appointment_type' => $patientType === 'inpatient' ? 'emergency' : ($appointmentType ?: 'consultation'), // Use 'emergency' for inpatient
 			'status' => 'scheduled',
 			'notes' => $this->request->getPost('notes'),
 			'created_by' => $userId
@@ -536,31 +604,39 @@ class Reception extends Controller
 		log_message('info', 'Insert result: ' . ($insertResult ? 'Success' : 'Failed'));
 		
 		if ($insertResult) {
-			// Check if this is an AJAX request
-			if ($this->request->isAJAX()) {
-				return $this->response->setJSON([
-					'status' => 'success',
-					'message' => 'Appointment created successfully'
-				]);
-			} else {
-				// Regular form submission - redirect with success message
-				return redirect()->to('reception/appointments')->with('success', 'Appointment created successfully');
+			// Update room occupancy if room is assigned
+			if (!empty($roomId)) {
+				$roomModel->updateOccupancy($roomId, true);
 			}
+			// Always return JSON for this endpoint
+			return $this->response->setJSON([
+				'status' => 'success',
+				'message' => 'Appointment created successfully'
+			]);
 		} else {
 			$errors = $appointmentModel->errors();
 			log_message('error', 'Failed to insert appointment. Errors: ' . json_encode($errors));
 			
-			// Check if this is an AJAX request
-			if ($this->request->isAJAX()) {
-				return $this->response->setJSON([
-					'status' => 'error',
-					'message' => 'Failed to create appointment',
-					'errors' => $errors
-				]);
-			} else {
-				// Regular form submission - redirect with error message
-				return redirect()->to('reception/appointments')->with('error', 'Failed to create appointment: ' . implode(', ', $errors));
+			// Build error message
+			$errorMessage = 'Failed to create appointment';
+			if (!empty($errors)) {
+				$errorMessage .= ': ' . implode(', ', array_values($errors));
 			}
+			
+			// Always return JSON for this endpoint
+			return $this->response->setJSON([
+				'status' => 'error',
+				'message' => $errorMessage,
+				'errors' => $errors
+			]);
+		}
+		} catch (\Exception $e) {
+			log_message('error', 'Exception in createAppointment: ' . $e->getMessage());
+			log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+			return $this->response->setJSON([
+				'status' => 'error',
+				'message' => 'An error occurred: ' . $e->getMessage()
+			]);
 		}
 	}
 
@@ -810,6 +886,114 @@ class Reception extends Controller
 			],
 			'unavailable_days' => array_unique($unavailableDayNumbers)
 		]);
+	}
+
+	public function getRoomsByType()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'receptionist') {
+			return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
+		}
+
+		$type = $this->request->getGet('type') ?? 'outpatient';
+		
+		// Validate type
+		if (!in_array($type, ['outpatient', 'inpatient'])) {
+			return $this->response->setJSON([
+				'status' => 'error',
+				'message' => 'Invalid room type. Must be "outpatient" or "inpatient"'
+			]);
+		}
+
+		$roomModel = new \App\Models\RoomModel();
+		
+		if ($type === 'outpatient') {
+			$rooms = $roomModel->getOutpatientRooms();
+		} else {
+			$rooms = $roomModel->getInpatientRooms();
+		}
+
+		return $this->response->setJSON([
+			'status' => 'success',
+			'rooms' => $rooms
+		]);
+	}
+
+	public function reports(): ResponseInterface|RedirectResponse
+	{
+		if (!$this->isReceptionist()) {
+			return redirect()->to('/login');
+		}
+
+		$patientModel = new PatientModel();
+		$appointmentModel = new \App\Models\AppointmentModel();
+		
+		// Get filters
+		$reportType = $this->request->getGet('type') ?? 'patients';
+		$dateFrom = $this->request->getGet('date_from') ?? date('Y-m-01');
+		$dateTo = $this->request->getGet('date_to') ?? date('Y-m-d');
+
+		$data = [
+			'title' => 'Reception Reports - HMS',
+			'user_role' => 'receptionist',
+			'user_name' => session()->get('name'),
+			'report_type' => $reportType,
+			'date_from' => $dateFrom,
+			'date_to' => $dateTo,
+			'new_patients' => [],
+			'appointments' => [],
+			'summary' => [
+				'total_new_patients' => 0,
+				'total_appointments' => 0,
+				'total_checkins' => 0,
+				'appointments_by_status' => [],
+			]
+		];
+
+		try {
+			// New Patients Report
+			$newPatients = $patientModel
+				->where('DATE(created_at) >=', $dateFrom)
+				->where('DATE(created_at) <=', $dateTo)
+				->orderBy('created_at', 'DESC')
+				->findAll();
+			
+			$data['new_patients'] = $newPatients;
+			$data['summary']['total_new_patients'] = count($newPatients);
+
+			// Appointments Report
+			$appointments = $appointmentModel
+				->select('appointments.*, patients.full_name as patient_name, patients.patient_id as patient_code, users.name as doctor_name')
+				->join('patients', 'patients.id = appointments.patient_id', 'left')
+				->join('users', 'users.id = appointments.doctor_id', 'left')
+				->where('DATE(appointments.appointment_date) >=', $dateFrom)
+				->where('DATE(appointments.appointment_date) <=', $dateTo)
+				->orderBy('appointments.appointment_date', 'DESC')
+				->orderBy('appointments.appointment_time', 'DESC')
+				->findAll();
+			
+			$data['appointments'] = $appointments;
+			$data['summary']['total_appointments'] = count($appointments);
+			
+			// Appointments by Status
+			$statusCounts = [];
+			foreach ($appointments as $apt) {
+				$status = $apt['status'] ?? 'pending';
+				$statusCounts[$status] = ($statusCounts[$status] ?? 0) + 1;
+			}
+			$data['summary']['appointments_by_status'] = $statusCounts;
+
+			// Check-ins (appointments with check-in status or completed)
+			$checkins = array_filter($appointments, function($apt) {
+				return in_array($apt['status'] ?? '', ['checked_in', 'completed']);
+			});
+			$data['summary']['total_checkins'] = count($checkins);
+
+		} catch (\Exception $e) {
+			log_message('error', 'Error fetching reception reports: ' . $e->getMessage());
+		}
+
+		$html = view('reception/reports', $data);
+		return $this->response->setBody($html);
 	}
 }
 

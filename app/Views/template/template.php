@@ -3804,6 +3804,363 @@
                 opacity: 0.8;
             }
         }
+
+        /* Pharmacy Dashboard Styles */
+        .pharmacy-stock-qty {
+            font-weight: 600;
+        }
+        .pharmacy-stock-qty.stock-zero {
+            color: #ef4444;
+        }
+        .pharmacy-stock-qty.stock-low {
+            color: #f59e0b;
+        }
+        .pharmacy-stock-qty.stock-ok {
+            color: #10b981;
+        }
+        .pharmacy-expired-text {
+            color: #ef4444;
+        }
+        .pharmacy-expiring-text {
+            color: #f59e0b;
+        }
+        .pharmacy-empty-text {
+            color: #94a3b8;
+        }
+        .pharmacy-badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .pharmacy-manage-btn {
+            padding: 0.35rem 0.75rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .pharmacy-manage-btn:hover {
+            background: #2563eb;
+        }
+        .pharmacy-empty-cell {
+            padding: 2rem;
+            text-align: center;
+            color: #64748b;
+        }
+        .pharmacy-low-stock-table {
+            background: #fef3c7;
+        }
+        .pharmacy-expired-table {
+            background: #fee2e2;
+        }
+        .pharmacy-low-stock-qty {
+            color: #f59e0b;
+            font-weight: 600;
+        }
+        .pharmacy-expired-qty {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        .pharmacy-expired-date {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        .pharmacy-movement-time {
+            color: #64748b;
+        }
+        .pharmacy-qty-positive {
+            color: #10b981;
+            font-weight: 600;
+        }
+        .pharmacy-qty-negative {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        .pharmacy-order-number {
+            color: #3b82f6;
+            font-family: monospace;
+            font-weight: 600;
+        }
+        .pharmacy-reference-text {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+        .pharmacy-empty-ref {
+            color: #94a3b8;
+        }
+
+        /* Admin Dashboard Styles */
+        .admin-empty-message {
+            color: #64748b;
+            text-align: center;
+            padding: 1rem;
+        }
+        .admin-activity-time {
+            color: #64748b;
+        }
+
+        /* Admin Doctors Page Styles */
+        .doctors-header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            background: #ffffff;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .doctors-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .doctors-count {
+            font-size: 0.875rem;
+            color: #6B7280;
+        }
+
+        .doctor-card-modern {
+            background: #ffffff;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .doctor-card-header {
+            background: #EEF1F6;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 2rem;
+        }
+
+        .doctor-info-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .doctor-avatar-modern {
+            flex-shrink: 0;
+        }
+
+        .doctor-details-modern {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .doctor-name {
+            margin: 0;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .doctor-email-modern {
+            margin: 0;
+            font-size: 0.875rem;
+            color: #6B7280;
+        }
+
+        .doctor-kpis-modern {
+            display: flex;
+            gap: 2rem;
+            flex-shrink: 0;
+        }
+
+        .kpi-item {
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .kpi-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1C3F70;
+            line-height: 1.2;
+            margin-bottom: 0.25rem;
+        }
+
+        .kpi-text {
+            font-size: 0.75rem;
+            color: #6B7280;
+            font-weight: 500;
+        }
+
+        .appointments-section-modern {
+            padding: 1.5rem;
+            background: #ffffff;
+        }
+
+        .appointments-title {
+            margin: 0 0 1rem 0;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .appointments-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .appointment-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .appointment-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .appointment-main {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex: 1;
+        }
+
+        .appointment-patient-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.375rem;
+            min-width: 150px;
+        }
+
+        .appointment-patient-name {
+            display: block;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .appointment-type-badge {
+            font-size: 0.75rem;
+            color: #6B7280;
+            background: #f1f5f9;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            display: inline-block;
+            width: fit-content;
+        }
+
+        .appointment-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .appointment-datetime-modern {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .appointment-date-modern {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .appointment-time-modern {
+            font-size: 0.75rem;
+            color: #6B7280;
+        }
+
+        .appointment-room-modern {
+            font-size: 0.75rem;
+        }
+
+        .room-text {
+            color: #6B7280;
+        }
+
+        .room-value {
+            color: #1C3F70;
+            font-weight: 600;
+            background: #e8f0f8;
+            padding: 0.125rem 0.5rem;
+            border-radius: 6px;
+        }
+
+        .appointment-status-modern {
+            flex-shrink: 0;
+        }
+
+        .no-appointments-modern {
+            padding: 2rem 1.5rem;
+            text-align: center;
+        }
+
+        .no-appointments-text {
+            color: #6B7280;
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        .empty-state {
+            padding: 3rem 1.5rem;
+            text-align: center;
+            background: #ffffff;
+            border-radius: 12px;
+        }
+
+        .empty-state-text {
+            color: #6B7280;
+            font-size: 0.9375rem;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .doctor-card-header {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .doctor-kpis-modern {
+                width: 100%;
+                justify-content: space-around;
+            }
+
+            .appointment-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .appointment-main {
+                width: 100%;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .appointment-status-modern {
+                align-self: flex-end;
+            }
+        }
     </style>
     <?php // Sidebar/header/footer are now handled by partials in app/Views/template/*.php ?>
 

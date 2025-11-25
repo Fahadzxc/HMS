@@ -6,7 +6,10 @@ $useSidebar = $useSidebar ?? false;
 <?php if ($useSidebar): ?>
     <header class="topbar">
         <div class="page-title"><?= esc($pageTitle ?? 'Dashboard') ?></div>
-        <div class="profile"><span class="avatar"></span><span><?= esc(session()->get('role') ? ucfirst(session()->get('role')) : 'Admin') ?></span></div>
+        <div class="profile">
+            <span class="avatar"></span>
+            <span class="role-badge"><?= esc(session()->get('role') ? ucfirst(session()->get('role')) : 'Admin') ?></span>
+        </div>
     </header>
 <?php else: ?>
     <header class="header">

@@ -26,8 +26,23 @@ class Results extends Controller
             return redirect()->to('/login');
         }
 
-        $results = $this->resultModel->getAllWithRelations();
-        $staff   = $this->staffModel->getAllWithRelations();
+        $results = [];
+        $staff = [];
+        
+        try {
+            $results = $this->resultModel->getAllWithRelations();
+        } catch (\Exception $e) {
+            log_message('error', 'Error fetching lab results: ' . $e->getMessage());
+        }
+        
+        $db = \Config\Database::connect();
+        if ($db->tableExists('lab_staff')) {
+            try {
+                $staff = $this->staffModel->getAllWithRelations();
+            } catch (\Exception $e) {
+                log_message('warning', 'Error fetching lab staff: ' . $e->getMessage());
+            }
+        }
 
         $data = [
             'pageTitle' => 'Laboratory Test Results',

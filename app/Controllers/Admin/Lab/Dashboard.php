@@ -45,6 +45,7 @@ class Dashboard extends Controller
 
         try {
             $today = date('Y-m-d');
+            $db = \Config\Database::connect();
 
             $pendingRequests = (clone $this->requestModel)
                 ->where('status', 'pending')
@@ -55,21 +56,45 @@ class Dashboard extends Controller
                 ->where('DATE(updated_at)', $today)
                 ->countAllResults();
 
-            $criticalResults = (clone $this->resultModel)
-                ->where('critical_flag', 1)
-                ->countAllResults();
+            $criticalResults = 0;
+            if ($db->tableExists('lab_test_results')) {
+                try {
+                    $criticalResults = (clone $this->resultModel)
+                        ->where('critical_flag', 1)
+                        ->countAllResults();
+                } catch (\Exception $e) {
+                    log_message('warning', 'Error counting critical results: ' . $e->getMessage());
+                }
+            }
 
-            $activeStaff = (clone $this->staffModel)
-                ->where('status', 'active')
-                ->countAllResults();
+            $activeStaff = 0;
+            if ($db->tableExists('lab_staff')) {
+                try {
+                    $activeStaff = (clone $this->staffModel)
+                        ->where('status', 'active')
+                        ->countAllResults();
+                } catch (\Exception $e) {
+                    log_message('warning', 'Error counting active staff: ' . $e->getMessage());
+                }
+            }
 
-            $recentRequests = $this->requestModel->getAllWithRelations([
-                'date_from' => date('Y-m-d', strtotime('-7 days')),
-            ]);
+            $recentRequests = [];
+            try {
+                $recentRequests = $this->requestModel->getAllWithRelations([
+                    'date_from' => date('Y-m-d', strtotime('-7 days')),
+                ]);
+            } catch (\Exception $e) {
+                log_message('warning', 'Error fetching recent requests: ' . $e->getMessage());
+            }
 
-            $recentResults = $this->resultModel->getAllWithRelations([
-                'date_from' => date('Y-m-d', strtotime('-7 days')),
-            ]);
+            $recentResults = [];
+            try {
+                $recentResults = $this->resultModel->getAllWithRelations([
+                    'date_from' => date('Y-m-d', strtotime('-7 days')),
+                ]);
+            } catch (\Exception $e) {
+                log_message('warning', 'Error fetching recent results: ' . $e->getMessage());
+            }
 
             $data['metrics'] = [
                 'pendingRequests' => $pendingRequests,

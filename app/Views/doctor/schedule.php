@@ -64,23 +64,39 @@
                 if (empty($daySchedules)) {
                     $daySchedules = $scheduleByDay[$dayOfWeekName] ?? [];
                 }
+                
+                // Get appointments for this date
+                $dayAppointments = $appointmentsByDate[$date] ?? [];
             ?>
                 <div class="calendar-day <?= $isToday ? 'today' : '' ?>" onclick="openDateSchedule('<?= $date ?>', '<?= $dayOfWeekName ?>')">
                     <div class="calendar-day-number"><?= $day ?></div>
                     <div class="calendar-day-schedules">
                         <?php if (!empty($daySchedules)): ?>
-                            <?php foreach (array_slice($daySchedules, 0, 2) as $sched): ?>
+                            <?php foreach (array_slice($daySchedules, 0, 1) as $sched): ?>
                                 <div class="calendar-schedule-item <?= $sched['is_available'] ? 'available' : 'unavailable' ?>">
                                     <div class="schedule-time">
                                         <?= date('g:i A', strtotime($sched['start_time'])) ?> - <?= date('g:i A', strtotime($sched['end_time'])) ?>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
-                            <?php if (count($daySchedules) > 2): ?>
-                                <div class="calendar-schedule-more">+<?= count($daySchedules) - 2 ?> more</div>
-                            <?php endif; ?>
                         <?php else: ?>
                             <div class="calendar-no-schedule">No schedule</div>
+                        <?php endif; ?>
+                        
+                        <?php if (!empty($dayAppointments)): ?>
+                            <?php foreach (array_slice($dayAppointments, 0, 3) as $apt): ?>
+                                <div class="calendar-appointment-item" title="<?= esc($apt['patient_name'] ?? 'Patient') ?> - <?= date('g:i A', strtotime($apt['appointment_time'])) ?>">
+                                    <div class="appointment-patient">
+                                        👤 <?= esc(substr($apt['patient_name'] ?? 'Patient', 0, 15)) ?><?= strlen($apt['patient_name'] ?? '') > 15 ? '...' : '' ?>
+                                    </div>
+                                    <div class="appointment-time">
+                                        <?= date('g:i A', strtotime($apt['appointment_time'])) ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                            <?php if (count($dayAppointments) > 3): ?>
+                                <div class="calendar-appointment-more">+<?= count($dayAppointments) - 3 ?> more appointment<?= count($dayAppointments) - 3 > 1 ? 's' : '' ?></div>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -258,6 +274,40 @@
     color: #94a3b8;
     font-style: italic;
     padding: 0.25rem 0.5rem;
+}
+
+.calendar-appointment-item {
+    padding: 0.4rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    line-height: 1.3;
+    background: #dbeafe;
+    color: #1e40af;
+    border-left: 3px solid #3b82f6;
+    margin-top: 0.25rem;
+}
+
+.appointment-patient {
+    font-weight: 600;
+    margin-bottom: 0.15rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.appointment-time {
+    font-size: 0.65rem;
+    color: #1e3a8a;
+    font-weight: 500;
+}
+
+.calendar-appointment-more {
+    font-size: 0.65rem;
+    color: #3b82f6;
+    font-style: italic;
+    padding: 0.2rem 0.5rem;
+    margin-top: 0.25rem;
+    font-weight: 500;
 }
 
 .modal {

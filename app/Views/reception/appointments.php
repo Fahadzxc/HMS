@@ -202,10 +202,15 @@
                         <option value="">Choose a patient...</option>
                         <?php if (isset($patients) && is_array($patients)): ?>
                             <?php foreach ($patients as $patient): ?>
+                                <?php 
+                                $patientType = $patient['patient_type'] ?? 'outpatient';
+                                ?>
                                 <option value="<?= $patient['id'] ?>" 
                                         data-name="<?= htmlspecialchars($patient['full_name']) ?>" 
-                                        data-contact="<?= htmlspecialchars($patient['contact']) ?>">
-                                    <?= $patient['id'] ?> - <?= htmlspecialchars($patient['full_name']) ?>
+                                        data-contact="<?= htmlspecialchars($patient['contact']) ?>"
+                                        data-type="<?= htmlspecialchars($patientType) ?>">
+                                    <?= $patient['id'] ?> - <?= htmlspecialchars($patient['full_name']) ?> 
+                                    (<?= ucfirst($patientType) ?>)
                                 </option>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -251,9 +256,9 @@
                         <p style="color: #64748b; margin: 0; text-align: center;">Select a doctor to view their schedule</p>
                     </div>
                 </div>
-                <div class="form-field">
+                <div class="form-field" id="appointment_type_field">
                     <label>Appointment Type <span class="req">*</span></label>
-                    <select name="appointment_type" required>
+                    <select name="appointment_type" id="appointment_type_select">
                         <option value="">Select Type</option>
                         <option value="consultation">Consultation</option>
                         <option value="follow-up">Follow-up</option>
@@ -264,6 +269,9 @@
                         <option value="xray">X-Ray</option>
                     </select>
                     <div class="error" data-error-for="appointment_type"></div>
+                    <small class="form-help" style="color: #64748b;">
+                        For outpatient appointments only
+                    </small>
                 </div>
                 <div class="form-field">
                     <label>Appointment Date <span class="req">*</span></label>
@@ -290,24 +298,12 @@
                     <div class="error" data-error-for="status"></div>
                 </div>
                 <div class="form-field">
-                    <label>Select Room</label>
+                    <label id="room_label">Select Room</label>
                     <select name="room_id" id="room_select">
                         <option value="">Choose a room...</option>
-                        <?php if (isset($rooms) && is_array($rooms)): ?>
-                            <?php foreach ($rooms as $room): ?>
-                                <option value="<?= $room['id'] ?>" 
-                                        data-type="<?= $room['room_type'] ?>"
-                                        data-floor="<?= $room['floor'] ?>"
-                                        data-capacity="<?= $room['capacity'] ?>"
-                                        data-occupancy="<?= $room['current_occupancy'] ?>">
-                                    <?= esc($room['room_number']) ?> - <?= esc($room['specialization']) ?> 
-                                    (Floor <?= $room['floor'] ?>, <?= $room['capacity'] - $room['current_occupancy'] ?> available)
-                                </option>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
                     </select>
                     <div class="error" data-error-for="room_id"></div>
-                    <small class="form-help">Optional: Select a specific room for the appointment</small>
+                    <small class="form-help" id="room_help">Select a patient first to load available rooms</small>
                 </div>
                 <div class="form-field form-field--full">
                     <label>Notes</label>
@@ -337,6 +333,11 @@ function closeAddAppointmentModal() {
     modal.style.display = 'none';
     modal.setAttribute('aria-hidden', 'true');
     form.reset();
+    
+    // Reset form fields
+    document.getElementById('appointment_type_field').style.display = 'block';
+    document.getElementById('appointment_type_select').setAttribute('required', 'required');
+    resetRoomField();
 }
 
 // Load Patient Details when patient is selected
@@ -345,12 +346,94 @@ function loadPatientDetails() {
     const selectedOption = select.options[select.selectedIndex];
     
     if (selectedOption.value) {
+        const patientType = selectedOption.getAttribute('data-type') || 'outpatient';
+        
+        // Fill patient details
         document.getElementById('patient_name').value = selectedOption.getAttribute('data-name');
         document.getElementById('patient_contact').value = selectedOption.getAttribute('data-contact');
+        
+        // Show/hide appointment type based on patient type
+        const appointmentTypeField = document.getElementById('appointment_type_field');
+        const appointmentTypeSelect = document.getElementById('appointment_type_select');
+        
+        if (patientType === 'inpatient') {
+            // Hide appointment type for inpatient
+            appointmentTypeField.style.display = 'none';
+            appointmentTypeSelect.removeAttribute('required');
+            appointmentTypeSelect.value = '';
+        } else {
+            // Show appointment type for outpatient
+            appointmentTypeField.style.display = 'block';
+            appointmentTypeSelect.setAttribute('required', 'required');
+        }
+        
+        // Load rooms based on patient type
+        loadRoomsByPatientType(patientType);
     } else {
         document.getElementById('patient_name').value = '';
         document.getElementById('patient_contact').value = '';
+        document.getElementById('appointment_type_field').style.display = 'block';
+        document.getElementById('appointment_type_select').setAttribute('required', 'required');
+        resetRoomField();
     }
+}
+
+// Load rooms based on patient type
+function loadRoomsByPatientType(patientType) {
+    const roomSelect = document.getElementById('room_select');
+    const roomLabel = document.getElementById('room_label');
+    const roomHelp = document.getElementById('room_help');
+    
+    // Reset room dropdown
+    roomSelect.innerHTML = '<option value="">Loading rooms...</option>';
+    
+    // Fetch rooms from backend
+    fetch(`<?= base_url('reception/rooms') ?>?type=${patientType}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success' && data.rooms) {
+                roomSelect.innerHTML = '<option value="">Choose a room...</option>';
+                
+                data.rooms.forEach(room => {
+                    const available = room.capacity - room.current_occupancy;
+                    const option = document.createElement('option');
+                    option.value = room.id;
+                    option.textContent = `${room.room_number} - ${room.specialization} (Floor ${room.floor}, ${available} available)`;
+                    roomSelect.appendChild(option);
+                });
+                
+                // Update label and help text based on patient type
+                if (patientType === 'inpatient') {
+                    roomLabel.innerHTML = 'Select Room <span class="req">*</span>';
+                    roomSelect.setAttribute('required', 'required');
+                    roomHelp.textContent = 'Required: Select a hospital room for inpatient admission';
+                } else {
+                    roomLabel.innerHTML = 'Select Room';
+                    roomSelect.removeAttribute('required');
+                    roomHelp.textContent = 'Optional: Select an OPD clinic room for outpatient appointment';
+                }
+            } else {
+                roomSelect.innerHTML = '<option value="">No rooms available</option>';
+                roomHelp.textContent = 'No rooms available for this patient type';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading rooms:', error);
+            roomSelect.innerHTML = '<option value="">Error loading rooms</option>';
+            roomHelp.textContent = 'Error loading rooms. Please try again.';
+        });
+}
+
+// Reset room field
+function resetRoomField() {
+    const roomSelect = document.getElementById('room_select');
+    const roomLabel = document.getElementById('room_label');
+    const roomHelp = document.getElementById('room_help');
+    
+    roomSelect.innerHTML = '<option value="">Choose a room...</option>';
+    roomSelect.removeAttribute('required');
+    roomLabel.innerHTML = 'Select Room';
+    roomHelp.textContent = 'Select a patient first to load available rooms';
 }
 
 // Event listeners
@@ -361,31 +444,87 @@ document.getElementById('btnOpenAddAppointment').addEventListener('click', funct
 
 // Add appointment form submission
 document.getElementById('addAppointmentForm').addEventListener('submit', function(e) {
-    // Let the form submit normally for now to debug
-    console.log('Form is being submitted...');
+    e.preventDefault();
     
-    // Validate required fields
+    // Get form values
+    const patientSelect = document.getElementById('patient_select');
+    const selectedOption = patientSelect.options[patientSelect.selectedIndex];
+    const patientType = selectedOption ? selectedOption.getAttribute('data-type') || 'outpatient' : 'outpatient';
+    
     const patientId = document.querySelector('select[name="patient_id"]').value;
     const doctorId = document.querySelector('select[name="doctor_id"]').value;
     const appointmentDate = document.querySelector('input[name="appointment_date"]').value;
     const appointmentTime = document.querySelector('input[name="appointment_time"]').value;
     const appointmentType = document.querySelector('select[name="appointment_type"]').value;
+    const roomId = document.querySelector('select[name="room_id"]').value;
     
-    if (!patientId || !doctorId || !appointmentDate || !appointmentTime || !appointmentType) {
-        e.preventDefault();
+    // Validate based on patient type
+    if (!patientId || !doctorId || !appointmentDate || !appointmentTime) {
         alert('Please fill in all required fields');
         return false;
     }
     
+    if (patientType === 'outpatient' && !appointmentType) {
+        alert('Appointment type is required for outpatient appointments');
+        return false;
+    }
+    
+    if (patientType === 'inpatient' && !roomId) {
+        alert('Room selection is required for inpatient admission');
+        return false;
+    }
+    
     // Check if selected date is unavailable for the doctor
-    if (appointmentDate && isDateUnavailable(appointmentDate, currentDoctorUnavailableDays)) {
-        e.preventDefault();
+    if (appointmentDate && typeof isDateUnavailable === 'function' && isDateUnavailable(appointmentDate, currentDoctorUnavailableDays)) {
         alert('The selected doctor is not available on this date. Please choose a different date or doctor.');
         return false;
     }
     
-    console.log('All fields filled and date is available, submitting form...');
-    // Form will submit normally
+    // Submit via AJAX
+    const formData = new FormData(document.getElementById('addAppointmentForm'));
+    
+    fetch('<?= base_url('reception/createAppointment') ?>', {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => {
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        } else {
+            // If not JSON, read as text to see what we got
+            return response.text().then(text => {
+                console.error('Non-JSON response:', text);
+                throw new Error('Server returned non-JSON response. Please check the console for details.');
+            });
+        }
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            alert(data.message || 'Appointment created successfully');
+            closeAddAppointmentModal();
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to create appointment');
+            // Display field errors if any
+            if (data.errors) {
+                Object.keys(data.errors).forEach(field => {
+                    const errorDiv = document.querySelector(`[data-error-for="${field}"]`);
+                    if (errorDiv) {
+                        errorDiv.textContent = data.errors[field];
+                    }
+                });
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred: ' + error.message);
+    });
 });
 
 // Check in patient function

@@ -20,6 +20,39 @@ class Accounts extends Controller
 		$this->ensureInsuranceTables();
 	}
 
+	// ---------- Helpers for Lab billing ----------
+	private function ensureLabBillingColumns(): void
+	{
+		$db = \Config\Database::connect();
+		$forge = \Config\Database::forge();
+		foreach (['lab_test_results','lab_test_requests'] as $tbl) {
+			if ($db->tableExists($tbl)) {
+				try {
+					$fields = $db->getFieldData($tbl);
+					$has = false;
+					foreach ($fields as $f) { if (strtolower($f->name) === 'billing_status') { $has = true; break; } }
+					if (!$has) {
+						$forge->addColumn($tbl, [
+							'billing_status' => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true]
+						]);
+						$db->table($tbl)->set('billing_status','unbilled')->where('billing_status IS NULL')->update();
+					}
+				} catch (\Exception $e) {
+					log_message('debug', 'ensureLabBillingColumns skip for '.$tbl.': '.$e->getMessage());
+				}
+			}
+		}
+	}
+	
+	private function guessLabPrice(string $name, array $defaults, float $fallback): float
+	{
+		$name = strtolower(trim($name));
+		foreach ($defaults as $k => $v) {
+			if (strpos($name, $k) !== false) return (float)$v;
+		}
+		return (float)$fallback;
+	}
+
 	public function dashboard()
 	{
 		if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
@@ -179,11 +212,32 @@ class Accounts extends Controller
 				return $this->response->setJSON(['success' => false, 'message' => 'Bill total must be greater than zero']);
 			}
 			
-			// Discount is always 0 (no PhilHealth yet)
-			$discount = 0;
-			// Tax is automatically 12% of subtotal
-			$tax = $subtotal * 0.12;
-			$totalAmount = $subtotal + $tax;
+			// Calculate discount based on PhilHealth insurance if applicable
+			$discount = floatval($postData['discount'] ?? 0);
+			
+			// If discount is 0, check if patient has PhilHealth insurance
+			if ($discount == 0) {
+				$insuranceModel = new InsuranceModel();
+				// Check if patient has an active PhilHealth claim or insurance
+				$philHealthClaim = $insuranceModel->where('patient_id', $postData['patient_id'])
+					->where('insurance_provider', 'PhilHealth')
+					->whereIn('status', ['pending', 'submitted', 'approved', 'paid'])
+					->orderBy('created_at', 'DESC')
+					->first();
+				
+				// If patient has PhilHealth, apply 15% discount (patient pays 85%)
+				if ($philHealthClaim) {
+					$discount = $subtotal * 0.15; // 15% discount
+				}
+			}
+			
+			// Ensure discount doesn't exceed subtotal
+			$discount = min($discount, $subtotal);
+			
+			// Tax is automatically 12% of (subtotal - discount)
+			$taxableAmount = $subtotal - $discount;
+			$tax = $taxableAmount * 0.12;
+			$totalAmount = $taxableAmount + $tax;
 			
 			// Create bill
 			$billData = [
@@ -216,6 +270,8 @@ class Accounts extends Controller
 			
 			// Create bill items
 			$itemErrors = [];
+			$labResultIdsToBill = [];
+			$labRequestIdsToBill = [];
 			foreach ($items as $item) {
 				if (empty($item['item_name']) || empty($item['quantity']) || empty($item['unit_price'])) {
 					continue; // Skip invalid items
@@ -247,10 +303,39 @@ class Accounts extends Controller
 				if (!$billItemModel->insert($itemData)) {
 					$itemErrors[] = $item['item_name'];
 				}
+				
+				// Track lab items to mark as billed
+				if (!empty($item['reference_type']) && !empty($item['reference_id'])) {
+					if ($item['reference_type'] === 'lab_result') {
+						$labResultIdsToBill[] = (int)$item['reference_id'];
+					} elseif ($item['reference_type'] === 'lab_request') {
+						$labRequestIdsToBill[] = (int)$item['reference_id'];
+					}
+				}
 			}
 			
 			if (!empty($itemErrors)) {
 				log_message('warning', 'Some bill items failed to create: ' . implode(', ', $itemErrors));
+			}
+			
+			// Mark lab rows as billed
+			if (!empty($labResultIdsToBill) || !empty($labRequestIdsToBill)) {
+				$this->ensureLabBillingColumns();
+				$db = \Config\Database::connect();
+				if (!empty($labResultIdsToBill) && $db->tableExists('lab_test_results')) {
+					try {
+						$db->table('lab_test_results')->whereIn('id', $labResultIdsToBill)->update(['billing_status' => 'billed']);
+					} catch (\Exception $e) {
+						log_message('warning', 'Failed to mark lab_test_results billed: ' . $e->getMessage());
+					}
+				}
+				if (!empty($labRequestIdsToBill) && $db->tableExists('lab_test_requests')) {
+					try {
+						$db->table('lab_test_requests')->whereIn('id', $labRequestIdsToBill)->update(['billing_status' => 'billed']);
+					} catch (\Exception $e) {
+						log_message('warning', 'Failed to mark lab_test_requests billed: ' . $e->getMessage());
+					}
+				}
 			}
 			
 			return $this->response->setJSON([
@@ -274,14 +359,64 @@ class Accounts extends Controller
 		
 		$paymentModel = new PaymentModel();
 		$billingModel = new BillingModel();
+		$insuranceModel = new InsuranceModel();
 		
 		$postData = $this->request->getJSON(true);
 		$billId = $postData['bill_id'];
-		$amount = $postData['amount'];
+		$amount = floatval($postData['amount']);
+		$paymentMethod = $postData['payment_method'];
 		
 		$bill = $billingModel->find($billId);
 		if (!$bill) {
 			return $this->response->setJSON(['success' => false, 'message' => 'Bill not found']);
+		}
+		
+		// Check if there's already an insurance payment for this bill
+		if ($paymentMethod === 'cash' || $paymentMethod === 'credit_card' || $paymentMethod === 'debit_card') {
+			$existingInsurancePayment = $paymentModel->where('bill_id', $billId)
+				->where('payment_method', 'insurance')
+				->where('status', 'completed')
+				->first();
+			
+			if ($existingInsurancePayment) {
+				// Check if there's an approved insurance claim
+				$approvedClaim = $insuranceModel->where('bill_id', $billId)
+					->where('status', 'approved')
+					->first();
+				
+				if ($approvedClaim) {
+					$insuranceAmount = floatval($existingInsurancePayment['amount']);
+					$remainingBalance = $bill['total_amount'] - $bill['paid_amount'];
+					
+					// If insurance already paid the full amount or more, don't allow cash payment
+					if ($insuranceAmount >= $bill['total_amount']) {
+						return $this->response->setJSON([
+							'success' => false, 
+							'message' => 'This bill is already fully paid by insurance. Cannot record additional cash payment.'
+						]);
+					}
+					
+					// If trying to pay more than remaining balance after insurance
+					if ($amount > $remainingBalance) {
+						return $this->response->setJSON([
+							'success' => false, 
+							'message' => 'Payment amount exceeds remaining balance. Remaining balance after insurance: ₱' . number_format($remainingBalance, 2)
+						]);
+					}
+				}
+			}
+		}
+		
+		// Validate amount doesn't exceed balance
+		if ($amount > $bill['balance']) {
+			return $this->response->setJSON([
+				'success' => false, 
+				'message' => 'Payment amount cannot exceed bill balance. Current balance: ₱' . number_format($bill['balance'], 2)
+			]);
+		}
+		
+		if ($amount <= 0) {
+			return $this->response->setJSON(['success' => false, 'message' => 'Payment amount must be greater than zero']);
 		}
 		
 		// Generate payment number
@@ -293,7 +428,7 @@ class Accounts extends Controller
 			'patient_id' => $bill['patient_id'],
 			'payment_number' => $paymentNumber,
 			'amount' => $amount,
-			'payment_method' => $postData['payment_method'],
+			'payment_method' => $paymentMethod,
 			'payment_date' => $postData['payment_date'] ?? date('Y-m-d'),
 			'transaction_id' => $postData['transaction_id'] ?? null,
 			'reference_number' => $postData['reference_number'] ?? null,
@@ -314,7 +449,6 @@ class Accounts extends Controller
 				'paid_amount' => $newPaidAmount,
 				'balance' => max(0, $newBalance),
 				'status' => $newStatus,
-				'payment_method' => $postData['payment_method'],
 			]);
 			
 			return $this->response->setJSON([
@@ -326,6 +460,76 @@ class Accounts extends Controller
 		}
 		
 		return $this->response->setJSON(['success' => false, 'message' => 'Failed to record payment']);
+	}
+	
+	public function voidPayment()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
+			return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(401);
+		}
+		
+		try {
+			$paymentModel = new PaymentModel();
+			$billingModel = new BillingModel();
+			
+			$postData = $this->request->getJSON(true);
+			$paymentId = $postData['payment_id'] ?? null;
+			
+			if (!$paymentId) {
+				return $this->response->setJSON(['success' => false, 'message' => 'Payment ID is required']);
+			}
+			
+			$payment = $paymentModel->find($paymentId);
+			if (!$payment) {
+				return $this->response->setJSON(['success' => false, 'message' => 'Payment not found']);
+			}
+			
+			if ($payment['status'] !== 'completed') {
+				return $this->response->setJSON(['success' => false, 'message' => 'Only completed payments can be voided']);
+			}
+			
+			$bill = $billingModel->find($payment['bill_id']);
+			if (!$bill) {
+				return $this->response->setJSON(['success' => false, 'message' => 'Bill not found']);
+			}
+			
+			// Update payment status to refunded
+			$paymentModel->update($paymentId, [
+				'status' => 'refunded',
+				'notes' => ($payment['notes'] ?? '') . ' [VOIDED]'
+			]);
+			
+			// Recalculate bill paid amount and balance
+			$db = \Config\Database::connect();
+			$allPayments = $db->table('payments')
+				->where('bill_id', $payment['bill_id'])
+				->where('status', 'completed')
+				->selectSum('amount')
+				->get()
+				->getRowArray();
+			
+			$newPaidAmount = floatval($allPayments['amount'] ?? 0);
+			$newBalance = $bill['total_amount'] - $newPaidAmount;
+			$newStatus = $newBalance <= 0 ? 'paid' : ($newBalance < $bill['total_amount'] ? 'partial' : 'pending');
+			
+			$billingModel->update($payment['bill_id'], [
+				'paid_amount' => $newPaidAmount,
+				'balance' => max(0, $newBalance),
+				'status' => $newStatus,
+			]);
+			
+			return $this->response->setJSON([
+				'success' => true,
+				'message' => 'Payment voided successfully'
+			]);
+			
+		} catch (\Exception $e) {
+			log_message('error', 'Error voiding payment: ' . $e->getMessage());
+			return $this->response->setJSON([
+				'success' => false,
+				'message' => 'Error: ' . $e->getMessage()
+			]);
+		}
 	}
 	
 	public function getBillDetails($billId)
@@ -385,6 +589,71 @@ class Accounts extends Controller
 		}
 	}
 	
+	public function getPatientInsuranceDiscount($patientId)
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
+			return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(401);
+		}
+		
+		try {
+			$insuranceModel = new InsuranceModel();
+			
+			// Check if patient has PhilHealth insurance
+			$philHealthClaim = $insuranceModel->where('patient_id', $patientId)
+				->where('insurance_provider', 'PhilHealth')
+				->whereIn('status', ['pending', 'submitted', 'approved', 'paid'])
+				->orderBy('created_at', 'DESC')
+				->first();
+			
+			$hasPhilHealth = !empty($philHealthClaim);
+			$discountPercentage = $hasPhilHealth ? 15 : 0; // PhilHealth covers 15%
+			$coPaymentPercentage = $hasPhilHealth ? 85 : 0; // Patient pays 85%
+			
+			return $this->response->setJSON([
+				'success' => true,
+				'has_philhealth' => $hasPhilHealth,
+				'discount_percentage' => $discountPercentage,
+				'copay_percentage' => $coPaymentPercentage,
+				'provider' => $philHealthClaim['insurance_provider'] ?? null,
+				'policy_number' => $philHealthClaim['policy_number'] ?? null,
+				'member_id' => $philHealthClaim['member_id'] ?? null
+			]);
+		} catch (\Exception $e) {
+			log_message('error', 'Error getting patient insurance discount: ' . $e->getMessage());
+			return $this->response->setJSON([
+				'success' => false,
+				'message' => 'Error: ' . $e->getMessage()
+			]);
+		}
+	}
+	
+	public function getClaimDetails($claimId)
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
+			return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(401);
+		}
+		
+		try {
+			$insuranceModel = new InsuranceModel();
+			$claim = $insuranceModel->find($claimId);
+			
+			if (!$claim) {
+				return $this->response->setJSON(['success' => false, 'message' => 'Claim not found']);
+			}
+			
+			return $this->response->setJSON([
+				'success' => true,
+				'claim' => $claim
+			]);
+		} catch (\Exception $e) {
+			log_message('error', 'Error getting claim details: ' . $e->getMessage());
+			return $this->response->setJSON([
+				'success' => false,
+				'message' => 'Error: ' . $e->getMessage()
+			]);
+		}
+	}
+	
 	public function getPatientBillableItems($patientId)
 	{
 		try {
@@ -401,6 +670,111 @@ class Accounts extends Controller
 			// Get patient info for room charges
 			$patientModel = new PatientModel();
 			$patient = $patientModel->find($patientId);
+			
+			// Load unbilled Laboratory items (results then requests)
+			$this->ensureLabBillingColumns();
+			
+			$defaultLabPrices = [
+				'cbc' => 350.00,
+				'urinalysis' => 250.00,
+				'x-ray' => 900.00,
+				'fecalysis' => 250.00,
+				'ct scan' => 4500.00,
+				'mri' => 8000.00,
+				'pregnancy test' => 300.00,
+				'covid' => 1500.00,
+				'blood sugar' => 280.00,
+			];
+			
+			// lab_test_results
+			if ($db->tableExists('lab_test_results')) {
+				try {
+					$results = $db->table('lab_test_results r')
+						->select('r.id, r.released_at, rq.test_type, rq.patient_id, r.status as result_status')
+						->join('lab_test_requests rq', 'rq.id = r.request_id', 'left')
+						->where('rq.patient_id', $patientId)
+						->whereIn('r.status', ['completed','released'])
+						->groupStart()
+							->where('r.billing_status', 'unbilled')
+							->orWhere('r.billing_status IS NULL')
+							->orWhere('r.billing_status', '')
+						->groupEnd()
+						->orderBy('r.released_at', 'DESC')
+						->get()->getResultArray();
+					
+					foreach ($results as $row) {
+						$testType = trim(strtolower($row['test_type'] ?? 'Lab Test'));
+						$unitPrice = $defaultLabPrices[$testType] ?? $this->guessLabPrice($testType, $defaultLabPrices, 500.00);
+						$billableItems[] = [
+							'category' => 'laboratory',
+							'code' => 'LAB-' . str_pad((string)$row['id'], 6, '0', STR_PAD_LEFT),
+							'date_time' => !empty($row['released_at']) ? date('Y-m-d\TH:i', strtotime($row['released_at'])) : date('Y-m-d\TH:i'),
+							'item_name' => strtoupper($row['test_type'] ?? 'Lab Test'),
+							'unit_price' => $unitPrice,
+							'quantity' => 1,
+							'reference_id' => $row['id'],
+							'reference_type' => 'lab_result'
+						];
+					}
+				} catch (\Exception $e) {
+					log_message('warning', 'Error fetching lab results: ' . $e->getMessage());
+				}
+			}
+			
+			// lab_test_requests (include all requests that haven't been billed)
+			if ($db->tableExists('lab_test_requests')) {
+				try {
+					// Get all lab requests for this patient that haven't been billed
+					$allRequests = $db->table('lab_test_requests rq')
+						->select('rq.id, rq.test_type, rq.requested_at, rq.status, rq.billing_status')
+						->where('rq.patient_id', $patientId)
+						->groupStart()
+							->where('rq.billing_status', 'unbilled')
+							->orWhere('rq.billing_status IS NULL')
+							->orWhere('rq.billing_status', '')
+						->groupEnd()
+						->orderBy('rq.requested_at', 'DESC')
+						->get()->getResultArray();
+					
+					// Get request IDs that already have billed results
+					$requestIdsWithBilledResults = [];
+					if ($db->tableExists('lab_test_results') && !empty($allRequests)) {
+						$requestIds = array_column($allRequests, 'id');
+						$billedResultsCheck = $db->table('lab_test_results')
+							->select('request_id')
+							->whereIn('request_id', $requestIds)
+							->where('billing_status', 'billed')
+							->get()->getResultArray();
+						$requestIdsWithBilledResults = array_column($billedResultsCheck, 'request_id');
+					}
+					
+					// Include all unbilled requests (whether they have results or not, as long as not billed)
+					$requests = [];
+					foreach ($allRequests as $row) {
+						// Only exclude if the result is already billed
+						if (!in_array($row['id'], $requestIdsWithBilledResults)) {
+							$requests[] = $row;
+						}
+					}
+					
+					foreach ($requests as $row) {
+						$testType = trim(strtolower($row['test_type'] ?? 'Lab Test'));
+						$unitPrice = $defaultLabPrices[$testType] ?? $this->guessLabPrice($testType, $defaultLabPrices, 500.00);
+						$billableItems[] = [
+							'category' => 'laboratory',
+							'code' => 'LABRQ-' . str_pad((string)$row['id'], 6, '0', STR_PAD_LEFT),
+							'date_time' => !empty($row['requested_at']) ? date('Y-m-d\TH:i', strtotime($row['requested_at'])) : date('Y-m-d\TH:i'),
+							'item_name' => strtoupper($row['test_type'] ?? 'Lab Test'),
+							'unit_price' => $unitPrice,
+							'quantity' => 1,
+							'reference_id' => $row['id'],
+							'reference_type' => 'lab_request'
+						];
+					}
+				} catch (\Exception $e) {
+					log_message('warning', 'Error fetching lab requests: ' . $e->getMessage());
+				}
+			}
 			
 			// Get billed appointment IDs (only if bills table exists)
 			$billedAppointmentIds = [];
@@ -531,7 +905,8 @@ class Accounts extends Controller
 								->where('nurse_name IS NOT NULL')
 								->where('nurse_name !=', '')
 								->orderBy('created_at', 'DESC')
-								->first();
+                                ->get()
+                                ->getRowArray();
 							if ($nurseUpdate && !empty($nurseUpdate['nurse_name'])) {
 								$nurseName = $nurseUpdate['nurse_name'];
 							}
@@ -622,19 +997,19 @@ class Accounts extends Controller
 				}
 			}
 			
-			// Add Room/Bed Charges if patient has a room
+			// Add Room/Bed Charges if patient has a room (inpatient or outpatient)
 			if ($patient && !empty($patient['room_number'])) {
-				// Check if room charges already billed
+				// Check if room charges already billed for this patient
 				$billedRoomCharges = [];
 				if ($db->tableExists('bills')) {
 					try {
-						$roomBills = $db->table('bills')
-							->select('room_id')
-							->where('patient_id', $patientId)
-							->where('room_id IS NOT NULL')
-							->where('bill_type', 'room')
+						$roomBills = $db->table('bills b')
+							->select('bi.reference_id as room_id')
+							->join('bill_items bi', 'bi.bill_id = b.id', 'left')
+							->where('b.patient_id', $patientId)
+							->where('bi.reference_type', 'room')
 							->get()->getResultArray();
-						$billedRoomCharges = array_column($roomBills, 'room_id');
+						$billedRoomCharges = array_filter(array_column($roomBills, 'room_id'));
 					} catch (\Exception $e) {
 						log_message('warning', 'Error fetching billed room charges: ' . $e->getMessage());
 					}
@@ -642,20 +1017,39 @@ class Accounts extends Controller
 				
 				// Get room info if rooms table exists
 				$roomId = null;
-				$roomNumber = $patient['room_number'];
+				$roomNumber = $patient['room_number'] ?? 'General Ward';
 				$roomRate = 200.00; // Default room rate per day
 				
-				if ($db->tableExists('rooms')) {
+				// Determine room rate based on room type
+				if (!empty($patient['room_type'])) {
+					switch(strtolower($patient['room_type'])) {
+						case 'private':
+							$roomRate = 1500.00;
+							break;
+						case 'semi':
+							$roomRate = 800.00;
+							break;
+						case 'ward':
+							$roomRate = 200.00;
+							break;
+						default:
+							$roomRate = 200.00;
+					}
+				}
+				
+				if ($db->tableExists('rooms') && !empty($patient['room_number'])) {
 					try {
 						$room = $db->table('rooms')
-							->where('room_number', $roomNumber)
-							->first();
+							->where('room_number', $patient['room_number'])
+							->get()
+							->getRowArray();
 						if ($room) {
 							$roomId = $room['id'] ?? null;
 							// Check if room has rate field, otherwise use default
 							if (isset($room['rate'])) {
 								$roomRate = floatval($room['rate']);
 							}
+							$roomNumber = $room['room_number'] ?? $patient['room_number'];
 						}
 					} catch (\Exception $e) {
 						log_message('warning', 'Error fetching room info: ' . $e->getMessage());
@@ -676,11 +1070,12 @@ class Accounts extends Controller
 						$days = max(1, $checkInDate->diff($today)->days + 1);
 					}
 					
+					$roomTypeLabel = !empty($patient['room_type']) ? ucfirst($patient['room_type']) : 'Ward';
 					$billableItems[] = [
 						'category' => 'room',
 						'code' => '100000',
 						'date_time' => date('Y-m-d\TH:i', strtotime($patient['admission_date'] ?? $patient['created_at'] ?? 'now')),
-						'item_name' => 'Bed Charges - ' . $roomNumber,
+						'item_name' => 'Bed Charges - ' . $roomTypeLabel . ($roomNumber !== 'General Ward' ? ' (' . $roomNumber . ')' : ''),
 						'unit_price' => $roomRate,
 						'quantity' => $days,
 						'reference_id' => $roomId,
@@ -1131,78 +1526,156 @@ class Accounts extends Controller
 	
 	public function updateInsuranceClaim()
 	{
-		if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
-			return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(401);
-		}
-		
-		$insuranceModel = new InsuranceModel();
-		$paymentModel = new PaymentModel();
-		$billingModel = new BillingModel();
-		
-		$postData = $this->request->getJSON(true);
-		$claimId = $postData['claim_id'];
-		$status = $postData['status'];
-		
-		$claim = $insuranceModel->find($claimId);
-		if (!$claim) {
-			return $this->response->setJSON(['success' => false, 'message' => 'Claim not found']);
-		}
-		
-		$updateData = [
-			'status' => $status,
-		];
-		
-		if ($status === 'approved') {
-			$updateData['approved_amount'] = $postData['approved_amount'] ?? $claim['claim_amount'];
-			$updateData['approved_date'] = date('Y-m-d');
-			
-			// Auto-create payment if approved
-			if ($postData['auto_create_payment'] ?? false) {
-				$bill = $billingModel->find($claim['bill_id']);
-				$paymentNumber = $paymentModel->generatePaymentNumber();
-				
-				$paymentData = [
-					'bill_id' => $claim['bill_id'],
-					'patient_id' => $claim['patient_id'],
-					'payment_number' => $paymentNumber,
-					'amount' => $updateData['approved_amount'],
-					'payment_method' => 'insurance',
-					'payment_date' => date('Y-m-d'),
-					'reference_number' => $claim['claim_number'],
-					'notes' => 'Insurance claim: ' . $claim['claim_number'],
-					'status' => 'completed',
-					'processed_by' => session()->get('user_id'),
-				];
-				
-				$paymentId = $paymentModel->insert($paymentData);
-				
-				if ($paymentId && $bill) {
-					$newPaidAmount = $bill['paid_amount'] + $updateData['approved_amount'];
-					$newBalance = $bill['total_amount'] - $newPaidAmount;
-					$newStatus = $newBalance <= 0 ? 'paid' : ($newBalance < $bill['total_amount'] ? 'partial' : 'pending');
-					
-					$billingModel->update($claim['bill_id'], [
-						'paid_amount' => $newPaidAmount,
-						'balance' => max(0, $newBalance),
-						'status' => $newStatus,
-					]);
-				}
+		try {
+			if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
+				return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(401);
 			}
-		} elseif ($status === 'rejected') {
-			$updateData['rejected_date'] = date('Y-m-d');
-			$updateData['rejection_reason'] = $postData['rejection_reason'] ?? null;
-		}
-		
-		$result = $insuranceModel->update($claimId, $updateData);
-		
-		if ($result) {
+			
+			$insuranceModel = new InsuranceModel();
+			$paymentModel = new PaymentModel();
+			$billingModel = new BillingModel();
+			
+			$postData = $this->request->getJSON(true);
+			
+			if (!$postData) {
+				return $this->response->setJSON(['success' => false, 'message' => 'Invalid request data']);
+			}
+			
+			$claimId = $postData['claim_id'] ?? null;
+			$status = $postData['status'] ?? null;
+			
+			if (!$claimId || !$status) {
+				return $this->response->setJSON(['success' => false, 'message' => 'Claim ID and status are required']);
+			}
+			
+			$claim = $insuranceModel->find($claimId);
+			if (!$claim) {
+				return $this->response->setJSON(['success' => false, 'message' => 'Claim not found']);
+			}
+			
+			$updateData = [
+				'status' => $status,
+			];
+			
+			if ($status === 'approved') {
+				$approvedAmount = floatval($postData['approved_amount'] ?? $claim['claim_amount']);
+				if ($approvedAmount <= 0) {
+					return $this->response->setJSON(['success' => false, 'message' => 'Approved amount must be greater than zero']);
+				}
+				
+				$updateData['approved_amount'] = $approvedAmount;
+				$updateData['approved_date'] = date('Y-m-d');
+				
+				// Auto-create payment if approved
+				if ($postData['auto_create_payment'] ?? false) {
+					$bill = $billingModel->find($claim['bill_id']);
+					if ($bill) {
+						// Check if there's already an insurance payment for this bill
+						$existingInsurancePayment = $paymentModel->where('bill_id', $claim['bill_id'])
+							->where('payment_method', 'insurance')
+							->where('status', 'completed')
+							->first();
+						
+						if ($existingInsurancePayment) {
+							// Insurance payment already exists, don't create duplicate
+							return $this->response->setJSON([
+								'success' => false,
+								'message' => 'Insurance payment already exists for this bill. Cannot create duplicate payment.'
+							]);
+						}
+						
+						// Check all existing payments for this bill
+						$existingPayments = $paymentModel->where('bill_id', $claim['bill_id'])
+							->where('status', 'completed')
+							->findAll();
+						
+						// Calculate total already paid (including all payment methods)
+						$totalAlreadyPaid = 0;
+						foreach ($existingPayments as $existingPayment) {
+							$totalAlreadyPaid += floatval($existingPayment['amount']);
+						}
+						
+						// If bill is already fully paid, don't create insurance payment
+						if ($totalAlreadyPaid >= $bill['total_amount']) {
+							return $this->response->setJSON([
+								'success' => false,
+								'message' => 'Bill is already fully paid (₱' . number_format($totalAlreadyPaid, 2) . '). Cannot create insurance payment.'
+							]);
+						}
+						
+						// Calculate remaining balance
+						$remainingBalance = $bill['total_amount'] - $totalAlreadyPaid;
+						
+						// Don't create insurance payment if it exceeds remaining balance
+						if ($updateData['approved_amount'] > $remainingBalance) {
+							return $this->response->setJSON([
+								'success' => false,
+								'message' => 'Approved amount (₱' . number_format($updateData['approved_amount'], 2) . ') exceeds remaining balance (₱' . number_format($remainingBalance, 2) . ').'
+							]);
+						}
+						
+						$paymentNumber = $paymentModel->generatePaymentNumber();
+						
+						$paymentData = [
+							'bill_id' => $claim['bill_id'],
+							'patient_id' => $claim['patient_id'],
+							'payment_number' => $paymentNumber,
+							'amount' => $updateData['approved_amount'],
+							'payment_method' => 'insurance',
+							'payment_date' => date('Y-m-d'),
+							'reference_number' => $claim['claim_number'],
+							'notes' => 'Insurance claim: ' . $claim['claim_number'],
+							'status' => 'completed',
+							'processed_by' => session()->get('user_id'),
+						];
+						
+						$paymentId = $paymentModel->insert($paymentData);
+						
+						if ($paymentId) {
+							$newPaidAmount = $bill['paid_amount'] + $updateData['approved_amount'];
+							$newBalance = $bill['total_amount'] - $newPaidAmount;
+							$newStatus = $newBalance <= 0 ? 'paid' : ($newBalance < $bill['total_amount'] ? 'partial' : 'pending');
+							
+							$billingModel->update($claim['bill_id'], [
+								'paid_amount' => $newPaidAmount,
+								'balance' => max(0, $newBalance),
+								'status' => $newStatus,
+							]);
+						}
+					}
+				}
+			} elseif ($status === 'rejected') {
+				$rejectionReason = $postData['rejection_reason'] ?? null;
+				if (empty($rejectionReason)) {
+					return $this->response->setJSON(['success' => false, 'message' => 'Rejection reason is required']);
+				}
+				$updateData['rejected_date'] = date('Y-m-d');
+				$updateData['rejection_reason'] = $rejectionReason;
+			}
+			
+			$result = $insuranceModel->update($claimId, $updateData);
+			
+			if ($result) {
+				return $this->response->setJSON([
+					'success' => true,
+					'message' => 'Insurance claim updated successfully'
+				]);
+			}
+			
+			$errors = $insuranceModel->errors();
 			return $this->response->setJSON([
-				'success' => true,
-				'message' => 'Insurance claim updated successfully'
+				'success' => false, 
+				'message' => 'Failed to update insurance claim: ' . (is_array($errors) ? implode(', ', $errors) : 'Unknown error')
+			]);
+			
+		} catch (\Exception $e) {
+			log_message('error', 'Error updating insurance claim: ' . $e->getMessage());
+			log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+			return $this->response->setJSON([
+				'success' => false,
+				'message' => 'Error: ' . $e->getMessage()
 			]);
 		}
-		
-		return $this->response->setJSON(['success' => false, 'message' => 'Failed to update insurance claim']);
 	}
 	
 	private function ensureInsuranceTables()
@@ -1248,13 +1721,81 @@ class Accounts extends Controller
 			return redirect()->to('/login');
 		}
 
+		$billingModel = new BillingModel();
+		$paymentModel = new PaymentModel();
+		$insuranceModel = new InsuranceModel();
+		
+		// Get filters
+		$reportType = $this->request->getGet('type') ?? 'bills';
+		$dateFrom = $this->request->getGet('date_from') ?? date('Y-m-01');
+		$dateTo = $this->request->getGet('date_to') ?? date('Y-m-d');
+
 		$data = [
-			'title' => 'Reports - HMS',
+			'title' => 'Accounts Reports - HMS',
 			'user_role' => 'accountant',
 			'user_name' => session()->get('name'),
+			'report_type' => $reportType,
+			'date_from' => $dateFrom,
+			'date_to' => $dateTo,
+			'bills' => [],
+			'payments' => [],
+			'insurance_claims' => [],
+			'summary' => [
+				'total_revenue' => 0,
+				'total_bills' => 0,
+				'total_payments' => 0,
+				'total_claims' => 0,
+				'pending_bills' => 0,
+			]
 		];
 
-		return view('auth/dashboard', $data);
+		try {
+			// Bills Report
+			$bills = $billingModel
+				->select('bills.*, patients.full_name as patient_name, patients.patient_id as patient_code')
+				->join('patients', 'patients.id = bills.patient_id', 'left')
+				->where('DATE(bills.created_at) >=', $dateFrom)
+				->where('DATE(bills.created_at) <=', $dateTo)
+				->orderBy('bills.created_at', 'DESC')
+				->findAll();
+			
+			$data['bills'] = $bills;
+			$data['summary']['total_bills'] = count($bills);
+			$data['summary']['pending_bills'] = count(array_filter($bills, function($b) {
+				return ($b['status'] ?? 'pending') === 'pending';
+			}));
+
+			// Payments Report
+			$payments = $paymentModel->getPaymentsWithPatient([
+				'date_from' => $dateFrom,
+				'date_to' => $dateTo,
+				'status' => 'completed'
+			]);
+			
+			$data['payments'] = $payments;
+			$data['summary']['total_payments'] = count($payments);
+			$data['summary']['total_revenue'] = array_sum(array_column($payments, 'amount'));
+
+			// Insurance Claims Report
+			$db = \Config\Database::connect();
+			$claims = $db->table('insurance_claims ic')
+				->select('ic.*, p.full_name as patient_name, b.bill_number')
+				->join('patients p', 'p.id = ic.patient_id', 'left')
+				->join('bills b', 'b.id = ic.bill_id', 'left')
+				->where('DATE(ic.created_at) >=', $dateFrom)
+				->where('DATE(ic.created_at) <=', $dateTo)
+				->orderBy('ic.created_at', 'DESC')
+				->get()
+				->getResultArray();
+			
+			$data['insurance_claims'] = $claims;
+			$data['summary']['total_claims'] = count($claims);
+
+		} catch (\Exception $e) {
+			log_message('error', 'Error fetching accounts reports: ' . $e->getMessage());
+		}
+
+		return view('accounts/reports', $data);
 	}
 
 	public function financial()

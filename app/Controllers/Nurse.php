@@ -336,6 +336,9 @@ class Nurse extends Controller
             $heartRate = $data['heart_rate'] ?? '';
             $temperature = $data['temperature'] ?? '';
             $oxygenSaturation = $data['oxygen_saturation'] ?? '';
+            $height = $data['height'] ?? '';
+            $weight = $data['weight'] ?? '';
+            $bmi = $data['bmi'] ?? '';
             $nurseName = $data['nurse_name'] ?? session()->get('name');
             $notes = $data['notes'] ?? '';
             
@@ -346,9 +349,62 @@ class Nurse extends Controller
                 ]);
             }
             
+            // Check if patient is inpatient and validate height/weight
+            $patientModel = new \App\Models\PatientModel();
+            $patient = $patientModel->find($patientId);
+            if ($patient && strtolower($patient['patient_type'] ?? 'outpatient') === 'inpatient') {
+                if (empty($height)) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Height is required for inpatient patients'
+                    ]);
+                }
+                if (empty($weight)) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Weight is required for inpatient patients'
+                    ]);
+                }
+                // Validate numeric values
+                $heightNum = floatval($height);
+                $weightNum = floatval($weight);
+                if ($heightNum <= 0 || $weightNum <= 0) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Please enter valid height and weight values'
+                    ]);
+                }
+            }
+            
             // Ensure table exists
             if (!$db->tableExists('treatment_updates')) {
                 $this->createTreatmentUpdatesTable($db);
+            } else {
+                // Check if height, weight, and BMI columns exist, if not add them
+                $fields = $db->getFieldData('treatment_updates');
+                $fieldNames = array_column($fields, 'name');
+                
+                if (!in_array('height', $fieldNames)) {
+                    try {
+                        $db->query("ALTER TABLE treatment_updates ADD COLUMN height VARCHAR(50) DEFAULT NULL AFTER oxygen_saturation");
+                    } catch (\Exception $e) {
+                        log_message('error', 'Failed to add height column: ' . $e->getMessage());
+                    }
+                }
+                if (!in_array('weight', $fieldNames)) {
+                    try {
+                        $db->query("ALTER TABLE treatment_updates ADD COLUMN weight VARCHAR(50) DEFAULT NULL AFTER height");
+                    } catch (\Exception $e) {
+                        log_message('error', 'Failed to add weight column: ' . $e->getMessage());
+                    }
+                }
+                if (!in_array('bmi', $fieldNames)) {
+                    try {
+                        $db->query("ALTER TABLE treatment_updates ADD COLUMN bmi VARCHAR(50) DEFAULT NULL AFTER weight");
+                    } catch (\Exception $e) {
+                        log_message('error', 'Failed to add BMI column: ' . $e->getMessage());
+                    }
+                }
             }
             
             // Insert directly to database
@@ -359,6 +415,9 @@ class Nurse extends Controller
                 'heart_rate' => $heartRate ?: null,
                 'temperature' => $temperature ?: null,
                 'oxygen_saturation' => $oxygenSaturation ?: null,
+                'height' => $height ?: null,
+                'weight' => $weight ?: null,
+                'bmi' => $bmi ?: null,
                 'nurse_name' => $nurseName,
                 'notes' => $notes ?: null,
                 'created_at' => date('Y-m-d H:i:s'),
@@ -598,6 +657,9 @@ class Nurse extends Controller
                     'heart_rate' => !empty($vitals['heart_rate']) ? $vitals['heart_rate'] : null,
                     'temperature' => !empty($vitals['temperature']) ? $vitals['temperature'] : null,
                     'oxygen_saturation' => !empty($vitals['oxygen_saturation']) ? $vitals['oxygen_saturation'] : null,
+                    'height' => !empty($vitals['height']) ? $vitals['height'] : null,
+                    'weight' => !empty($vitals['weight']) ? $vitals['weight'] : null,
+                    'bmi' => !empty($vitals['bmi']) ? $vitals['bmi'] : null,
                     'nurse_name' => $nurseName,
                     'notes' => !empty($notes) ? $notes : null,
                     'created_at' => date('Y-m-d H:i:s'),
@@ -726,6 +788,21 @@ class Nurse extends Controller
                 'constraint' => 50,
                 'null'       => true,
             ],
+            'height' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 50,
+                'null'       => true,
+            ],
+            'weight' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 50,
+                'null'       => true,
+            ],
+            'bmi' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 50,
+                'null'       => true,
+            ],
             'nurse_name' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
@@ -761,6 +838,9 @@ class Nurse extends Controller
                     `heart_rate` varchar(50) DEFAULT NULL,
                     `temperature` varchar(50) DEFAULT NULL,
                     `oxygen_saturation` varchar(50) DEFAULT NULL,
+                    `height` varchar(50) DEFAULT NULL,
+                    `weight` varchar(50) DEFAULT NULL,
+                    `bmi` varchar(50) DEFAULT NULL,
                     `nurse_name` varchar(255) DEFAULT NULL,
                     `notes` text DEFAULT NULL,
                     `created_at` datetime DEFAULT NULL,
@@ -1421,5 +1501,191 @@ class Nurse extends Controller
             $forge->addKey('bill_id');
             $forge->createTable('bill_items', true);
         }
+    }
+
+    public function reports()
+    {
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'nurse') {
+            return redirect()->to('/login');
+        }
+
+        $nurseId = session()->get('user_id');
+        $db = \Config\Database::connect();
+        $patientModel = new \App\Models\PatientModel();
+        
+        // Get filters
+        $reportType = $this->request->getGet('type') ?? 'treatment_updates';
+        $dateFrom = $this->request->getGet('date_from') ?? date('Y-m-01');
+        $dateTo = $this->request->getGet('date_to') ?? date('Y-m-d');
+
+        $data = [
+            'title' => 'Nurse Reports - HMS',
+            'user_role' => 'nurse',
+            'user_name' => session()->get('name'),
+            'report_type' => $reportType,
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
+            'treatment_updates' => [],
+            'vital_signs' => [],
+            'patient_assignments' => [],
+            'summary' => [
+                'total_updates' => 0,
+                'total_patients' => 0,
+                'avg_vitals_per_day' => 0,
+                'total_vital_checks' => 0,
+            ]
+        ];
+
+        try {
+            // Treatment Updates Report
+            if ($db->tableExists('treatment_updates')) {
+                // Get nurse name from session
+                $nurseName = session()->get('name');
+                
+                // Check if table has nurse_id column, otherwise use nurse_name
+                $fields = $db->getFieldData('treatment_updates');
+                $hasNurseId = false;
+                foreach ($fields as $field) {
+                    if (strtolower($field->name) === 'nurse_id') {
+                        $hasNurseId = true;
+                        break;
+                    }
+                }
+                
+                $updates = $db->table('treatment_updates tu')
+                    ->select('tu.*, p.full_name as patient_name, p.patient_id as patient_code');
+                
+                // Filter by nurse_id if column exists, otherwise by nurse_name
+                if ($hasNurseId) {
+                    $updates->join('users u', 'u.id = tu.nurse_id', 'left')
+                            ->where('tu.nurse_id', $nurseId);
+                } else {
+                    $updates->where('tu.nurse_name', $nurseName);
+                }
+                
+                $updates = $updates
+                    ->join('patients p', 'p.id = tu.patient_id', 'left')
+                    ->where('DATE(tu.created_at) >=', $dateFrom)
+                    ->where('DATE(tu.created_at) <=', $dateTo)
+                    ->orderBy('tu.created_at', 'DESC')
+                    ->get()
+                    ->getResultArray();
+                
+                // Get prescriptions for these patients to show "marked as given" status
+                $prescriptionModel = new PrescriptionModel();
+                $patientIds = array_unique(array_column($updates, 'patient_id'));
+                $prescriptionsByPatient = [];
+                
+                if (!empty($patientIds) && $db->tableExists('prescriptions')) {
+                    $allPrescriptions = $prescriptionModel
+                        ->whereIn('patient_id', $patientIds)
+                        ->orderBy('created_at', 'DESC')
+                        ->findAll();
+                    
+                    foreach ($allPrescriptions as $rx) {
+                        $pid = (int)$rx['patient_id'];
+                        if (!isset($prescriptionsByPatient[$pid])) {
+                            $prescriptionsByPatient[$pid] = [];
+                        }
+                        $prescriptionsByPatient[$pid][] = $rx;
+                    }
+                }
+                
+                // Attach prescription info to updates
+                foreach ($updates as &$update) {
+                    $pid = (int)$update['patient_id'];
+                    $patientPrescriptions = $prescriptionsByPatient[$pid] ?? [];
+                    $medicationsGiven = [];
+                    
+                    foreach ($patientPrescriptions as $rx) {
+                        $items = json_decode($rx['items_json'] ?? '[]', true) ?: [];
+                        $status = $rx['status'] ?? 'pending';
+                        $rxDate = !empty($rx['updated_at']) ? date('Y-m-d', strtotime($rx['updated_at'])) : date('Y-m-d', strtotime($rx['created_at']));
+                        $updateDate = !empty($update['created_at']) ? date('Y-m-d', strtotime($update['created_at'])) : '';
+                        
+                        // If prescription was marked as given on or before this update date
+                        if ($status !== 'pending' && $rxDate <= $updateDate) {
+                            foreach ($items as $item) {
+                                $medicationsGiven[] = ($item['name'] ?? 'N/A') . ' (' . ($item['quantity'] ?? 0) . ')';
+                            }
+                        }
+                    }
+                    
+                    $update['medications_given'] = !empty($medicationsGiven) ? implode(', ', $medicationsGiven) : '—';
+                    $update['treatment_notes'] = $update['notes'] ?? '—';
+                }
+                unset($update);
+                
+                $data['treatment_updates'] = $updates;
+                $data['summary']['total_updates'] = count($updates);
+                
+                // Get unique patients
+                $patientIds = array_unique(array_column($updates, 'patient_id'));
+                $data['summary']['total_patients'] = count($patientIds);
+                
+                // Calculate average vitals per day
+                $days = max(1, (strtotime($dateTo) - strtotime($dateFrom)) / 86400);
+                $data['summary']['avg_vitals_per_day'] = $days > 0 ? round(count($updates) / $days, 2) : 0;
+                
+                // Count vital signs entries (those with height, weight, or vital signs)
+                $vitalChecks = array_filter($updates, function($update) {
+                    return !empty($update['height']) || !empty($update['weight']) || 
+                           !empty($update['blood_pressure']) || !empty($update['heart_rate']) ||
+                           !empty($update['temperature']) || !empty($update['oxygen_saturation']);
+                });
+                $data['summary']['total_vital_checks'] = count($vitalChecks);
+            }
+
+            // Patient Assignments (from appointments where nurse is involved)
+            $appointmentModel = new \App\Models\AppointmentModel();
+            $assignments = $appointmentModel
+                ->select('appointments.*, patients.full_name as patient_name, patients.patient_id as patient_code, users.name as doctor_name')
+                ->join('patients', 'patients.id = appointments.patient_id', 'left')
+                ->join('users', 'users.id = appointments.doctor_id', 'left')
+                ->where('DATE(appointments.appointment_date) >=', $dateFrom)
+                ->where('DATE(appointments.appointment_date) <=', $dateTo)
+                ->where('appointments.status !=', 'cancelled')
+                ->orderBy('appointments.appointment_date', 'DESC')
+                ->findAll();
+            
+            // Filter to show only patients that have treatment updates from this nurse
+            $assignedPatientIds = [];
+            if ($db->tableExists('treatment_updates')) {
+                $fields = $db->getFieldData('treatment_updates');
+                $hasNurseId = false;
+                foreach ($fields as $field) {
+                    if (strtolower($field->name) === 'nurse_id') {
+                        $hasNurseId = true;
+                        break;
+                    }
+                }
+                
+                $query = $db->table('treatment_updates')
+                    ->select('patient_id');
+                
+                if ($hasNurseId) {
+                    $query->where('nurse_id', $nurseId);
+                } else {
+                    $query->where('nurse_name', session()->get('name'));
+                }
+                
+                $assignedPatientIds = $query
+                    ->where('DATE(created_at) >=', $dateFrom)
+                    ->where('DATE(created_at) <=', $dateTo)
+                    ->distinct()
+                    ->get()
+                    ->getResultArray();
+                $assignedPatientIds = array_column($assignedPatientIds, 'patient_id');
+            }
+            
+            $data['patient_assignments'] = array_filter($assignments, function($apt) use ($assignedPatientIds) {
+                return in_array($apt['patient_id'], $assignedPatientIds);
+            });
+
+        } catch (\Exception $e) {
+            log_message('error', 'Error fetching nurse reports: ' . $e->getMessage());
+        }
+
+        return view('nurse/reports', $data);
     }
 }
