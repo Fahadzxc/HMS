@@ -576,21 +576,38 @@ class Accounts extends Controller
 	
 	public function getPatientInsuranceDiscount($patientId)
 	{
-		if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
+		$userRole = session()->get('role');
+		if (!session()->get('isLoggedIn') || !in_array($userRole, ['accountant', 'admin'])) {
 			return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(401);
 		}
 		
 		try {
 			$insuranceModel = new InsuranceModel();
 			
-			// Get patient's most recent insurance claim
+			// Get patient's most recent insurance claim (any record with valid provider, regardless of bill_id or status)
 			$insuranceClaim = $insuranceModel->where('patient_id', $patientId)
-				->whereIn('status', ['pending', 'submitted', 'approved', 'paid'])
+				->where('insurance_provider IS NOT NULL')
+				->where('insurance_provider !=', '')
+				->where('insurance_provider !=', 'None')
+				->where('insurance_provider !=', 'none')
+				->where('insurance_provider !=', 'None / Self-Pay')
 				->orderBy('created_at', 'DESC')
 				->first();
 			
+			// Check all insurance records for this patient for debugging
+			$allInsuranceRecords = $insuranceModel->where('patient_id', $patientId)->findAll();
+			log_message('debug', 'All insurance records for patient ' . $patientId . ': ' . json_encode($allInsuranceRecords));
+			
 			$hasInsurance = !empty($insuranceClaim) && !empty($insuranceClaim['insurance_provider']);
 			$provider = $hasInsurance ? $insuranceClaim['insurance_provider'] : null;
+			
+			// Log for debugging
+			log_message('debug', 'Insurance lookup for patient ' . $patientId . ': hasInsurance=' . ($hasInsurance ? 'true' : 'false') . ', provider=' . ($provider ?? 'null'));
+			if ($insuranceClaim) {
+				log_message('debug', 'Insurance claim found: ' . json_encode($insuranceClaim));
+			} else {
+				log_message('warning', 'No insurance claim found for patient ' . $patientId);
+			}
 			
 			// Discount rates by insurance provider
 			$discountRates = [
@@ -600,6 +617,7 @@ class Accounts extends Controller
 				'Intellicare' => 10,       // 10% discount
 				'PhilCare' => 10,          // 10% discount
 				'Insular Healthcare' => 10, // 10% discount
+				'Insular Health Care' => 10, // Alternative spelling
 				'Avega' => 10,             // 10% discount
 				'Pacific Cross' => 10,     // 10% discount
 			];
@@ -609,14 +627,34 @@ class Accounts extends Controller
 			
 			if ($hasInsurance && $provider) {
 				// Normalize provider name (handle variations)
-				$providerLower = strtolower($provider);
+				$providerLower = strtolower(trim($provider));
 				
+				// Try exact match first
 				foreach ($discountRates as $key => $rate) {
-					if (strpos($providerLower, strtolower($key)) !== false) {
+					$keyLower = strtolower(trim($key));
+					if ($providerLower === $keyLower) {
 						$discountPercentage = $rate;
 						$coPaymentPercentage = 100 - $rate;
+						log_message('debug', 'Exact match found: ' . $provider . ' -> ' . $key . ' = ' . $rate . '%');
 						break;
 					}
+				}
+				
+				// If no exact match, try partial match
+				if ($discountPercentage == 0) {
+					foreach ($discountRates as $key => $rate) {
+						$keyLower = strtolower(trim($key));
+						if (strpos($providerLower, $keyLower) !== false || strpos($keyLower, $providerLower) !== false) {
+							$discountPercentage = $rate;
+							$coPaymentPercentage = 100 - $rate;
+							log_message('debug', 'Partial match found: ' . $provider . ' -> ' . $key . ' = ' . $rate . '%');
+							break;
+						}
+					}
+				}
+				
+				if ($discountPercentage == 0) {
+					log_message('warning', 'No discount rate found for provider: ' . $provider);
 				}
 			}
 			
@@ -628,7 +666,12 @@ class Accounts extends Controller
 				'copay_percentage' => $coPaymentPercentage,
 				'provider' => $provider,
 				'policy_number' => $insuranceClaim['policy_number'] ?? null,
-				'member_id' => $insuranceClaim['member_id'] ?? null
+				'member_id' => $insuranceClaim['member_id'] ?? null,
+				'debug' => [
+					'insurance_claim_found' => !empty($insuranceClaim),
+					'provider_name' => $provider,
+					'discount_calculated' => $discountPercentage
+				]
 			]);
 		} catch (\Exception $e) {
 			log_message('error', 'Error getting patient insurance discount: ' . $e->getMessage());

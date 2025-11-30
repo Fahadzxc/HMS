@@ -58,16 +58,63 @@ class DoctorScheduleModel extends Model
     // Check if doctor is available on specific day and time
     public function isDoctorAvailableOnSchedule($doctorId, $date, $time)
     {
+        // Normalize time format (ensure HH:MM:SS)
+        if (strlen($time) == 5) {
+            $time .= ':00'; // Add seconds if missing
+        }
+        
+        // Check for date-specific schedule first
+        $dateSpecificSchedules = $this->where('doctor_id', $doctorId)
+            ->where('schedule_date', $date)
+            ->where('is_available', true)
+            ->findAll();
+        
+        foreach ($dateSpecificSchedules as $schedule) {
+            $startTime = $schedule['start_time'];
+            $endTime = $schedule['end_time'];
+            
+            // Handle overnight schedules (end_time < start_time means it spans midnight)
+            if ($endTime < $startTime) {
+                // Overnight schedule: time is valid if >= start_time OR <= end_time
+                if ($time >= $startTime || $time <= $endTime) {
+                    return true;
+                }
+            } else {
+                // Normal schedule: time must be between start and end
+                if ($time >= $startTime && $time <= $endTime) {
+                    return true;
+                }
+            }
+        }
+        
+        // Check for recurring weekly schedule (schedule_date is NULL)
         $dayOfWeek = strtolower(date('l', strtotime($date)));
         
-        $schedule = $this->where('doctor_id', $doctorId)
+        $recurringSchedules = $this->where('doctor_id', $doctorId)
                         ->where('day_of_week', $dayOfWeek)
+            ->where('schedule_date IS NULL', null, false)
                         ->where('is_available', true)
-                        ->where('start_time <=', $time)
-                        ->where('end_time >=', $time)
-                        ->first();
+            ->findAll();
         
-        return $schedule !== null;
+        foreach ($recurringSchedules as $schedule) {
+            $startTime = $schedule['start_time'];
+            $endTime = $schedule['end_time'];
+            
+            // Handle overnight schedules (end_time < start_time means it spans midnight)
+            if ($endTime < $startTime) {
+                // Overnight schedule: time is valid if >= start_time OR <= end_time
+                if ($time >= $startTime || $time <= $endTime) {
+                    return true;
+                }
+            } else {
+                // Normal schedule: time must be between start and end
+                if ($time >= $startTime && $time <= $endTime) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 
     // Get available time slots for a doctor on a specific date

@@ -722,16 +722,20 @@ async function calculateBillTotal() {
             const response = await fetch(`<?= base_url('accounts/getPatientInsuranceDiscount') ?>/${patientId}`);
             const result = await response.json();
             
+            console.log('Insurance discount response:', result);
+            
             if (result.success && result.has_insurance && result.discount_percentage > 0) {
                 // Calculate discount based on insurance provider
                 discount = subtotal * (result.discount_percentage / 100);
                 discountInfo = `${result.provider} discount (${result.discount_percentage}%): Patient pays ${result.copay_percentage}%`;
+                console.log(`Discount calculated: ${discount.toFixed(2)} for provider ${result.provider}`);
             } else {
                 discount = 0;
                 discountInfo = '';
+                console.log('No discount - has_insurance:', result.has_insurance, 'discount_percentage:', result.discount_percentage);
             }
         } catch (error) {
-            console.log('Error checking insurance:', error);
+            console.error('Error checking insurance:', error);
             discount = 0;
         }
     }
