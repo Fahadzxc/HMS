@@ -1,0 +1,186 @@
+ERROR - 2025-11-26 10:03:04 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(1012): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('4')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+CRITICAL - 2025-11-26 17:31:11 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "template.php"
+[Method: GET, Route: reception/patients]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 39.
+ 1 SYSTEMPATH\View\View.php(214): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('template.php')
+ 2 SYSTEMPATH\View\View.php(242): CodeIgniter\View\View->render('template', [], true)
+ 3 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('reception/patients', [], true)
+ 4 APPPATH\Controllers\Reception.php(308): view('reception/patients', [...])
+ 5 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->patients()
+ 6 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-26 17:40:50 --> ParseError: syntax error, unexpected token "`"
+[Method: GET, Route: reception/dashboard]
+in APPPATH\Views\template.php on line 2.
+ 1 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 2 SYSTEMPATH\View\View.php(242): CodeIgniter\View\View->render('template', [], true)
+ 3 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('reception/dashboard', [], true)
+ 4 APPPATH\Controllers\Reception.php(269): view('reception/dashboard', [...])
+ 5 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->dashboard()
+ 6 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-26 17:42:16 --> ParseError: syntax error, unexpected token "`"
+[Method: GET, Route: reception/dashboard]
+in APPPATH\Views\template.php on line 2.
+ 1 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 2 SYSTEMPATH\View\View.php(242): CodeIgniter\View\View->render('template', [], true)
+ 3 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('reception/dashboard', [], true)
+ 4 APPPATH\Controllers\Reception.php(269): view('reception/dashboard', [...])
+ 5 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->dashboard()
+ 6 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-26 18:07:36 --> Validation failed: {"full_name":"The full_name field is required."}
+ERROR - 2025-11-26 18:07:42 --> Validation failed: {"full_name":"The full_name field is required."}
+ERROR - 2025-11-26 18:07:43 --> Validation failed: {"full_name":"The full_name field is required."}
+ERROR - 2025-11-26 18:07:43 --> Validation failed: {"full_name":"The full_name field is required."}
+ERROR - 2025-11-26 18:43:20 --> Validation failed: {"contact":"The contact field is not in the correct format."}
+ERROR - 2025-11-26 18:43:24 --> Validation failed: {"contact":"The contact field is not in the correct format."}
+ERROR - 2025-11-26 18:43:26 --> Validation failed: {"contact":"The contact field is not in the correct format."}
+ERROR - 2025-11-26 18:43:26 --> Validation failed: {"contact":"The contact field is not in the correct format."}
+ERROR - 2025-11-26 18:43:27 --> Validation failed: {"contact":"The contact field is not in the correct format."}
+ERROR - 2025-11-26 18:43:27 --> Validation failed: {"contact":"The contact field is not in the correct format."}
+DEBUG - 2025-11-26 19:24:21 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+ERROR - 2025-11-26 19:37:36 --> mysqli_sql_exception: MySQL server has gone away in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `p`.*, `...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `p`.*, `...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `p`.*, `...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `p`.*, `...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(168): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+CRITICAL - 2025-11-26 19:37:36 --> CodeIgniter\Database\Exceptions\DatabaseException: MySQL server has gone away
+[Method: GET, Route: nurse/treatment-updates]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `p`.*, `u`.`name` as `assigned_doctor_name`, `a`.`appointment_date` as `last_appointment_date`, `a`.`status` as `appointment_status`, `p`.`room_number`, `r`.`room_number` as `appointment_room_number`
+FROM `patients` `p`
+LEFT JOIN (SELECT patient_id, doctor_id, appointment_date, status, room_id, 
+                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                         FROM appointments 
+                         WHERE status != "cancelled") a ON `a`.`patient_id` = `p`.`id` AND `a`.`rn` = 1
+LEFT JOIN `users` `u` ON `u`.`id` = `a`.`doctor_id`
+LEFT JOIN `rooms` `r` ON `r`.`id` = `a`.`room_id`
+WHERE `p`.`status` = :p.status:
+ORDER BY `p`.`id` DESC', [...], false)
+ 2 APPPATH\Controllers\Nurse.php(168): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+ 4 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-26 19:37:36 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: MySQL server has gone away
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `p`.*, `u`.`name` as `assigned_doctor_name`, `a`.`appointment_date` as `last_appointment_date`, `a`.`status` as `appointment_status`, `p`.`room_number`, `r`.`room_number` as `appointment_room_number`
+FROM `patients` `p`
+LEFT JOIN (SELECT patient_id, doctor_id, appointment_date, status, room_id, 
+                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                         FROM appointments 
+                         WHERE status != "cancelled") a ON `a`.`patient_id` = `p`.`id` AND `a`.`rn` = 1
+LEFT JOIN `users` `u` ON `u`.`id` = `a`.`doctor_id`
+LEFT JOIN `rooms` `r` ON `r`.`id` = `a`.`room_id`
+WHERE `p`.`status` = \'active\'
+ORDER BY `p`.`id` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `p`.*, `u`.`name` as `assigned_doctor_name`, `a`.`appointment_date` as `last_appointment_date`, `a`.`status` as `appointment_status`, `p`.`room_number`, `r`.`room_number` as `appointment_room_number`
+FROM `patients` `p`
+LEFT JOIN (SELECT patient_id, doctor_id, appointment_date, status, room_id, 
+                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                         FROM appointments 
+                         WHERE status != "cancelled") a ON `a`.`patient_id` = `p`.`id` AND `a`.`rn` = 1
+LEFT JOIN `users` `u` ON `u`.`id` = `a`.`doctor_id`
+LEFT JOIN `rooms` `r` ON `r`.`id` = `a`.`room_id`
+WHERE `p`.`status` = \'active\'
+ORDER BY `p`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `p`.*, `u`.`name` as `assigned_doctor_name`, `a`.`appointment_date` as `last_appointment_date`, `a`.`status` as `appointment_status`, `p`.`room_number`, `r`.`room_number` as `appointment_room_number`
+FROM `patients` `p`
+LEFT JOIN (SELECT patient_id, doctor_id, appointment_date, status, room_id, 
+                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                         FROM appointments 
+                         WHERE status != "cancelled") a ON `a`.`patient_id` = `p`.`id` AND `a`.`rn` = 1
+LEFT JOIN `users` `u` ON `u`.`id` = `a`.`doctor_id`
+LEFT JOIN `rooms` `r` ON `r`.`id` = `a`.`room_id`
+WHERE `p`.`status` = :p.status:
+ORDER BY `p`.`id` DESC', [...], false)
+ 4 APPPATH\Controllers\Nurse.php(168): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+ 6 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-26 19:37:36 --> [Caused by] mysqli_sql_exception: MySQL server has gone away
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `p`.*, `u`.`name` as `assigned_doctor_name`, `a`.`appointment_date` as `last_appointment_date`, `a`.`status` as `appointment_status`, `p`.`room_number`, `r`.`room_number` as `appointment_room_number`
+FROM `patients` `p`
+LEFT JOIN (SELECT patient_id, doctor_id, appointment_date, status, room_id, 
+                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                         FROM appointments 
+                         WHERE status != "cancelled") a ON `a`.`patient_id` = `p`.`id` AND `a`.`rn` = 1
+LEFT JOIN `users` `u` ON `u`.`id` = `a`.`doctor_id`
+LEFT JOIN `rooms` `r` ON `r`.`id` = `a`.`room_id`
+WHERE `p`.`status` = \'active\'
+ORDER BY `p`.`id` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `p`.*, `u`.`name` as `assigned_doctor_name`, `a`.`appointment_date` as `last_appointment_date`, `a`.`status` as `appointment_status`, `p`.`room_number`, `r`.`room_number` as `appointment_room_number`
+FROM `patients` `p`
+LEFT JOIN (SELECT patient_id, doctor_id, appointment_date, status, room_id, 
+                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                         FROM appointments 
+                         WHERE status != "cancelled") a ON `a`.`patient_id` = `p`.`id` AND `a`.`rn` = 1
+LEFT JOIN `users` `u` ON `u`.`id` = `a`.`doctor_id`
+LEFT JOIN `rooms` `r` ON `r`.`id` = `a`.`room_id`
+WHERE `p`.`status` = \'active\'
+ORDER BY `p`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `p`.*, `u`.`name` as `assigned_doctor_name`, `a`.`appointment_date` as `last_appointment_date`, `a`.`status` as `appointment_status`, `p`.`room_number`, `r`.`room_number` as `appointment_room_number`
+FROM `patients` `p`
+LEFT JOIN (SELECT patient_id, doctor_id, appointment_date, status, room_id, 
+                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                         FROM appointments 
+                         WHERE status != "cancelled") a ON `a`.`patient_id` = `p`.`id` AND `a`.`rn` = 1
+LEFT JOIN `users` `u` ON `u`.`id` = `a`.`doctor_id`
+LEFT JOIN `rooms` `r` ON `r`.`id` = `a`.`room_id`
+WHERE `p`.`status` = \'active\'
+ORDER BY `p`.`id` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `p`.*, `u`.`name` as `assigned_doctor_name`, `a`.`appointment_date` as `last_appointment_date`, `a`.`status` as `appointment_status`, `p`.`room_number`, `r`.`room_number` as `appointment_room_number`
+FROM `patients` `p`
+LEFT JOIN (SELECT patient_id, doctor_id, appointment_date, status, room_id, 
+                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                         FROM appointments 
+                         WHERE status != "cancelled") a ON `a`.`patient_id` = `p`.`id` AND `a`.`rn` = 1
+LEFT JOIN `users` `u` ON `u`.`id` = `a`.`doctor_id`
+LEFT JOIN `rooms` `r` ON `r`.`id` = `a`.`room_id`
+WHERE `p`.`status` = :p.status:
+ORDER BY `p`.`id` DESC', [...], false)
+ 5 APPPATH\Controllers\Nurse.php(168): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->treatmentUpdates()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))

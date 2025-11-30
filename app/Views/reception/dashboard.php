@@ -1,4 +1,15 @@
-<!-- Receptionist dashboard partial (inner content only) -->
+<?= $this->extend('template') ?>
+
+<?= $this->section('content') ?>
+
+<?php
+$metrics = $metrics ?? ['newPatientsToday' => 0, 'newPatientsChange' => 0, 'appointmentsToday' => 0, 'walkInsToday' => 0, 'dischargedToday' => 0];
+$tasks = $tasks ?? [];
+$quickActions = $quickActions ?? [];
+$appointmentsByStatus = $appointmentsByStatus ?? [];
+$upcomingAppointments = $upcomingAppointments ?? [];
+?>
+
 <section class="panel">
     <header class="panel-header">
         <h2>Reception Dashboard</h2>
@@ -30,29 +41,31 @@
             <div class="kpi-card">
                 <div class="kpi-content">
                     <div class="kpi-label">New Patients Today</div>
-                    <div class="kpi-value">8</div>
-                    <div class="kpi-change kpi-positive">+2 from yesterday</div>
+                    <div class="kpi-value"><?= number_format($metrics['newPatientsToday']) ?></div>
+                    <div class="kpi-change <?= ($metrics['newPatientsChange'] ?? 0) >= 0 ? 'kpi-positive' : 'kpi-negative' ?>">
+                        <?= ($metrics['newPatientsChange'] >= 0 ? '+' : '') . number_format($metrics['newPatientsChange']) ?> from yesterday
+                    </div>
                 </div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-content">
                     <div class="kpi-label">Appointments</div>
-                    <div class="kpi-value">24</div>
-                    <div class="kpi-change kpi-positive">&nbsp;</div>
+                    <div class="kpi-value"><?= number_format($metrics['appointmentsToday']) ?></div>
+                    <div class="kpi-change">&nbsp;</div>
                 </div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-content">
                     <div class="kpi-label">Walk-ins</div>
-                    <div class="kpi-value">12</div>
-                    <div class="kpi-change kpi-positive">+3 from yesterday</div>
+                    <div class="kpi-value"><?= number_format($metrics['walkInsToday']) ?></div>
+                    <div class="kpi-change"><?= ($metrics['walkInsToday'] ?? 0) > 0 ? '<span class="kpi-positive">Active</span>' : '&nbsp;' ?></div>
                 </div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-content">
                     <div class="kpi-label">Discharged</div>
-                    <div class="kpi-value">6</div>
-                    <div class="kpi-change kpi-positive">&nbsp;</div>
+                    <div class="kpi-value"><?= number_format($metrics['dischargedToday']) ?></div>
+                    <div class="kpi-change">&nbsp;</div>
                 </div>
             </div>
         </div>
@@ -66,22 +79,25 @@
             <p>Your assigned tasks for today</p>
         </header>
         <div class="stack">
-            <div class="card">
-                <div class="row between">
-                    <h3>Patient Registration</h3>
-                    <span class="badge medium">pending</span>
+            <?php foreach ($tasks as $task): ?>
+                <div class="card">
+                    <div class="row between">
+                        <h3><?= esc($task['title']) ?></h3>
+                        <?php if (!empty($task['status'])): ?>
+                            <span class="badge <?= $task['status'] === 'urgent' ? 'high' : ($task['status'] === 'pending' ? 'medium' : 'success') ?>">
+                                <?= strtoupper($task['status']) ?>
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                    <p><?= esc($task['description']) ?></p>
+                    <?php if (!empty($task['link'])): ?>
+                        <a href="<?= esc($task['link']) ?>" class="link">View</a>
+                    <?php endif; ?>
                 </div>
-                <p>New patient walk-ins waiting</p>
-                <a href="#" class="link">Process</a>
-            </div>
-            <div class="card">
-                <div class="row between">
-                    <h3>Appointment Confirmations</h3>
-                    <span class="badge high">urgent</span>
-                </div>
-                <p>5 appointments need confirmation</p>
-                <a href="#" class="link">Review</a>
-            </div>
+            <?php endforeach; ?>
+            <?php if (empty($tasks)): ?>
+                <div class="card"><p>No tasks at the moment.</p></div>
+            <?php endif; ?>
         </div>
     </section>
 
@@ -90,10 +106,11 @@
             <h2>Quick Actions</h2>
         </header>
         <div class="actions-grid">
-            <a class="action-tile" href="#"><span class="icon"></span><span>Register Patient</span></a>
-            <a class="action-tile" href="#"><span class="icon"></span><span>Book Appointment</span></a>
-            <a class="action-tile" href="#"><span class="icon"></span><span>Patient Check-in</span></a>
-            <a class="action-tile" href="#"><span class="icon"></span><span>Process Billing</span></a>
+            <?php foreach ($quickActions as $action): ?>
+                <a class="action-tile" href="<?= esc($action['url']) ?>">
+                    <span><?= esc($action['label']) ?></span>
+                </a>
+            <?php endforeach; ?>
         </div>
     </section>
 </div>
@@ -108,26 +125,59 @@
             <div class="row between">
                 <div>
                     <h3>Today's Appointments</h3>
-                    <p>24 appointments scheduled</p>
+                    <p><?= number_format($metrics['appointmentsToday']) ?> appointments scheduled</p>
                 </div>
                 <div class="row">
                     <span class="badge success">Active</span>
                 </div>
             </div>
             <div class="status-list">
-                <div class="status-row">
-                    <span><span class="dot ok"></span>Confirmed</span>
-                    <span>18</span>
-                </div>
-                <div class="status-row">
-                    <span><span class="dot warn"></span>Pending</span>
-                    <span>5</span>
-                </div>
-                <div class="status-row">
-                    <span><span class="dot error"></span>Cancelled</span>
-                    <span>1</span>
-                </div>
+                <?php foreach (['confirmed' => 'ok', 'pending' => 'warn', 'cancelled' => 'error'] as $status => $class): ?>
+                    <div class="status-row">
+                        <span><span class="dot <?= $class ?>"></span><?= ucfirst($status) ?></span>
+                        <span><?= number_format($appointmentsByStatus[$status] ?? 0) ?></span>
+                    </div>
+                <?php endforeach; ?>
             </div>
         </div>
     </div>
 </section>
+
+<section class="panel panel-spaced">
+    <header class="panel-header">
+        <h2>Upcoming Appointments</h2>
+        <p>Next patients arriving</p>
+    </header>
+    <div class="stack">
+        <?php if (!empty($upcomingAppointments)): ?>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Doctor</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($upcomingAppointments as $apt): ?>
+                            <tr>
+                                <td><?= esc($apt['patient_name'] ?? 'N/A') ?></td>
+                                <td><?= esc($apt['doctor_name'] ?? 'N/A') ?></td>
+                                <td><?= !empty($apt['appointment_date']) ? date('M d, Y', strtotime($apt['appointment_date'])) : '—' ?></td>
+                                <td><?= !empty($apt['appointment_time']) ? date('g:i A', strtotime($apt['appointment_time'])) : '—' ?></td>
+                                <td><span class="badge <?= ($apt['status'] ?? '') === 'pending' ? 'badge-warning' : 'badge-info' ?>"><?= strtoupper($apt['status'] ?? 'scheduled') ?></span></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php else: ?>
+            <div class="card"><p>No upcoming appointments.</p></div>
+        <?php endif; ?>
+    </div>
+</section>
+
+<?= $this->endSection() ?>

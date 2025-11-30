@@ -8,6 +8,7 @@ use App\Models\MedicationModel;
 use App\Models\PatientModel;
 use App\Models\PharmacyStockMovementModel;
 use App\Models\MedicineOrderModel;
+use App\Models\SettingModel;
 
 class Pharmacy extends Controller
 {
@@ -1035,5 +1036,55 @@ class Pharmacy extends Controller
 			'previous_stock' => $previousStock,
 			'new_stock' => $newStock,
 		]);
+	}
+
+	public function settings()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'pharmacist') {
+			return redirect()->to('/login');
+		}
+
+		$model = new SettingModel();
+		$defaults = [
+			'pharmacy_reorder_level'        => '15',
+			'pharmacy_expiry_warning'       => '60',
+			'pharmacy_auto_restock'         => '0',
+			'pharmacy_supplier_email'       => 'purchasing@hospital.local',
+			'pharmacy_dispense_doublecheck' => '1',
+		];
+		$settings = array_merge($defaults, $model->getAllAsMap());
+
+		$data = [
+			'title'     => 'Pharmacy Settings - HMS',
+			'user_role' => 'pharmacist',
+			'user_name' => session()->get('name'),
+			'pageTitle' => 'Settings',
+			'settings'  => $settings,
+		];
+
+		return view('pharmacy/settings', $data);
+	}
+
+	public function saveSettings()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'pharmacist') {
+			return redirect()->to('/login');
+		}
+
+		$model = new SettingModel();
+		$post = $this->request->getPost();
+		$keys = [
+			'pharmacy_reorder_level',
+			'pharmacy_expiry_warning',
+			'pharmacy_auto_restock',
+			'pharmacy_supplier_email',
+			'pharmacy_dispense_doublecheck',
+		];
+
+		foreach ($keys as $key) {
+			$model->setValue($key, (string)($post[$key] ?? ''), 'pharmacy');
+		}
+
+		return redirect()->to('/pharmacy/settings')->with('success', 'Settings saved successfully.');
 	}
 }

@@ -115,20 +115,7 @@
                                     <label>Oxygen Saturation</label>
                                     <input type="text" class="vital-input" placeholder="98%" data-patient="<?= $p['id'] ?>" data-field="o2">
                                 </div>
-                                <?php if (strtolower($p['patient_type'] ?? 'outpatient') === 'inpatient'): ?>
-                                <div class="vital-item">
-                                    <label>Height (cm) <span class="req">*</span></label>
-                                    <input type="number" class="vital-input" placeholder="170" data-patient="<?= $p['id'] ?>" data-field="height" step="0.1" min="50" max="250" required>
-                                </div>
-                                <div class="vital-item">
-                                    <label>Weight (kg) <span class="req">*</span></label>
-                                    <input type="number" class="vital-input" placeholder="70" data-patient="<?= $p['id'] ?>" data-field="weight" step="0.1" min="10" max="500" required>
-                                </div>
-                                <div class="vital-item">
-                                    <label>BMI (Auto-calculated)</label>
-                                    <input type="text" class="vital-input" id="bmi-display-<?= $p['id'] ?>" data-patient="<?= $p['id'] ?>" data-field="bmi" readonly placeholder="—" style="background-color: #f3f4f6;">
-                                </div>
-                                <?php endif; ?>
+                                <!-- Height/Weight/BMI removed per request -->
                                 <div class="vital-item vital-actions-right">
                                     <label>&nbsp;</label>
                                     <button class="btn btn-primary btn-small" onclick="saveVitalTime(<?= $p['id'] ?>)">Save Time</button>
@@ -140,11 +127,7 @@
                             <div class="vital-history">
                                 <div class="vh-grid vh-header">
                                     <div>Time</div>
-                                    <?php if (strtolower($p['patient_type'] ?? 'outpatient') === 'inpatient'): ?>
-                                    <div>Height</div>
-                                    <div>Weight</div>
-                                    <div>BMI</div>
-                                    <?php endif; ?>
+                                    <!-- Height/Weight/BMI columns removed -->
                                     <div>Blood Pressure</div>
                                     <div>Heart Rate</div>
                                     <div>Temperature</div>
@@ -166,11 +149,7 @@
                                     ?>
                                         <div class="vh-row">
                                             <div><?= esc($update['time'] ?? '—') ?></div>
-                                            <?php if (strtolower($p['patient_type'] ?? 'outpatient') === 'inpatient'): ?>
-                                            <div><?= !empty($update['height']) ? esc($update['height']) . ' cm' : '—' ?></div>
-                                            <div><?= !empty($update['weight']) ? esc($update['weight']) . ' kg' : '—' ?></div>
-                                            <div><?= esc($update['bmi'] ?? '—') ?></div>
-                                            <?php endif; ?>
+                                            <!-- Height/Weight/BMI values removed -->
                                             <div><?= esc($update['blood_pressure'] ?? '—') ?></div>
                                             <div><?= esc($update['heart_rate'] ?? '—') ?></div>
                                             <div><?= esc($update['temperature'] ?? '—') ?></div>

@@ -13,19 +13,20 @@ $menus = [
         ['label' => 'Pharmacy & Inventory', 'url' => base_url('admin/pharmacy-inventory')],
         ['label' => 'Reports', 'url' => base_url('admin/reports')],
         ['label' => 'User Management', 'url' => base_url('admin/users')],
-        ['label' => 'Settings', 'url' => base_url('settings')],
+        ['label' => 'Settings', 'url' => base_url('admin/settings')],
         ['label' => 'Logout', 'url' => base_url('auth/logout')],
     ],
     'doctor' => [
         ['label' => 'Dashboard', 'url' => base_url('doctor/dashboard')],
         ['label' => 'Patient Records', 'url' => base_url('doctor/patients')],
         ['label' => 'Appointments', 'url' => base_url('doctor/appointments')],
+        ['label' => 'Inpatients', 'url' => base_url('doctor/inpatients')],
         ['label' => 'Prescriptions', 'url' => base_url('doctor/prescriptions')],
         ['label' => 'Lab Requests', 'url' => base_url('doctor/labs')],
         ['label' => 'Consultations', 'url' => base_url('doctor/consultations')],
         ['label' => 'My Schedule', 'url' => base_url('doctor/schedule')],
         ['label' => 'Medical Reports', 'url' => base_url('doctor/reports')],
-        ['label' => 'Settings', 'url' => base_url('settings')],
+        ['label' => 'Settings', 'url' => base_url('admin/settings')],
         ['label' => 'Logout', 'url' => base_url('auth/logout')],
     ],
     'nurse' => [
@@ -33,18 +34,15 @@ $menus = [
         ['label' => 'Patients', 'url' => base_url('nurse/patients')],
         ['label' => 'Treatment Updates', 'url' => base_url('nurse/treatment-updates')],
         ['label' => 'Reports', 'url' => base_url('nurse/reports')],
-        ['label' => 'Settings', 'url' => base_url('settings')],
+        ['label' => 'Settings', 'url' => base_url('admin/settings')],
         ['label' => 'Logout', 'url' => base_url('auth/logout')],
     ],
     'receptionist' => [
         ['label' => 'Dashboard', 'url' => base_url('reception/dashboard')],
         ['label' => 'Patient Registration', 'url' => base_url('reception/patients')],
         ['label' => 'Appointments', 'url' => base_url('reception/appointments')],
-        ['label' => 'Check-in', 'url' => base_url('reception/checkin')],
-        ['label' => 'Billing', 'url' => base_url('reception/billing')],
-        ['label' => 'Schedule', 'url' => base_url('reception/schedule')],
         ['label' => 'Reports', 'url' => base_url('reception/reports')],
-        ['label' => 'Settings', 'url' => base_url('settings')],
+        ['label' => 'Settings', 'url' => base_url('admin/settings')],
         ['label' => 'Logout', 'url' => base_url('auth/logout')],
     ],
     'lab' => [
@@ -52,7 +50,7 @@ $menus = [
         ['label' => 'Test Requests', 'url' => base_url('lab/requests')],
         ['label' => 'Test Results', 'url' => base_url('lab/results')],
         ['label' => 'Reports', 'url' => base_url('lab/reports')],
-        ['label' => 'Settings', 'url' => base_url('settings')],
+        ['label' => 'Settings', 'url' => base_url('admin/settings')],
         ['label' => 'Logout', 'url' => base_url('auth/logout')],
     ],
     'pharmacist' => [
@@ -63,7 +61,7 @@ $menus = [
         ['label' => 'Stock Movement', 'url' => base_url('pharmacy/stockMovement')],
         ['label' => 'Orders', 'url' => base_url('pharmacy/orders')],
         ['label' => 'Reports', 'url' => base_url('pharmacy/reports')],
-        ['label' => 'Settings', 'url' => base_url('settings')],
+        ['label' => 'Settings', 'url' => base_url('admin/settings')],
         ['label' => 'Logout', 'url' => base_url('auth/logout')],
     ],
     'accountant' => [
@@ -73,7 +71,7 @@ $menus = [
         ['label' => 'Insurance', 'url' => base_url('accounts/insurance')],
         ['label' => 'Reports', 'url' => base_url('accounts/reports')],
         ['label' => 'Financial', 'url' => base_url('accounts/financial')],
-        ['label' => 'Settings', 'url' => base_url('settings')],
+        ['label' => 'Settings', 'url' => base_url('admin/settings')],
         ['label' => 'Logout', 'url' => base_url('auth/logout')],
     ],
     'it' => [
@@ -83,7 +81,7 @@ $menus = [
         ['label' => 'Backup', 'url' => base_url('it/backup')],
         ['label' => 'Security', 'url' => base_url('it/security')],
         ['label' => 'Support Tickets', 'url' => base_url('it/tickets')],
-        ['label' => 'Settings', 'url' => base_url('settings')],
+        ['label' => 'Settings', 'url' => base_url('admin/settings')],
         ['label' => 'Logout', 'url' => base_url('auth/logout')],
     ],
 ];
@@ -100,6 +98,22 @@ $brandLabels = [
 ];
 $brandLabel = $brandLabels[$roleKey] ?? 'HMS Portal';
 $menuToRender = $menus[$roleKey];
+$settingsUrlMap = [
+    'admin' => base_url('admin/settings'),
+    'accountant' => base_url('accounts/settings'),
+    'nurse' => base_url('nurse/settings'),
+    'receptionist' => base_url('reception/settings'),
+    'doctor' => base_url('doctor/settings'),
+    'lab' => base_url('lab/settings'),
+    'pharmacist' => base_url('pharmacy/settings'),
+];
+$settingsUrl = $settingsUrlMap[$roleKey] ?? base_url('admin/settings');
+$menuToRender = array_map(static function ($item) use ($settingsUrl) {
+    if (($item['label'] ?? '') === 'Settings') {
+        $item['url'] = $settingsUrl;
+    }
+    return $item;
+}, $menuToRender);
 $currentUrl = current_url();
 ?>
 

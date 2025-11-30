@@ -5,6 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\Controller;
 use App\Models\LabTestRequestModel;
 use App\Models\LabTestResultModel;
+use App\Models\SettingModel;
 
 class Lab extends Controller
 {
@@ -398,5 +399,55 @@ class Lab extends Controller
 		}
 
 		return view('lab/reports', $data);
+	}
+
+	public function settings()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'lab') {
+			return redirect()->to('/login');
+		}
+
+		$model = new SettingModel();
+		$defaults = [
+			'lab_default_priority'      => 'normal',
+			'lab_auto_assign_staff'     => '1',
+			'lab_urgent_threshold'      => '6',
+			'lab_notification_email'    => session()->get('email') ?? 'lab@hospital.local',
+			'lab_report_signature'      => "Laboratory Department\nMediCare Hospital",
+		];
+		$settings = array_merge($defaults, $model->getAllAsMap());
+
+		$data = [
+			'title'     => 'Lab Settings - HMS',
+			'user_role' => 'lab',
+			'user_name' => session()->get('name'),
+			'pageTitle' => 'Settings',
+			'settings'  => $settings,
+		];
+
+		return view('lab/settings', $data);
+	}
+
+	public function saveSettings()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'lab') {
+			return redirect()->to('/login');
+		}
+
+		$model = new SettingModel();
+		$post = $this->request->getPost();
+		$keys = [
+			'lab_default_priority',
+			'lab_auto_assign_staff',
+			'lab_urgent_threshold',
+			'lab_notification_email',
+			'lab_report_signature',
+		];
+
+		foreach ($keys as $key) {
+			$model->setValue($key, (string)($post[$key] ?? ''), 'lab');
+		}
+
+		return redirect()->to('/lab/settings')->with('success', 'Settings saved successfully.');
 	}
 }

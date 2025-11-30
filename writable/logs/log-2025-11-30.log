@@ -1,0 +1,105 @@
+CRITICAL - 2025-11-30 08:03:36 --> Exception: Failed to parse time string (04/56/2009) at position 4 (6): Double date specification
+[Method: POST, Route: reception/patients/store]
+in APPPATH\Controllers\Reception.php on line 137.
+ 1 APPPATH\Controllers\Reception.php(137): DateTime->__construct('04/56/2009')
+ 2 APPPATH\Controllers\Reception.php(393): App\Controllers\Reception->extractPayload([...])
+ 3 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->store()
+ 4 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-30 08:05:25 --> Exception: Failed to parse time string (04/56/2009) at position 4 (6): Double date specification
+[Method: POST, Route: reception/patients/store]
+in APPPATH\Controllers\Reception.php on line 137.
+ 1 APPPATH\Controllers\Reception.php(137): DateTime->__construct('04/56/2009')
+ 2 APPPATH\Controllers\Reception.php(393): App\Controllers\Reception->extractPayload([...])
+ 3 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->store()
+ 4 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-30 09:43:33 --> Validation failed: {"email":"The email field must contain a unique value."}
+ERROR - 2025-11-30 09:43:36 --> Validation failed: {"email":"The email field must contain a unique value."}
+ERROR - 2025-11-30 09:43:37 --> Validation failed: {"email":"The email field must contain a unique value."}
+ERROR - 2025-11-30 09:43:38 --> Validation failed: {"email":"The email field must contain a unique value."}
+ERROR - 2025-11-30 09:43:38 --> Validation failed: {"email":"The email field must contain a unique value."}
+ERROR - 2025-11-30 09:43:56 --> Validation failed: {"email":"The email field must contain a unique value."}
+ERROR - 2025-11-30 09:50:44 --> Validation failed: {"ec_contact":"The ec_contact field is not in the correct format."}
+ERROR - 2025-11-30 09:50:47 --> Validation failed: {"ec_contact":"The ec_contact field is not in the correct format."}
+ERROR - 2025-11-30 09:50:48 --> Validation failed: {"ec_contact":"The ec_contact field is not in the correct format."}
+ERROR - 2025-11-30 09:50:49 --> Validation failed: {"ec_contact":"The ec_contact field is not in the correct format."}
+ERROR - 2025-11-30 09:50:49 --> Validation failed: {"ec_contact":"The ec_contact field is not in the correct format."}
+ERROR - 2025-11-30 09:50:50 --> Validation failed: {"ec_contact":"The ec_contact field is not in the correct format."}
+ERROR - 2025-11-30 10:03:20 --> mysqli_sql_exception: Duplicate entry 'PT-20251130-002' for key 'uniq_patient_id' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `pa...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `pa...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `pa...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(2345): CodeIgniter\Database\BaseConnection->query('INSERT INTO `pa...', Array, false)
+#4 C:\xampp\htdocs\HMS\system\Model.php(394): CodeIgniter\Database\BaseBuilder->insert()
+#5 C:\xampp\htdocs\HMS\system\BaseModel.php(838): CodeIgniter\Model->doInsert(Array)
+#6 C:\xampp\htdocs\HMS\system\Model.php(797): CodeIgniter\BaseModel->insert(Array, true)
+#7 C:\xampp\htdocs\HMS\app\Controllers\Reception.php(407): CodeIgniter\Model->insert(Array)
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Reception->store()
+#9 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+#10 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#12 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#13 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#14 {main}
+ERROR - 2025-11-30 10:03:20 --> Database exception: Duplicate entry 'PT-20251130-002' for key 'uniq_patient_id'
+ERROR - 2025-11-30 10:05:08 --> mysqli_sql_exception: Duplicate entry 'PT-20251130-002' for key 'uniq_patient_id' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `pa...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `pa...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `pa...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(2345): CodeIgniter\Database\BaseConnection->query('INSERT INTO `pa...', Array, false)
+#4 C:\xampp\htdocs\HMS\system\Model.php(394): CodeIgniter\Database\BaseBuilder->insert()
+#5 C:\xampp\htdocs\HMS\system\BaseModel.php(838): CodeIgniter\Model->doInsert(Array)
+#6 C:\xampp\htdocs\HMS\system\Model.php(797): CodeIgniter\BaseModel->insert(Array, true)
+#7 C:\xampp\htdocs\HMS\app\Controllers\Reception.php(407): CodeIgniter\Model->insert(Array)
+#8 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Reception->store()
+#9 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+#10 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#12 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#13 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#14 {main}
+ERROR - 2025-11-30 10:05:08 --> Database exception: Duplicate entry 'PT-20251130-002' for key 'uniq_patient_id'
+CRITICAL - 2025-11-30 10:16:02 --> Exception: Failed to parse time string (04/56/2008) at position 4 (6): Double date specification
+[Method: POST, Route: reception/patients/store]
+in APPPATH\Controllers\Reception.php on line 142.
+ 1 APPPATH\Controllers\Reception.php(142): DateTime->__construct('04/56/2008')
+ 2 APPPATH\Controllers\Reception.php(425): App\Controllers\Reception->extractPayload([...])
+ 3 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->store()
+ 4 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-30 10:16:07 --> Exception: Failed to parse time string (04/56/2008) at position 4 (6): Double date specification
+[Method: POST, Route: reception/patients/store]
+in APPPATH\Controllers\Reception.php on line 142.
+ 1 APPPATH\Controllers\Reception.php(142): DateTime->__construct('04/56/2008')
+ 2 APPPATH\Controllers\Reception.php(425): App\Controllers\Reception->extractPayload([...])
+ 3 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->store()
+ 4 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-11-30 10:16:15 --> Exception: Failed to parse time string (04/56/2008) at position 4 (6): Double date specification
+[Method: POST, Route: reception/patients/store]
+in APPPATH\Controllers\Reception.php on line 142.
+ 1 APPPATH\Controllers\Reception.php(142): DateTime->__construct('04/56/2008')
+ 2 APPPATH\Controllers\Reception.php(425): App\Controllers\Reception->extractPayload([...])
+ 3 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->store()
+ 4 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-30 10:36:15 --> Failed to insert appointment. Errors: {"appointment_type":"Invalid appointment type"}
+ERROR - 2025-11-30 10:36:28 --> Failed to insert appointment. Errors: {"appointment_type":"Invalid appointment type"}

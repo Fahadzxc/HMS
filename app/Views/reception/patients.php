@@ -154,12 +154,31 @@
         </header>
         <form id="addPatientForm" class="modal-body" method="post" action="<?= site_url('reception/patients/store') ?>">
             <?= csrf_field() ?>
-            <div class="form-grid">
+            <style>
+                .name-grid{display:grid;grid-template-columns:2fr 1fr 2fr;gap:16px}
+                @media (max-width: 768px){.name-grid{grid-template-columns:1fr}}
+            </style>
+            <div class="name-grid">
                 <div class="form-field">
-                    <label>Full Name <span class="req">*</span></label>
-                    <input type="text" name="full_name" required>
+                    <label>First Name <span class="req">*</span></label>
+                    <input type="text" name="first_name" required>
+                    <div class="error" data-error-for="first_name"></div>
+                </div>
+                <div class="form-field">
+                    <label>Middle Name</label>
+                    <input type="text" name="middle_name">
+                    <div class="error" data-error-for="middle_name"></div>
+                </div>
+                <div class="form-field">
+                    <label>Last Name <span class="req">*</span></label>
+                    <input type="text" name="last_name" required>
+                    <div class="error" data-error-for="last_name"></div>
+                </div>
+                <input type="hidden" name="full_name">
                     <div class="error" data-error-for="full_name"></div>
                 </div>
+
+            <div class="form-grid">
                 <div class="form-field">
                     <label>Date of Birth <span class="req">*</span></label>
                     <input type="text" name="date_of_birth" id="date_of_birth" placeholder="mm/dd/yyyy" maxlength="10" required>
@@ -201,31 +220,155 @@
                     <div class="error" data-error-for="email"></div>
                 </div>
                 <div class="form-field">
-                    <label>Address <span class="req">*</span></label>
-                    <select name="address" required>
-                        <option value="">Select Address</option>
-                        <option>Lagao</option>
-                        <option>Bula</option>
-                        <option>San Isidro</option>
-                        <option>Calumpang</option>
-                        <option>Tambler</option>
-                        <option>City Heights</option>
+                    <label>Province <span class="req">*</span></label>
+                    <select id="province" required>
+                        <option value="">Select Province</option>
+                        <option value="south_cotabato">South Cotabato</option>
+                        <option value="sarangani">Sarangani</option>
                     </select>
-                    <div class="error" data-error-for="address"></div>
+                    <div class="error" data-error-for="province"></div>
                 </div>
                 <div class="form-field">
+                    <label>City/Municipality <span class="req">*</span></label>
+                    <select id="city" required>
+                        <option value="">Select City/Municipality</option>
+                    </select>
+                    <div class="error" data-error-for="city"></div>
+                </div>
+                <div class="form-field">
+                    <label>Barangay <span class="req">*</span></label>
+                    <select id="barangay" required>
+                        <option value="">Select Barangay</option>
+                    </select>
+                    <div class="error" data-error-for="barangay"></div>
+                </div>
+                <input type="hidden" name="address">
+                <div class="form-field">
                     <label>Patient Type <span class="req">*</span></label>
-                    <select name="patient_type" required>
+					<select name="patient_type" id="patientType" required>
                         <option value="">Select Patient Type</option>
                         <option value="outpatient">Outpatient</option>
                         <option value="inpatient">Inpatient</option>
                     </select>
                     <div class="error" data-error-for="patient_type"></div>
                 </div>
+                <div class="form-field">
+                    <label>Insurance Provider</label>
+                    <select name="insurance_provider" id="insuranceProvider">
+                        <option value="">Select Insurance Provider</option>
+                        <option value="philhealth">PhilHealth</option>
+                        <option value="maxicare">Maxicare</option>
+                        <option value="medicard">Medicard</option>
+                        <option value="intellicare">Intellicare</option>
+                        <option value="philcare">PhilCare</option>
+                        <option value="insular_healthcare">Insular Healthcare</option>
+                        <option value="avega">Avega</option>
+                        <option value="pacific_cross">Pacific Cross</option>
+                        <option value="none">None / Self-Pay</option>
+                    </select>
+                    <div class="error" data-error-for="insurance_provider"></div>
+                </div>
+                <div id="insuranceDetails" style="display: none;">
+                    <div class="form-field">
+                        <label>Policy Number <small style="color: #6B7280;">(Auto-generated if left blank)</small></label>
+                        <input type="text" name="insurance_policy_number" id="insurancePolicyNumber" placeholder="Leave blank to auto-generate">
+                        <div class="error" data-error-for="insurance_policy_number"></div>
+                    </div>
+                    <div class="form-field">
+                        <label>Member ID <small style="color: #6B7280;">(Auto-generated if left blank)</small></label>
+                        <input type="text" name="insurance_member_id" id="insuranceMemberId" placeholder="Leave blank to auto-generate">
+                        <div class="error" data-error-for="insurance_member_id"></div>
+                    </div>
+                </div>
                 <div class="form-field form-field--full">
                     <label>Medical Concern <span class="req">*</span></label>
                     <textarea name="concern" rows="4" required></textarea>
                     <div class="error" data-error-for="concern"></div>
+                </div>
+            </div>
+
+			<!-- Inpatient section (hidden by default) -->
+			<div id="inpatientSection" style="display: none; overflow: hidden;">
+				<style>
+					#inpatientSection .section-title{margin:16px 0 8px 0;font-weight:700;color:#1f2937}
+					#inpatientSection .row{display:flex;flex-wrap:wrap;gap:16px}
+					#inpatientSection .col-md-6{flex:1 1 calc(50% - 8px);min-width:260px}
+					#inpatientSection .col-md-4{flex:1 1 calc(33.333% - 11px);min-width:220px}
+					#inpatientSection .col-md-3{flex:1 1 calc(25% - 12px);min-width:180px}
+					@media (max-width:768px){
+						#inpatientSection .col-md-6,#inpatientSection .col-md-4,#inpatientSection .col-md-3{flex:1 1 100%}
+					}
+				</style>
+
+				<div class="section-title">Admission Details</div>
+				<div class="row">
+					<div class="col-md-6 form-field">
+						<label>Admission Date &amp; Time</label>
+						<input type="datetime-local" name="admission_datetime">
+					</div>
+					<div class="col-md-6 form-field">
+						<label>Admission Type</label>
+						<select name="admission_type">
+							<option value="">Select Type</option>
+							<option value="emergency">Emergency</option>
+							<option value="scheduled">Scheduled</option>
+							<option value="transfer">Transfer</option>
+						</select>
+					</div>
+					<div class="col-md-6 form-field">
+						<label>Attending Doctor</label>
+						<select name="attending_doctor_id" id="attendingDoctor">
+							<option value="">Select Doctor</option>
+						</select>
+					</div>
+					<div class="col-md-6 form-field">
+						<label>Room / Ward</label>
+						<select name="room_id" id="roomSelect">
+							<option value="">Select Room / Ward</option>
+						</select>
+					</div>
+					<div class="col-md-6 form-field">
+						<label>Bed Number</label>
+						<select name="bed_number" id="bedSelect">
+							<option value="">Select Bed</option>
+						</select>
+					</div>
+				</div>
+
+                <div class="section-title">Vital Signs</div>
+                <div class="row">
+                    <div class="col-md-4 form-field">
+                        <label>Temperature (°C)</label>
+                        <input type="number" step="0.1" name="vs_temperature" placeholder="36.7">
+                    </div>
+                    <div class="col-md-4 form-field">
+                        <label>Blood Pressure</label>
+                        <input type="text" name="vs_bp" placeholder="120/80">
+                    </div>
+                    <div class="col-md-4 form-field">
+                        <label>Heart Rate (bpm)</label>
+                        <input type="number" name="vs_hr" placeholder="72">
+                    </div>
+                    <div class="col-md-4 form-field">
+                        <label>Oxygen Saturation (%)</label>
+                        <input type="number" name="vs_o2" placeholder="98">
+                    </div>
+                </div>
+
+				<div class="section-title">Emergency Contact</div>
+				<div class="row">
+					<div class="col-md-6 form-field">
+						<label>Contact Person Name</label>
+						<input type="text" name="ec_name" placeholder="Full name">
+					</div>
+					<div class="col-md-6 form-field">
+						<label>Contact Number</label>
+						<input type="text" name="ec_contact" placeholder="09XX XXX XXXX">
+					</div>
+					<div class="col-md-6 form-field">
+						<label>Relationship to Patient</label>
+						<input type="text" name="ec_relationship" placeholder="Parent / Spouse / Sibling">
+					</div>
                 </div>
             </div>
             <footer class="modal-footer">
@@ -236,6 +379,7 @@
     </div>
 </div>
 
+<?= $this->endSection() ?>
 <?= $this->section('scripts') ?>
 <script>
     (function(){
@@ -246,7 +390,20 @@
         const backdrop = document.getElementById('modalBackdrop');
         const form = document.getElementById('addPatientForm');
 
-        function open(){ modal.style.display='block'; modal.setAttribute('aria-hidden','false'); }
+        function open(){
+            modal.style.display='block';
+            modal.setAttribute('aria-hidden','false');
+            // Default the admission datetime to "now"
+            const ad = form.querySelector('input[name="admission_datetime"]');
+            if (ad && !ad.value) {
+                const now = new Date();
+                const pad = n => String(n).padStart(2,'0');
+                const v = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+                ad.value = v;
+            }
+            // Re-filter doctors based on the defaulted datetime
+            try { filterDoctorsByAdmission(); } catch(_e) {}
+        }
         function close(){ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); clearErrors(); form.reset(); }
         function setError(name, msg){ const el = modal.querySelector('[data-error-for="'+name+'"]'); if(el){ el.textContent = msg || ''; } }
         function clearErrors(){ modal.querySelectorAll('.error').forEach(e=>e.textContent=''); }
@@ -262,7 +419,40 @@
             clearErrors();
             const submitBtn = form.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
+
+            // Compose full_name from first/middle/last before sending
+            const firstName = (form.querySelector('[name=\"first_name\"]').value || '').trim();
+            const middleName = (form.querySelector('[name=\"middle_name\"]').value || '').trim();
+            const lastName = (form.querySelector('[name=\"last_name\"]').value || '').trim();
+            const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
+            const hiddenFullName = form.querySelector('[name=\"full_name\"]');
+            if (hiddenFullName) hiddenFullName.value = fullName;
+
             const formData = new FormData(form);
+            // Ensure backend receives expected keys/format
+            formData.set('full_name', fullName);
+            // Send contact as digits only (remove spaces)
+            const contactRaw = (form.querySelector('input[name=\"contact\"]').value || '').replace(/\\D/g, '');
+            if (contactRaw) formData.set('contact', contactRaw);
+            // Ensure insurance fields are included
+            const insuranceProvider = form.querySelector('[name=\"insurance_provider\"]')?.value || '';
+            if (insuranceProvider) formData.set('insurance_provider', insuranceProvider);
+            const insurancePolicy = form.querySelector('[name=\"insurance_policy_number\"]')?.value || '';
+            if (insurancePolicy) formData.set('insurance_policy_number', insurancePolicy);
+            const insuranceMember = form.querySelector('[name=\"insurance_member_id\"]')?.value || '';
+            if (insuranceMember) formData.set('insurance_member_id', insuranceMember);
+            // Compose address from province/city/barangay
+            const provinceKey = (document.getElementById('province')?.value || '').trim();
+            const cityKey = (document.getElementById('city')?.value || '').trim();
+            const barangay = (document.getElementById('barangay')?.value || '').trim();
+            const addressHidden = form.querySelector('[name=\"address\"]');
+            if (addressHidden) {
+                const provinceName = (window.__addressData?.[provinceKey]?.name) || '';
+                const cityName = (window.__addressData?.[provinceKey]?.cities?.[cityKey]?.name) || '';
+                const addressText = [barangay, cityName || provinceName].filter(Boolean).join(', ');
+                addressHidden.value = addressText;
+                if (addressText) formData.set('address', addressText);
+            }
 
             try {
                 const resp = await fetch(form.action, { method: 'POST', body: formData, headers: { 'X-Requested-With':'XMLHttpRequest' } });
@@ -314,7 +504,264 @@
             });
         }
 
+		// Inpatient section toggle and dynamic dropdowns
+		const patientTypeEl = document.getElementById('patientType');
+		const inpatientEl = document.getElementById('inpatientSection');
+		function showInpatient() {
+			if (!inpatientEl) return;
+			inpatientEl.style.display = 'block';
+			inpatientEl.style.maxHeight = '2000px';
+			inpatientEl.style.opacity = '1';
+		}
+		function hideInpatient() {
+			if (!inpatientEl) return;
+			inpatientEl.style.maxHeight = '0';
+			inpatientEl.style.opacity = '0';
+			// Use a small timeout to hide completely after transition
+			setTimeout(() => { inpatientEl.style.display = 'none'; }, 250);
+		}
+		if (patientTypeEl && inpatientEl) {
+			// Initialize state
+			if (patientTypeEl.value === 'inpatient') showInpatient(); else hideInpatient();
+			patientTypeEl.addEventListener('change', function() {
+				if (this.value === 'inpatient') {
+                    showInpatient();
+                    // Ensure admission datetime defaults to now when switching to inpatient
+                    const ad = document.querySelector('input[name="admission_datetime"]');
+                    if (ad && !ad.value) {
+                        const now = new Date();
+                        const pad = n => String(n).padStart(2,'0');
+                        ad.value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+                    }
+                    loadDoctors();
+                    loadRooms();
+					// Re-filter shortly after lists load
+					setTimeout(() => { try { filterDoctorsByAdmission(); } catch(_e) {} }, 400);
+				} else {
+					hideInpatient();
+				}
+			});
+		}
+
+		// Populate Attending Doctor and Room/Ward dynamically
+		async function loadDoctors() {
+			const sel = document.getElementById('attendingDoctor');
+			if (!sel || sel.options.length > 1) return; // already loaded or not present
+			try {
+				const resp = await fetch('<?= base_url('reception/doctors') ?>', { headers: { 'X-Requested-With':'XMLHttpRequest' }});
+				const data = await resp.json();
+				const doctors = Array.isArray(data?.doctors) ? data.doctors : (Array.isArray(data) ? data : []);
+				if (doctors.length === 0) throw new Error('empty');
+				doctors.forEach(d => {
+					const opt = document.createElement('option');
+					opt.value = d.id ?? d.doctor_id ?? '';
+					opt.textContent = d.name ?? d.full_name ?? d.doctor_name ?? 'Doctor';
+					sel.appendChild(opt);
+				});
+			} catch (e) {
+				// Fallback static options
+				['Dr. Santos','Dr. Reyes','Dr. Cruz'].forEach((name, idx) => {
+					const opt = document.createElement('option');
+					opt.value = 'fallback_' + (idx+1);
+					opt.textContent = name;
+					sel.appendChild(opt);
+				});
+			}
+		}
+
+		async function loadRooms() {
+			const sel = document.getElementById('roomSelect');
+			const bedSel = document.getElementById('bedSelect');
+			if (!sel || sel.options.length > 1) return;
+			try {
+				const resp = await fetch('<?= base_url('reception/rooms') ?>?type=inpatient', { headers: { 'X-Requested-With':'XMLHttpRequest' }});
+				const data = await resp.json();
+				const rooms = Array.isArray(data?.rooms) ? data.rooms : [];
+				if (rooms.length === 0) throw new Error('empty');
+				rooms.forEach(r => {
+					const opt = document.createElement('option');
+					opt.value = r.id ?? r.room_id ?? '';
+					opt.dataset.capacity = r.capacity ?? '';
+					opt.dataset.occupancy = r.current_occupancy ?? '';
+					const label = `${r.room_number ?? r.name ?? 'Room'}${r.specialization ? ' - ' + r.specialization : ''}${r.floor ? ' (Floor ' + r.floor + ')' : ''}`;
+					opt.textContent = label;
+					sel.appendChild(opt);
+				});
+				if (bedSel) {
+					sel.addEventListener('change', populateBeds);
+				}
+			} catch (e) {
+				['Ward A - 101','Ward B - 202','ICU - 3F'].forEach((label, idx) => {
+					const opt = document.createElement('option');
+					opt.value = 'fallback_room_' + (idx+1);
+					opt.textContent = label;
+					sel.appendChild(opt);
+				});
+			}
+		}
+
+		function populateBeds() {
+			const sel = document.getElementById('roomSelect');
+			const bedSel = document.getElementById('bedSelect');
+			if (!sel || !bedSel) return;
+			const selected = sel.options[sel.selectedIndex];
+			const cap = parseInt(selected?.dataset?.capacity || '0', 10);
+			bedSel.innerHTML = '<option value=\"\">Select Bed</option>';
+			if (!isNaN(cap) && cap > 0) {
+				for (let i = 1; i <= cap; i++) {
+					const opt = document.createElement('option');
+					opt.value = String(i);
+					opt.textContent = 'Bed ' + i;
+					bedSel.appendChild(opt);
+				}
+			}
+		}
+
+        // Address cascading dropdowns (Province -> City -> Barangay)
+        const provinceEl = document.getElementById('province');
+        const cityEl = document.getElementById('city');
+        const barangayEl = document.getElementById('barangay');
+        window.__addressData = {
+            south_cotabato: {
+                name: 'South Cotabato',
+                cities: {
+                    gensan: {
+                        name: 'General Santos City',
+                        barangays: [
+                            'Apopong','Baluan','Batomelong','Buayan','Bula','Calumpang','City Heights','Conel',
+                            'Dadiangas East','Dadiangas North','Dadiangas South','Dadiangas West','Fatima','Katangawan',
+                            'Labangal','Lagao','Mabuhay','Olympog','San Isidro','San Jose','Sinawal','Tambler',
+                            'Tinagacan','Upper Labay'
+                        ]
+                    }
+                }
+            },
+            sarangani: {
+                name: 'Sarangani',
+                cities: {
+                    malapatan: { name: 'Malapatan', barangays: ['Daan Suyan','Kihan','Kinam','Libi','Lun Masla','Lun Padidu','Patag','Poblacion','Sapu Masla','Sapu Padidu','Tuyan','Upper Suyan'] },
+                    alabel: { name: 'Alabel', barangays: ['Alegria','Bagacay','Baluntay','Datal Anggas','Domolok','Kawas','Maribulan','Pag-Asa','Paraiso','Poblacion','Spring','Tokawal'] },
+                    glan: { name: 'Glan', barangays: ['Baliton','Batulaki','Burias','Cablalan','Congan','Glan Padidu','Gumasa','Ilaya','Kapatan','Lago','Laguimit','Mudan','Pangyan','Poblacion','Rio Del Pilar','San Jose','San Vicente','Taluya','Tango','Tapon'] },
+                    kiamba: { name: 'Kiamba', barangays: ['Badtasan','Datu Datu','Gasi','Kapate','Katubao','Kayupo','Kling','Lagundi','Lebe','Lomuyon','Luma','Maligang','Nalus','Poblacion','Salakit','Suli','Tablao','Tamadang','Tambilil','Tuka'] },
+                    maasim: { name: 'Maasim', barangays: ['Amsipit','Bales','Colon','Daliao','Kabatiol','Kablacan','Kamanga','Kanalo','Lumasal','Lumatil','Malbang','Nomoh','Pananag','Poblacion','Seven Hills','Tinoto'] }
+                }
+            }
+        };
+
+        function populateCities() {
+            cityEl.innerHTML = '<option value=\"\">Select City/Municipality</option>';
+            barangayEl.innerHTML = '<option value=\"\">Select Barangay</option>';
+            const prov = provinceEl.value;
+            if (!prov || !window.__addressData[prov]) return;
+            const cities = window.__addressData[prov].cities || {};
+            Object.keys(cities).forEach(key => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = cities[key].name;
+                cityEl.appendChild(opt);
+            });
+        }
+
+        function populateBarangays() {
+            barangayEl.innerHTML = '<option value=\"\">Select Barangay</option>';
+            const prov = provinceEl.value;
+            const city = cityEl.value;
+            if (!prov || !city || !window.__addressData[prov]?.cities?.[city]) return;
+            const brgys = window.__addressData[prov].cities[city].barangays || [];
+            brgys.forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b;
+                opt.textContent = b;
+                barangayEl.appendChild(opt);
+            });
+        }
+
+        if (provinceEl && cityEl && barangayEl) {
+            provinceEl.addEventListener('change', populateCities);
+            cityEl.addEventListener('change', populateBarangays);
+        }
+
+        // Admission datetime → filter available doctors based on schedule (debounced, limited)
+        const admissionDt = document.querySelector('input[name=\"admission_datetime\"]');
+        const doctorSelect = document.getElementById('attendingDoctor');
+        let __filterDoctorsTimer = null;
+        let __filterInFlight = false;
+        function scheduleFilterDoctors() {
+            if (!admissionDt) return;
+            clearTimeout(__filterDoctorsTimer);
+            __filterDoctorsTimer = setTimeout(() => { filterDoctorsByAdmission().catch(()=>{}); }, 500);
+        }
+        async function filterDoctorsByAdmission() {
+            if (__filterInFlight) return;
+            __filterInFlight = true;
+            if (!doctorSelect) return;
+            // Load doctors once and populate (no per-doctor schedule calls to avoid heavy loading)
+            try {
+                const resp = await fetch('<?= base_url('reception/doctors') ?>', { headers: { 'X-Requested-With':'XMLHttpRequest' }});
+                const data = await resp.json();
+                const doctors = Array.isArray(data?.doctors) ? data.doctors : [];
+                doctorSelect.innerHTML = '<option value=\"\">Select Doctor</option>';
+                doctors.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.id;
+                    opt.textContent = d.name;
+                    doctorSelect.appendChild(opt);
+                });
+            } catch(e) {
+                doctorSelect.innerHTML = '<option value=\"\">Select Doctor</option>';
+            }
+            __filterInFlight = false;
+        }
+		if (admissionDt) {
+            admissionDt.addEventListener('change', scheduleFilterDoctors);
+            admissionDt.addEventListener('input', scheduleFilterDoctors);
+            admissionDt.addEventListener('blur', scheduleFilterDoctors);
+        }
+
         // Patient type handling - removed room selection logic
+    })();
+    
+    // Insurance Provider change handler
+    (function() {
+        const insuranceProvider = document.getElementById('insuranceProvider');
+        const insuranceDetails = document.getElementById('insuranceDetails');
+        const policyNumberInput = document.getElementById('insurancePolicyNumber');
+        const memberIdInput = document.getElementById('insuranceMemberId');
+        
+        if (insuranceProvider) {
+            insuranceProvider.addEventListener('change', function() {
+                const provider = this.value;
+                
+                // Show/hide insurance details fields
+                if (provider && provider !== '' && provider !== 'none') {
+                    if (insuranceDetails) insuranceDetails.style.display = 'block';
+                    
+                    // Auto-generate Policy Number and Member ID if fields are empty
+                    if (policyNumberInput && !policyNumberInput.value.trim()) {
+                        const year = new Date().getFullYear();
+                        const month = String(new Date().getMonth() + 1).padStart(2, '0');
+                        const providerCode = provider.substring(0, 3).toUpperCase();
+                        const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+                        policyNumberInput.value = providerCode + '-' + year + month + '-' + randomNum;
+                    }
+                    
+                    if (memberIdInput && !memberIdInput.value.trim()) {
+                        const providerCode = provider.substring(0, 2).toUpperCase();
+                        const randomNum = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+                        memberIdInput.value = providerCode + randomNum;
+                    }
+                } else {
+                    if (insuranceDetails) insuranceDetails.style.display = 'none';
+                    if (policyNumberInput) policyNumberInput.value = '';
+                    if (memberIdInput) memberIdInput.value = '';
+                }
+            });
+            
+            // Trigger change event on page load if insurance provider is already selected
+            if (insuranceProvider.value && insuranceProvider.value !== '' && insuranceProvider.value !== 'none') {
+                insuranceProvider.dispatchEvent(new Event('change'));
+            }
+        }
     })();
 </script>
 
@@ -609,6 +1056,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?= $this->endSection() ?>
 <?= $this->endSection() ?>
 

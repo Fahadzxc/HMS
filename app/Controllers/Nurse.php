@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use CodeIgniter\Controller;
 use App\Models\PrescriptionModel;
+use App\Models\SettingModel;
 
 class Nurse extends Controller
 {
@@ -14,19 +15,97 @@ class Nurse extends Controller
 
     public function dashboard()
     {
-        // Check if user is logged in and is a nurse
         if (!session()->get('isLoggedIn') || session()->get('role') !== 'nurse') {
             return redirect()->to('/login');
+        }
+
+        $nurseName = session()->get('name') ?? 'Nurse';
+        $db = \Config\Database::connect();
+        $today = date('Y-m-d');
+
+        $metrics = [
+            'assignedPatients' => 0,
+            'pendingMedications' => 0,
+            'vitalChecksDue' => 0,
+            'dischargesToday' => 0,
+        ];
+        $todayTasks = [];
+        $patientsUnderCare = [];
+        $recentActivities = [];
+
+        // Assigned patients & recent activities from treatment updates
+        if ($db->tableExists('treatment_updates')) {
+            $metrics['assignedPatients'] = (int) ($db->table('treatment_updates')
+                ->select('COUNT(DISTINCT patient_id) as total')
+                ->where('nurse_name', $nurseName)
+                ->get()
+                ->getRow('total') ?? 0);
+
+            // Vital checks due (no update today)
+            $patientsLastUpdate = $db->table('treatment_updates')
+                ->select('patient_id, MAX(created_at) as last_update')
+                ->where('nurse_name', $nurseName)
+                ->groupBy('patient_id')
+                ->get()
+                ->getResultArray();
+
+            $metrics['vitalChecksDue'] = count(array_filter($patientsLastUpdate, static function ($row) use ($today) {
+                return !empty($row['last_update']) && date('Y-m-d', strtotime($row['last_update'])) < $today;
+            }));
+
+            $patientsUnderCare = $db->table('treatment_updates tu')
+                ->select('tu.*, p.full_name as patient_name, p.patient_id as patient_code')
+                ->join('patients p', 'p.id = tu.patient_id', 'left')
+                ->where('tu.nurse_name', $nurseName)
+                ->orderBy('tu.created_at', 'DESC')
+                ->limit(5)
+                ->get()
+                ->getResultArray();
+
+            $recentActivities = $db->table('treatment_updates')
+                ->select('patient_id, notes, created_at, nurse_name, blood_pressure, heart_rate, temperature')
+                ->where('nurse_name', $nurseName)
+                ->orderBy('created_at', 'DESC')
+                ->limit(6)
+                ->get()
+                ->getResultArray();
+        }
+
+        // Pending medications
+        if ($db->tableExists('prescriptions')) {
+            $metrics['pendingMedications'] = (int) ($db->table('prescriptions')
+                ->whereIn('status', ['pending', 'in-progress', 'scheduled'])
+                ->countAllResults() ?? 0);
+
+            $todayTasks = $db->table('prescriptions pr')
+                ->select('pr.id, pr.created_at, pr.status, p.full_name as patient_name')
+                ->join('patients p', 'p.id = pr.patient_id', 'left')
+                ->whereIn('pr.status', ['pending', 'in-progress'])
+                ->orderBy('pr.created_at', 'DESC')
+                ->limit(4)
+                ->get()
+                ->getResultArray();
+        }
+
+        // Discharges today from patients table
+        if ($db->tableExists('patients')) {
+            $metrics['dischargesToday'] = (int) ($db->table('patients')
+                ->where('status', 'discharged')
+                ->where('DATE(updated_at)', $today)
+                ->countAllResults() ?? 0);
         }
 
         $data = [
             'title' => 'Nurse Dashboard - HMS',
             'user_role' => 'nurse',
-            'user_name' => session()->get('name')
+            'user_name' => $nurseName,
+            'metrics' => $metrics,
+            'todayTasks' => $todayTasks,
+            'patientsUnderCare' => $patientsUnderCare,
+            'recentActivities' => $recentActivities,
         ];
 
-        // Use the same dashboard system as admin and doctor
-        return view('auth/dashboard', $data);
+        return view('nurse/dashboard', $data);
     }
 
     public function patients()
@@ -349,32 +428,7 @@ class Nurse extends Controller
                 ]);
             }
             
-            // Check if patient is inpatient and validate height/weight
-            $patientModel = new \App\Models\PatientModel();
-            $patient = $patientModel->find($patientId);
-            if ($patient && strtolower($patient['patient_type'] ?? 'outpatient') === 'inpatient') {
-                if (empty($height)) {
-                    return $this->response->setJSON([
-                        'success' => false,
-                        'message' => 'Height is required for inpatient patients'
-                    ]);
-                }
-                if (empty($weight)) {
-                    return $this->response->setJSON([
-                        'success' => false,
-                        'message' => 'Weight is required for inpatient patients'
-                    ]);
-                }
-                // Validate numeric values
-                $heightNum = floatval($height);
-                $weightNum = floatval($weight);
-                if ($heightNum <= 0 || $weightNum <= 0) {
-                    return $this->response->setJSON([
-                        'success' => false,
-                        'message' => 'Please enter valid height and weight values'
-                    ]);
-                }
-            }
+            // Height/Weight no longer required for inpatient patients (per request)
             
             // Ensure table exists
             if (!$db->tableExists('treatment_updates')) {
@@ -1687,5 +1741,57 @@ class Nurse extends Controller
         }
 
         return view('nurse/reports', $data);
+    }
+
+    public function settings()
+    {
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'nurse') {
+            return redirect()->to('/login');
+        }
+
+        $model = new SettingModel();
+        $defaults = [
+            'nurse_shift_start'       => '07:00',
+            'nurse_shift_end'         => '19:00',
+            'nurse_max_patients'      => '10',
+            'nurse_require_vitals'    => '1',
+            'nurse_task_reminders'    => '1',
+            'nurse_handover_template' => "Patient status\nPending meds\nFollow-up tests",
+        ];
+        $settings = array_merge($defaults, $model->getAllAsMap());
+
+        $data = [
+            'title'     => 'Nurse Settings - HMS',
+            'user_role' => 'nurse',
+            'user_name' => session()->get('name'),
+            'pageTitle' => 'Settings',
+            'settings'  => $settings,
+        ];
+
+        return view('nurse/settings', $data);
+    }
+
+    public function saveSettings()
+    {
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'nurse') {
+            return redirect()->to('/login');
+        }
+
+        $model = new SettingModel();
+        $post = $this->request->getPost();
+        $keys = [
+            'nurse_shift_start',
+            'nurse_shift_end',
+            'nurse_max_patients',
+            'nurse_require_vitals',
+            'nurse_task_reminders',
+            'nurse_handover_template',
+        ];
+
+        foreach ($keys as $key) {
+            $model->setValue($key, (string)($post[$key] ?? ''), 'nurse');
+        }
+
+        return redirect()->to('/nurse/settings')->with('success', 'Settings saved successfully.');
     }
 }

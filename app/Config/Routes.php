@@ -94,6 +94,16 @@ $routes->post('accounts/createInsuranceClaim', 'Accounts::createInsuranceClaim')
 $routes->post('accounts/updateInsuranceClaim', 'Accounts::updateInsuranceClaim');
 $routes->get('accounts/reports', 'Accounts::reports');
 $routes->get('accounts/financial', 'Accounts::financial');
+$routes->get('accounts/settings', 'Accounts::settings');
+$routes->post('accounts/settings/save', 'Accounts::saveSettings');
+$routes->get('nurse/settings', 'Nurse::settings');
+$routes->post('nurse/settings/save', 'Nurse::saveSettings');
+$routes->get('reception/settings', 'Reception::settings');
+$routes->post('reception/settings/save', 'Reception::saveSettings');
+$routes->get('doctor/settings', 'Doctor::settings');
+$routes->post('doctor/settings/save', 'Doctor::saveSettings');
+$routes->get('lab/settings', 'Lab::settings');
+$routes->post('lab/settings/save', 'Lab::saveSettings');
 
 // IT Routes
 $routes->get('it/system', 'It::system');
@@ -109,6 +119,7 @@ $routes->post('doctor/updateSchedule', 'Doctor::updateSchedule');
 $routes->get('doctor/getAvailableSlots', 'Doctor::getAvailableSlots');
 $routes->get('doctor/appointments', 'Doctor::appointments');
 $routes->get('doctor/consultations', 'Doctor::consultations');
+$routes->get('doctor/inpatients', 'Doctor::inpatients');
 $routes->get('doctor/consultations/view/(:num)', 'Doctor::viewConsultation/$1');
 $routes->get('doctor/patients', 'Doctor::patients');
 $routes->get('doctor/patients/show/(:num)', 'Doctor::getPatientDetails/$1');
@@ -175,9 +186,26 @@ $routes->post('admin/users/create', 'Admin\\Users::create');
 $routes->post('admin/users/update', 'Admin\\Users::update');
 $routes->post('admin/users/delete', 'Admin\\Users::delete');
 
+// Admin Settings
+$routes->get('admin/settings', 'Admin\\Settings::index');
+$routes->post('admin/settings/save', 'Admin\\Settings::save');
+$routes->get('accounts/settings', 'Accounts::settings');
+$routes->post('accounts/settings/save', 'Accounts::saveSettings');
+$routes->get('nurse/settings', 'Nurse::settings');
+$routes->post('nurse/settings/save', 'Nurse::saveSettings');
+$routes->get('reception/settings', 'Reception::settings');
+$routes->post('reception/settings/save', 'Reception::saveSettings');
+$routes->get('doctor/settings', 'Doctor::settings');
+$routes->post('doctor/settings/save', 'Doctor::saveSettings');
+$routes->get('lab/settings', 'Lab::settings');
+$routes->post('lab/settings/save', 'Lab::saveSettings');
+$routes->get('pharmacy/settings', 'Pharmacy::settings');
+$routes->post('pharmacy/settings/save', 'Pharmacy::saveSettings');
+
 // Reception Appointment Routes
 $routes->post('reception/createAppointment', 'Reception::createAppointment');
 $routes->post('reception/checkInPatient', 'Reception::checkInPatient');
 $routes->get('reception/getDoctorSchedule/(:num)', 'Reception::getDoctorSchedule/$1');
 $routes->get('reception/getDoctorUnavailableDates/(:num)', 'Reception::getDoctorUnavailableDates/$1');
 $routes->get('reception/rooms', 'Reception::getRoomsByType');
+$routes->get('reception/doctors', 'Reception::getDoctors');

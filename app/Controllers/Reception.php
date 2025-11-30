@@ -8,6 +8,8 @@ use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\ResponseInterface;
 use App\Models\PatientModel;
 use App\Models\ReceptionistModel;
+use App\Models\SettingModel;
+use App\Models\AppointmentModel;
 use Config\Services;
 use DateTime;
 
@@ -41,7 +43,7 @@ class Reception extends Controller
             $uniqueEmailRule   = 'permit_empty|valid_email|max_length[150]|is_unique[patients.email,id,' . $id . ']';
         }
 
-        return [
+        $rules = [
             'full_name'         => 'required|min_length[2]|max_length[200]',
             'gender'            => 'required|in_list[Male,Female,Other]',
             'date_of_birth'     => 'required',
@@ -52,6 +54,16 @@ class Reception extends Controller
             'patient_type'      => 'required|in_list[outpatient,inpatient]',
             'concern'           => 'required|max_length[500]',
         ];
+
+        // Emergency contact fields are REQUIRED for inpatients
+        $patientType = $this->request->getPost('patient_type');
+        if (strtolower($patientType) === 'inpatient') {
+            $rules['ec_name'] = 'required|min_length[2]|max_length[100]';
+            $rules['ec_contact'] = 'required|regex_match[/^09[0-9]{9}$/]';
+            $rules['ec_relationship'] = 'required|min_length[2]|max_length[50]';
+        }
+
+        return $rules;
     }
 
     private function sanitizePostData(): array
@@ -74,6 +86,16 @@ class Reception extends Controller
         $data['blood_type']        = (string) ($data['blood_type'] ?? '');
         $data['patient_type']      = (string) ($data['patient_type'] ?? '');
         $data['concern']           = trim((string) ($data['concern'] ?? ''));
+        
+        // Map emergency contact fields from form (ec_name, ec_contact, ec_relationship) to database fields
+        $data['emergency_name']    = trim((string) ($data['ec_name'] ?? $data['emergency_name'] ?? ''));
+        $data['emergency_contact'] = preg_replace('/\D/', '', (string) ($data['ec_contact'] ?? $data['emergency_contact'] ?? ''));
+        $data['relationship']      = trim((string) ($data['ec_relationship'] ?? $data['relationship'] ?? ''));
+        
+        // Insurance fields
+        $data['insurance_provider']     = trim((string) ($data['insurance_provider'] ?? ''));
+        $data['insurance_policy_number'] = trim((string) ($data['insurance_policy_number'] ?? ''));
+        $data['insurance_member_id']    = trim((string) ($data['insurance_member_id'] ?? ''));
 
         $status         = strtolower((string) ($data['status'] ?? 'active'));
         $data['status'] = in_array($status, ['active', 'inactive'], true) ? $status : 'active';
@@ -139,17 +161,47 @@ class Reception extends Controller
             'patient_type'      => $data['patient_type'],
             'concern'           => $data['concern'],
             'status'            => $data['status'],
+            'emergency_name'    => !empty($data['emergency_name']) ? $data['emergency_name'] : null,
+            'emergency_contact' => !empty($data['emergency_contact']) ? $data['emergency_contact'] : null,
+            'relationship'      => !empty($data['relationship']) ? $data['relationship'] : null,
         ];
     }
 
     private function generatePatientId(): string
     {
-        $today = date('Y-m-d');
-        $model = new PatientModel();
-
-        $count = $model->where('DATE(created_at)', $today)->countAllResults();
-
-        return sprintf('PT-%s-%03d', date('Ymd'), $count + 1);
+        $db = \Config\Database::connect();
+        $today = date('Ymd');
+        $baseId = 'PT-' . $today . '-';
+        
+        // Use a loop to ensure uniqueness with retry mechanism
+        $maxRetries = 10;
+        $attempt = 0;
+        
+        while ($attempt < $maxRetries) {
+            // Get count of patients created today
+            $count = (int) $db->table('patients')
+                ->where('DATE(created_at)', date('Y-m-d'))
+                ->countAllResults();
+            
+            // Generate patient ID
+            $patientId = $baseId . str_pad((string)($count + 1), 3, '0', STR_PAD_LEFT);
+            
+            // Check if this ID already exists
+            $exists = $db->table('patients')
+                ->where('patient_id', $patientId)
+                ->countAllResults() > 0;
+            
+            if (!$exists) {
+                return $patientId;
+            }
+            
+            // If exists, increment and try again
+            $attempt++;
+            usleep(100000); // Wait 0.1 seconds before retry
+        }
+        
+        // If all retries failed, use timestamp-based ID as fallback
+        return $baseId . date('His') . '-' . str_pad((string)rand(0, 99), 2, '0', STR_PAD_LEFT);
     }
 
     public function dashboard()
@@ -165,15 +217,106 @@ class Reception extends Controller
             $receptionistProfile = $receptionistModel->where('user_id', $userId)->first();
         }
 
+        $patientModel = new PatientModel();
+        $appointmentModel = new AppointmentModel();
+        $today = date('Y-m-d');
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
+
+        $newPatientsToday = (int) ($patientModel->builder()
+            ->selectCount('id', 'total')
+            ->where('DATE(created_at)', $today)
+            ->get()->getRow('total') ?? 0);
+
+        $newPatientsYesterday = (int) ($patientModel->builder()
+            ->selectCount('id', 'total')
+            ->where('DATE(created_at)', $yesterday)
+            ->get()->getRow('total') ?? 0);
+
+        $appointmentsToday = (int) ($appointmentModel->builder()
+            ->selectCount('id', 'total')
+            ->where('DATE(appointment_date)', $today)
+            ->get()->getRow('total') ?? 0);
+
+        $walkInsToday = (int) ($appointmentModel->builder()
+            ->selectCount('id', 'total')
+            ->where('DATE(appointment_date)', $today)
+            ->where('appointment_type', 'walk-in')
+            ->get()->getRow('total') ?? 0);
+
+        $dischargedToday = (int) ($patientModel->builder()
+            ->selectCount('id', 'total')
+            ->where('status', 'discharged')
+            ->where('DATE(updated_at)', $today)
+            ->get()->getRow('total') ?? 0);
+
+        $appointmentsByStatus = [];
+        $statusRows = $appointmentModel->builder()
+            ->select('status, COUNT(*) as total')
+            ->where('DATE(appointment_date)', $today)
+            ->groupBy('status')
+            ->get()->getResultArray();
+        foreach ($statusRows as $row) {
+            $statusKey = strtolower($row['status'] ?? 'pending');
+            $appointmentsByStatus[$statusKey] = (int) ($row['total'] ?? 0);
+        }
+
+        $upcomingAppointments = $appointmentModel->builder()
+            ->select('appointments.*, patients.full_name as patient_name, users.name as doctor_name')
+            ->join('patients', 'patients.id = appointments.patient_id', 'left')
+            ->join('users', 'users.id = appointments.doctor_id', 'left')
+            ->where('appointments.status !=', 'cancelled')
+            ->where('appointments.appointment_date >=', $today)
+            ->orderBy('appointments.appointment_date', 'ASC')
+            ->orderBy('appointments.appointment_time', 'ASC')
+            ->limit(5)
+            ->get()->getResultArray();
+
+        $pendingConfirmations = $appointmentsByStatus['pending'] ?? 0;
+
+        $tasks = [
+            [
+                'title' => 'Patient Registration',
+                'description' => $newPatientsToday > 0 ? $newPatientsToday . ' new walk-ins waiting' : 'No new walk-ins',
+                'status' => $newPatientsToday > 0 ? 'pending' : 'clear',
+                'link' => base_url('reception/patients'),
+            ],
+            [
+                'title' => 'Appointment Confirmations',
+                'description' => $pendingConfirmations > 0 ? $pendingConfirmations . ' appointments need confirmation' : 'All appointments confirmed',
+                'status' => $pendingConfirmations > 0 ? 'urgent' : 'clear',
+                'link' => base_url('reception/appointments'),
+            ],
+        ];
+
+        $quickActions = [
+            ['label' => 'Register Patient', 'url' => base_url('reception/patients')],
+            ['label' => 'Book Appointment', 'url' => base_url('reception/appointments')],
+            ['label' => 'Patient Check-in', 'url' => base_url('reception/checkin')],
+            ['label' => 'Process Billing', 'url' => base_url('reception/billing')],
+        ];
+
+        $metrics = [
+            'newPatientsToday'  => $newPatientsToday,
+            'newPatientsChange' => $newPatientsToday - $newPatientsYesterday,
+            'appointmentsToday' => $appointmentsToday,
+            'walkInsToday'      => $walkInsToday,
+            'dischargedToday'   => $dischargedToday,
+        ];
+
         $data = [
             'title'                => 'Reception Dashboard - HMS',
             'user_role'            => 'receptionist',
             'user_name'            => session()->get('name'),
             'user_email'           => session()->get('email'),
             'receptionistProfile'  => $receptionistProfile,
+            'metrics'              => $metrics,
+            'tasks'                => $tasks,
+            'quickActions'         => $quickActions,
+            'appointmentsByStatus' => $appointmentsByStatus,
+            'upcomingAppointments' => $upcomingAppointments,
         ];
 
-        return view('auth/dashboard', $data);
+        return view('reception/dashboard', $data);
     }
 
     public function patients(): ResponseInterface|RedirectResponse
@@ -231,8 +374,8 @@ class Reception extends Controller
 		$todaysAppointments   = $appointmentModel->getAppointmentsByDate(date('Y-m-d'));
 		$upcomingAppointments = $appointmentModel->getUpcomingAppointments(50);
 		
-		// Get ALL patients (both outpatient and inpatient)
-		$patients = $patientModel->orderBy('id', 'DESC')->findAll();
+		// Get only OUTPATIENTS for appointment booking (inpatients have their own appointment system)
+		$patients = $patientModel->where('patient_type', 'outpatient')->orderBy('id', 'DESC')->findAll();
 		
 		$doctors = $userModel->getDoctors();
 		
@@ -298,6 +441,263 @@ class Reception extends Controller
                         'message' => 'Validation failed: ' . implode(', ', $errors)
                     ]);
             }
+
+            // If created successfully, process additional data
+            $newPatientId = (int) $model->getInsertID();
+            $rawPost = $this->request->getPost();
+            $db = \Config\Database::connect();
+            $isInpatient = strtolower($payload['patient_type'] ?? '') === 'inpatient';
+            
+            // Create insurance record if insurance_provider is provided and not "none" (for both inpatients and outpatients)
+            $insuranceProvider = trim((string)($rawPost['insurance_provider'] ?? ''));
+            if ($newPatientId > 0 && !empty($insuranceProvider) && strtolower($insuranceProvider) !== 'none' && $db->tableExists('insurance_claims')) {
+                try {
+                    // Use direct database insert to bypass model validation (bill_id is required in model but not during registration)
+                    $insuranceModel = new \App\Models\InsuranceModel();
+                    
+                    // Generate a basic claim number for reference
+                    $claimNumber = $insuranceModel->generateClaimNumber();
+                    
+                    // Format insurance provider name
+                    $providerName = ucfirst(str_replace('_', ' ', $insuranceProvider));
+                    
+                    // Auto-generate Policy Number if not provided
+                    $policyNumber = trim((string)($rawPost['insurance_policy_number'] ?? ''));
+                    if (empty($policyNumber)) {
+                        $year = date('Y');
+                        $month = date('m');
+                        $providerCode = strtoupper(substr($providerName, 0, 3));
+                        $randomNum = str_pad((string)rand(0, 9999), 4, '0', STR_PAD_LEFT);
+                        $policyNumber = $providerCode . '-' . $year . $month . '-' . $randomNum;
+                    }
+                    
+                    // Auto-generate Member ID if not provided
+                    $memberId = trim((string)($rawPost['insurance_member_id'] ?? ''));
+                    if (empty($memberId)) {
+                        $providerCode = strtoupper(substr($providerName, 0, 2));
+                        $randomNum = str_pad((string)rand(0, 999999), 6, '0', STR_PAD_LEFT);
+                        $memberId = $providerCode . $randomNum;
+                    }
+                    
+                    // Create a basic insurance record (without bill_id since no bill yet)
+                    // This will be updated later when bills are created
+                    $insuranceData = [
+                        'claim_number' => $claimNumber,
+                        'bill_id' => 0, // Use 0 instead of null to satisfy validation, will be updated when bill is created
+                        'patient_id' => $newPatientId,
+                        'insurance_provider' => $providerName,
+                        'policy_number' => $policyNumber,
+                        'member_id' => $memberId,
+                        'claim_amount' => 0, // Will be updated when bill is created
+                        'approved_amount' => 0,
+                        'deductible' => 0,
+                        'co_payment' => 0,
+                        'status' => 'pending', // Pending until bill is created
+                        'submitted_date' => null,
+                        'notes' => 'Insurance information recorded during patient registration',
+                        'created_by' => (int) (session()->get('user_id') ?? 0),
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ];
+                    
+                    // Insert directly using database builder to bypass model validation
+                    $db->table('insurance_claims')->insert($insuranceData);
+                } catch (\Throwable $ie) {
+                    log_message('error', 'Failed creating insurance record for patient '.$newPatientId.': '.$ie->getMessage());
+                }
+            }
+            
+            // If inpatient, seed initial vitals so nurses can see it immediately
+            if ($newPatientId > 0 && $isInpatient) {
+
+                // Ensure treatment_updates table exists (minimal schema)
+                if (!$db->tableExists('treatment_updates')) {
+                    $db->query("CREATE TABLE IF NOT EXISTS treatment_updates (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        patient_id INT NOT NULL,
+                        time DATETIME NULL,
+                        blood_pressure VARCHAR(50) NULL,
+                        heart_rate VARCHAR(50) NULL,
+                        temperature VARCHAR(50) NULL,
+                        oxygen_saturation VARCHAR(50) NULL,
+                        nurse_name VARCHAR(150) NULL,
+                        notes TEXT NULL,
+                        created_at DATETIME NULL,
+                        updated_at DATETIME NULL
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+                }
+
+                // Map inpatient modal fields
+                $admitDt = trim((string)($rawPost['admission_datetime'] ?? ''));
+                $timeVal = null;
+                if ($admitDt !== '') {
+                    // admission_datetime is in 'Y-m-dTH:i' from datetime-local
+                    $timeVal = str_replace('T', ' ', $admitDt) . ':00';
+                }
+
+                $insertData = [
+                    'patient_id'        => $newPatientId,
+                    'time'              => $timeVal ?: date('Y-m-d H:i:s'),
+                    'blood_pressure'    => trim((string)($rawPost['vs_bp'] ?? '')) ?: null,
+                    'heart_rate'        => trim((string)($rawPost['vs_hr'] ?? '')) ?: null,
+                    'temperature'       => trim((string)($rawPost['vs_temperature'] ?? '')) ?: null,
+                    'oxygen_saturation' => trim((string)($rawPost['vs_o2'] ?? '')) ?: null,
+                    'nurse_name'        => 'System (Reception)',
+                    'created_at'        => date('Y-m-d H:i:s'),
+                    'updated_at'        => date('Y-m-d H:i:s'),
+                ];
+
+                try {
+                    $db->table('treatment_updates')->insert($insertData);
+                } catch (\Throwable $te) {
+                    log_message('error', 'Failed to seed initial vitals for patient '.$newPatientId.': '.$te->getMessage());
+                }
+
+                // Get room_number from room_id and update patient record
+                $roomNumber = null;
+                $admissionDate = null;
+                
+                $roomId = (int) ($rawPost['room_id'] ?? 0);
+                if ($roomId > 0 && $db->tableExists('rooms')) {
+                    try {
+                        $roomBuilder = $db->table('rooms');
+                        $roomBuilder->where('id', $roomId);
+                        $roomResult = $roomBuilder->get()->getRowArray();
+                        if ($roomResult && !empty($roomResult['room_number'])) {
+                            $roomNumber = $roomResult['room_number'];
+                        }
+                    } catch (\Throwable $re) {
+                        log_message('error', 'Failed to get room number for patient '.$newPatientId.': '.$re->getMessage());
+                    }
+                }
+                
+                // Extract admission date from admission_datetime
+                if (!empty($admitDt)) {
+                    $parts = explode('T', $admitDt);
+                    $admissionDate = $parts[0] ?? null;
+                } else {
+                    // If no admission_datetime provided, use current date
+                    $admissionDate = date('Y-m-d');
+                }
+                
+                // Update patient record with room_number and admission_date
+                if ($roomNumber || $admissionDate) {
+                    try {
+                        $updateData = [];
+                        if ($roomNumber) {
+                            $updateData['room_number'] = $roomNumber;
+                        }
+                        if ($admissionDate) {
+                            $updateData['admission_date'] = $admissionDate;
+                        }
+                        if (!empty($updateData)) {
+                            $db->table('patients')->where('id', $newPatientId)->update($updateData);
+                        }
+                    } catch (\Throwable $ue) {
+                        log_message('error', 'Failed to update patient room/admission date for patient '.$newPatientId.': '.$ue->getMessage());
+                    }
+                }
+
+                // Create an appointment/admission record so nurse view shows assigned doctor
+                try {
+                    if ($db->tableExists('appointments')) {
+                        $doctorId = (int) ($rawPost['attending_doctor_id'] ?? 0);
+                        $apptDate = $admissionDate ?: date('Y-m-d');
+                        $apptTime = null;
+                        if (!empty($admitDt)) {
+                            $parts = explode('T', $admitDt);
+                            $apptTime = isset($parts[1]) ? substr($parts[1], 0, 5) : null;
+                        }
+                        if (!$apptTime) {
+                            $apptTime = date('H:i');
+                        }
+                        $appointmentPayload = [
+                            'patient_id'        => $newPatientId,
+                            'doctor_id'         => $doctorId ?: null,
+                            'appointment_date'  => $apptDate,
+                            'appointment_time'  => $apptTime,
+                            // Use valid enum value for status (appointments table)
+                            'status'            => 'confirmed',
+                            // Map admission type if provided (fallback to 'emergency' else default handled by DB)
+                            'appointment_type'  => !empty($rawPost['admission_type']) ? strtolower($rawPost['admission_type']) : 'emergency',
+                            'room_id'           => $roomId ?: null,
+                            'created_by'        => (int) (session()->get('user_id') ?? 0),
+                            'created_at'        => date('Y-m-d H:i:s'),
+                            'updated_at'        => date('Y-m-d H:i:s'),
+                        ];
+                        $db->table('appointments')->insert($appointmentPayload);
+                    }
+                } catch (\Throwable $ae) {
+                    log_message('error', 'Failed creating admission appointment for patient '.$newPatientId.': '.$ae->getMessage());
+                }
+            }
+            
+            // Create insurance record if insurance_provider is provided and not "none" (for both inpatients and outpatients)
+            $rawPost = $this->request->getPost();
+            $insuranceProvider = trim((string)($rawPost['insurance_provider'] ?? ''));
+            if (!empty($insuranceProvider) && strtolower($insuranceProvider) !== 'none' && $db->tableExists('insurance_claims')) {
+                    try {
+                        // Use direct database insert to bypass model validation (bill_id is required in model but not during registration)
+                        $insuranceModel = new \App\Models\InsuranceModel();
+                        
+                        // Generate a basic claim number for reference
+                        $claimNumber = $insuranceModel->generateClaimNumber();
+                        
+                        // Format insurance provider name
+                        $providerName = ucfirst(str_replace('_', ' ', $insuranceProvider));
+                        
+                        // Auto-generate Policy Number if not provided
+                        $policyNumber = trim((string)($rawPost['insurance_policy_number'] ?? ''));
+                        if (empty($policyNumber)) {
+                            $year = date('Y');
+                            $month = date('m');
+                            $providerCode = strtoupper(substr($providerName, 0, 3));
+                            $randomNum = str_pad((string)rand(0, 9999), 4, '0', STR_PAD_LEFT);
+                            $policyNumber = $providerCode . '-' . $year . $month . '-' . $randomNum;
+                        }
+                        
+                        // Auto-generate Member ID if not provided
+                        $memberId = trim((string)($rawPost['insurance_member_id'] ?? ''));
+                        if (empty($memberId)) {
+                            $providerCode = strtoupper(substr($providerName, 0, 2));
+                            $randomNum = str_pad((string)rand(0, 999999), 6, '0', STR_PAD_LEFT);
+                            $memberId = $providerCode . $randomNum;
+                        }
+                        
+                        // Create a basic insurance record (without bill_id since no bill yet)
+                        // This will be updated later when bills are created
+                        $insuranceData = [
+                            'claim_number' => $claimNumber,
+                            'bill_id' => 0, // Use 0 instead of null to satisfy validation, will be updated when bill is created
+                            'patient_id' => $newPatientId,
+                            'insurance_provider' => $providerName,
+                            'policy_number' => $policyNumber,
+                            'member_id' => $memberId,
+                            'claim_amount' => 0, // Will be updated when bill is created
+                            'approved_amount' => 0,
+                            'deductible' => 0,
+                            'co_payment' => 0,
+                            'status' => 'pending', // Pending until bill is created
+                            'submitted_date' => null,
+                            'notes' => 'Insurance information recorded during patient registration',
+                            'created_by' => (int) (session()->get('user_id') ?? 0),
+                            'created_at' => date('Y-m-d H:i:s'),
+                            'updated_at' => date('Y-m-d H:i:s'),
+                        ];
+                        
+                        // Insert directly using database builder to bypass model validation
+                        $db->table('insurance_claims')->insert($insuranceData);
+                    } catch (\Throwable $ie) {
+                        log_message('error', 'Failed creating insurance record for patient '.$newPatientId.': '.$ie->getMessage());
+                    }
+                }
+            
+            // Return success response
+            return $this->response->setJSON([
+                'status'  => 'success',
+                'message' => 'Patient registered successfully',
+                'patient_id' => $newPatientId,
+            ]);
         } catch (DatabaseException $ex) {
             log_message('error', 'Database exception: ' . $ex->getMessage());
             return $this->response->setStatusCode(ResponseInterface::HTTP_BAD_REQUEST)
@@ -918,6 +1318,26 @@ class Reception extends Controller
 		]);
 	}
 
+	public function getDoctors()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'receptionist') {
+			return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
+		}
+
+		$userModel = new \App\Models\UserModel();
+		$doctors = $userModel->getDoctors();
+
+		return $this->response->setJSON([
+			'status'  => 'success',
+			'doctors' => array_map(static function ($d) {
+				return [
+					'id'   => $d['id'] ?? null,
+					'name' => $d['name'] ?? ($d['email'] ?? 'Doctor')
+				];
+			}, $doctors ?? [])
+		]);
+	}
+
 	public function reports(): ResponseInterface|RedirectResponse
 	{
 		if (!$this->isReceptionist()) {
@@ -992,11 +1412,58 @@ class Reception extends Controller
 			log_message('error', 'Error fetching reception reports: ' . $e->getMessage());
 		}
 
-		$html = view('reception/reports', $data);
-		return $this->response->setBody($html);
-	}
+        $html = view('reception/reports', $data);
+        return $this->response->setBody($html);
+    }
+
+    public function settings()
+    {
+        if (!$this->isReceptionist()) {
+            return redirect()->to('/login');
+        }
+
+        $model = new SettingModel();
+        $defaults = [
+            'reception_queue_alert'        => '20',
+            'reception_auto_assign_room'   => '1',
+            'reception_default_room'       => 'OPD-1',
+            'reception_notification_email' => session()->get('email') ?? 'reception@hospital.local',
+            'reception_checkin_message'    => "Welcome to MediCare Hospital!\nPlease prepare your ID and appointment slip.",
+        ];
+        $settings = array_merge($defaults, $model->getAllAsMap());
+
+        $data = [
+            'title'     => 'Reception Settings - HMS',
+            'user_role' => 'receptionist',
+            'user_name' => session()->get('name'),
+            'pageTitle' => 'Settings',
+            'settings'  => $settings,
+        ];
+
+        return view('reception/settings', $data);
+    }
+
+    public function saveSettings()
+    {
+        if (!$this->isReceptionist()) {
+            return redirect()->to('/login');
+        }
+
+        $model = new SettingModel();
+        $post = $this->request->getPost();
+        $keys = [
+            'reception_queue_alert',
+            'reception_auto_assign_room',
+            'reception_default_room',
+            'reception_notification_email',
+            'reception_checkin_message',
+        ];
+
+        foreach ($keys as $key) {
+            $model->setValue($key, (string)($post[$key] ?? ''), 'reception');
+        }
+
+        return redirect()->to('/reception/settings')->with('success', 'Settings saved successfully.');
+    }
 }
-
-
-
 

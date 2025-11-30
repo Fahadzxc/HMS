@@ -1,3 +1,14 @@
+<?php
+$metrics = $metrics ?? ['assignedPatients' => 0, 'pendingMedications' => 0, 'vitalChecksDue' => 0, 'dischargesToday' => 0];
+$todayTasks = $todayTasks ?? [];
+$patientsUnderCare = $patientsUnderCare ?? [];
+$recentActivities = $recentActivities ?? [];
+?>
+
+<?= $this->extend('template') ?>
+
+<?= $this->section('content') ?>
+
 <section class="panel">
     <header class="panel-header">
         <h2>Nurse Dashboard</h2>
@@ -8,28 +19,30 @@
             <div class="kpi-card">
                 <div class="kpi-content">
                     <div class="kpi-label">Assigned Patients</div>
-                    <div class="kpi-value">0</div>
-                    <div class="kpi-change kpi-positive">&nbsp;</div>
+                    <div class="kpi-value"><?= number_format($metrics['assignedPatients'] ?? 0) ?></div>
+                    <div class="kpi-change">&nbsp;</div>
                 </div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-content">
                     <div class="kpi-label">Pending Medications</div>
-                    <div class="kpi-value">0</div>
-                    <div class="kpi-change kpi-positive">&nbsp;</div>
+                    <div class="kpi-value"><?= number_format($metrics['pendingMedications'] ?? 0) ?></div>
+                    <div class="kpi-change <?= ($metrics['pendingMedications'] ?? 0) > 0 ? 'kpi-warning' : '' ?>">
+                        <?= ($metrics['pendingMedications'] ?? 0) > 0 ? 'Needs action' : '&nbsp;' ?>
+                    </div>
                 </div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-content">
                     <div class="kpi-label">Vital Checks Due</div>
-                    <div class="kpi-value">0</div>
+                    <div class="kpi-value"><?= number_format($metrics['vitalChecksDue'] ?? 0) ?></div>
                     <div class="kpi-change kpi-positive">&nbsp;</div>
                 </div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-content">
                     <div class="kpi-label">Discharges Today</div>
-                    <div class="kpi-value">0</div>
+                    <div class="kpi-value"><?= number_format($metrics['dischargesToday'] ?? 0) ?></div>
                     <div class="kpi-change kpi-positive">&nbsp;</div>
                 </div>
             </div>
@@ -41,12 +54,35 @@
     <section class="panel">
         <header class="panel-header">
             <h2>Today's Tasks</h2>
-            <p>Your assigned tasks for today</p>
+            <p>Med administrations and follow-ups</p>
         </header>
         <div class="stack">
-            <div class="card">
-                <p>No tasks assigned yet. Check back later or contact your supervisor.</p>
-            </div>
+            <?php if (!empty($todayTasks)): ?>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Status</th>
+                                <th>Requested</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($todayTasks as $task): ?>
+                                <tr>
+                                    <td><?= esc($task['patient_name'] ?? 'N/A') ?></td>
+                                    <td><span class="badge <?= ($task['status'] ?? '') === 'pending' ? 'badge-warning' : 'badge-info' ?>"><?= strtoupper($task['status'] ?? 'pending') ?></span></td>
+                                    <td><?= !empty($task['created_at']) ? date('M d, g:i A', strtotime($task['created_at'])) : '—' ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <div class="card">
+                    <p>No tasks assigned yet. Check back later or contact your supervisor.</p>
+                </div>
+            <?php endif; ?>
         </div>
     </section>
 
@@ -81,23 +117,61 @@
         <p>Patients currently assigned to you</p>
     </header>
     <div class="stack">
-        <div class="card">
-            <p>No patients assigned yet. Patients will appear here once assigned by the doctor or administrator.</p>
-        </div>
+        <?php if (!empty($patientsUnderCare)): ?>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Vitals</th>
+                            <th>Notes</th>
+                            <th>Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($patientsUnderCare as $patient): ?>
+                            <tr>
+                                <td>
+                                    <strong><?= esc($patient['patient_name'] ?? 'Patient #' . ($patient['patient_id'] ?? '')) ?></strong>
+                                    <div class="text-muted"><?= esc($patient['patient_code'] ?? '') ?></div>
+                                </td>
+                                <td>
+                                    <div>BP: <?= esc($patient['blood_pressure'] ?? '—') ?></div>
+                                    <div>HR: <?= esc($patient['heart_rate'] ?? '—') ?> bpm</div>
+                                    <div>Temp: <?= esc($patient['temperature'] ?? '—') ?>°C</div>
+                                </td>
+                                <td><?= esc($patient['notes'] ?? '—') ?></td>
+                                <td><?= !empty($patient['created_at']) ? date('M d, g:i A', strtotime($patient['created_at'])) : '—' ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php else: ?>
+            <div class="card">
+                <p>No patients assigned yet. Patients will appear here once assigned by the doctor or administrator.</p>
+            </div>
+        <?php endif; ?>
     </div>
 </section>
 
+<?php if (!empty($recentActivities)): ?>
 <section class="panel panel-spaced">
     <header class="panel-header">
-        <h2>My Schedule</h2>
-        <p>Your current work schedule</p>
+        <h2>Recent Activity</h2>
+        <p>Latest updates recorded on your shift</p>
     </header>
     <div class="stack">
-        <div class="card">
-            <p>No schedule assigned yet. Contact your supervisor to set up your work schedule.</p>
-        </div>
+        <?php foreach ($recentActivities as $activity): ?>
+            <div class="card">
+                <strong>Patient #<?= esc($activity['patient_id'] ?? '—') ?></strong>
+                <p><?= esc($activity['notes'] ?? 'No notes provided.') ?></p>
+                <small class="text-muted"><?= !empty($activity['created_at']) ? date('M d, g:i A', strtotime($activity['created_at'])) : '—' ?></small>
+            </div>
+        <?php endforeach; ?>
     </div>
 </section>
+<?php endif; ?>
 
 <!-- Vital Signs Modal -->
 <div id="vitalSignsModal" class="modal" aria-hidden="true" style="display:none;">
@@ -365,3 +439,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<?= $this->endSection() ?>

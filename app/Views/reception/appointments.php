@@ -80,8 +80,22 @@
                                 <td><?= htmlspecialchars($appointment['doctor_name'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($appointment['room_number'] ?? '—') ?></td>
                                 <td>
-                                    <span class="badge badge-<?= $appointment['appointment_type'] === 'emergency' ? 'danger' : 'primary' ?>">
-                                        <?= ucfirst($appointment['appointment_type']) ?>
+                                    <?php
+                                    $type = strtolower($appointment['appointment_type'] ?? 'consultation');
+                                    $typeBadge = 'primary';
+                                    if ($type === 'emergency') {
+                                        $typeBadge = 'danger';
+                                    } elseif (in_array($type, ['lab_test', 'xray'])) {
+                                        $typeBadge = 'info';
+                                    } elseif ($type === 'vaccination') {
+                                        $typeBadge = 'success';
+                                    } elseif ($type === 'routine') {
+                                        $typeBadge = 'secondary';
+                                    }
+                                    $typeDisplay = str_replace('_', ' ', $type);
+                                    ?>
+                                    <span class="badge badge-<?= $typeBadge ?>">
+                                        <?= strtoupper($typeDisplay) ?>
                                     </span>
                                 </td>
                                 <td>
@@ -89,16 +103,18 @@
                                         $appointment['status'] === 'confirmed' ? 'success' : 
                                         ($appointment['status'] === 'scheduled' ? 'warning' : 'secondary') 
                                     ?>">
-                                        <?= ucfirst($appointment['status']) ?>
+                                        <?= strtoupper($appointment['status']) ?>
                                     </span>
                                 </td>
                                 <td>
                                     <?php if ($appointment['status'] === 'scheduled'): ?>
-                                        <button class="btn-sm btn-success" onclick="checkInPatient(<?= $appointment['id'] ?>)">
+                                        <span class="text-muted" style="cursor: pointer; text-decoration: underline;" onclick="checkInPatient(<?= $appointment['id'] ?>)">
                                             Check In
-                                        </button>
+                                        </span>
                                     <?php else: ?>
-                                        <span class="text-muted">Checked In</span>
+                                        <span class="text-muted" style="text-decoration: underline;">
+                                            Checked In
+                                        </span>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -152,7 +168,25 @@
                                 <td><?= date('g:i A', strtotime($appointment['appointment_time'])) ?></td>
                                 <td><?= htmlspecialchars($appointment['patient_name'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($appointment['doctor_name'] ?? 'N/A') ?></td>
-                                <td><?= ucfirst($appointment['appointment_type']) ?></td>
+                                <td>
+                                    <?php
+                                    $type = strtolower($appointment['appointment_type'] ?? 'consultation');
+                                    $typeBadge = 'primary';
+                                    if ($type === 'emergency') {
+                                        $typeBadge = 'danger';
+                                    } elseif (in_array($type, ['lab_test', 'xray'])) {
+                                        $typeBadge = 'info';
+                                    } elseif ($type === 'vaccination') {
+                                        $typeBadge = 'success';
+                                    } elseif ($type === 'routine') {
+                                        $typeBadge = 'secondary';
+                                    }
+                                    $typeDisplay = str_replace('_', ' ', $type);
+                                    ?>
+                                    <span class="badge badge-<?= $typeBadge ?>">
+                                        <?= strtoupper($typeDisplay) ?>
+                                    </span>
+                                </td>
                                 <td>
                                     <span class="badge badge-<?= 
                                         $appointment['status'] === 'confirmed' ? 'success' : 
@@ -163,13 +197,13 @@
                                 </td>
                                 <td>
                                     <?php if ($appointment['status'] === 'scheduled' && $appointment['appointment_date'] === date('Y-m-d')): ?>
-                                        <button class="btn-xs btn-success" onclick="checkInPatient(<?= $appointment['id'] ?>)">
+                                        <span class="text-muted" style="cursor: pointer; text-decoration: underline;" onclick="checkInPatient(<?= $appointment['id'] ?>)">
                                             Check In
-                                        </button>
+                                        </span>
                                     <?php else: ?>
-                                        <button class="btn-xs btn-primary" onclick="editAppointment(<?= $appointment['id'] ?>)">
+                                        <span class="text-muted" style="cursor: pointer; text-decoration: underline;" onclick="editAppointment(<?= $appointment['id'] ?>)">
                                             Edit
-                                        </button>
+                                        </span>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -202,15 +236,10 @@
                         <option value="">Choose a patient...</option>
                         <?php if (isset($patients) && is_array($patients)): ?>
                             <?php foreach ($patients as $patient): ?>
-                                <?php 
-                                $patientType = $patient['patient_type'] ?? 'outpatient';
-                                ?>
                                 <option value="<?= $patient['id'] ?>" 
                                         data-name="<?= htmlspecialchars($patient['full_name']) ?>" 
-                                        data-contact="<?= htmlspecialchars($patient['contact']) ?>"
-                                        data-type="<?= htmlspecialchars($patientType) ?>">
-                                    <?= $patient['id'] ?> - <?= htmlspecialchars($patient['full_name']) ?> 
-                                    (<?= ucfirst($patientType) ?>)
+                                        data-contact="<?= htmlspecialchars($patient['contact']) ?>">
+                                    <?= $patient['id'] ?> - <?= htmlspecialchars($patient['full_name']) ?>
                                 </option>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -298,12 +327,12 @@
                     <div class="error" data-error-for="status"></div>
                 </div>
                 <div class="form-field">
-                    <label id="room_label">Select Room</label>
+                    <label>Select Room</label>
                     <select name="room_id" id="room_select">
                         <option value="">Choose a room...</option>
                     </select>
                     <div class="error" data-error-for="room_id"></div>
-                    <small class="form-help" id="room_help">Select a patient first to load available rooms</small>
+                    <small class="form-help">Optional: Select an OPD clinic room for outpatient appointment</small>
                 </div>
                 <div class="form-field form-field--full">
                     <label>Notes</label>
@@ -335,8 +364,6 @@ function closeAddAppointmentModal() {
     form.reset();
     
     // Reset form fields
-    document.getElementById('appointment_type_field').style.display = 'block';
-    document.getElementById('appointment_type_select').setAttribute('required', 'required');
     resetRoomField();
 }
 
@@ -346,49 +373,28 @@ function loadPatientDetails() {
     const selectedOption = select.options[select.selectedIndex];
     
     if (selectedOption.value) {
-        const patientType = selectedOption.getAttribute('data-type') || 'outpatient';
-        
         // Fill patient details
         document.getElementById('patient_name').value = selectedOption.getAttribute('data-name');
         document.getElementById('patient_contact').value = selectedOption.getAttribute('data-contact');
         
-        // Show/hide appointment type based on patient type
-        const appointmentTypeField = document.getElementById('appointment_type_field');
-        const appointmentTypeSelect = document.getElementById('appointment_type_select');
-        
-        if (patientType === 'inpatient') {
-            // Hide appointment type for inpatient
-            appointmentTypeField.style.display = 'none';
-            appointmentTypeSelect.removeAttribute('required');
-            appointmentTypeSelect.value = '';
-        } else {
-            // Show appointment type for outpatient
-            appointmentTypeField.style.display = 'block';
-            appointmentTypeSelect.setAttribute('required', 'required');
-        }
-        
-        // Load rooms based on patient type
-        loadRoomsByPatientType(patientType);
+        // Load OPD rooms for outpatient appointments
+        loadOPDRooms();
     } else {
         document.getElementById('patient_name').value = '';
         document.getElementById('patient_contact').value = '';
-        document.getElementById('appointment_type_field').style.display = 'block';
-        document.getElementById('appointment_type_select').setAttribute('required', 'required');
         resetRoomField();
     }
 }
 
-// Load rooms based on patient type
-function loadRoomsByPatientType(patientType) {
+// Load OPD rooms for outpatient appointments
+function loadOPDRooms() {
     const roomSelect = document.getElementById('room_select');
-    const roomLabel = document.getElementById('room_label');
-    const roomHelp = document.getElementById('room_help');
     
     // Reset room dropdown
     roomSelect.innerHTML = '<option value="">Loading rooms...</option>';
     
-    // Fetch rooms from backend
-    fetch(`<?= base_url('reception/rooms') ?>?type=${patientType}`)
+    // Fetch OPD rooms from backend
+    fetch(`<?= base_url('reception/rooms') ?>?type=outpatient`)
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success' && data.rooms) {
@@ -401,39 +407,21 @@ function loadRoomsByPatientType(patientType) {
                     option.textContent = `${room.room_number} - ${room.specialization} (Floor ${room.floor}, ${available} available)`;
                     roomSelect.appendChild(option);
                 });
-                
-                // Update label and help text based on patient type
-                if (patientType === 'inpatient') {
-                    roomLabel.innerHTML = 'Select Room <span class="req">*</span>';
-                    roomSelect.setAttribute('required', 'required');
-                    roomHelp.textContent = 'Required: Select a hospital room for inpatient admission';
-                } else {
-                    roomLabel.innerHTML = 'Select Room';
-                    roomSelect.removeAttribute('required');
-                    roomHelp.textContent = 'Optional: Select an OPD clinic room for outpatient appointment';
-                }
             } else {
-                roomSelect.innerHTML = '<option value="">No rooms available</option>';
-                roomHelp.textContent = 'No rooms available for this patient type';
+                roomSelect.innerHTML = '<option value="">No OPD rooms available</option>';
             }
         })
         .catch(error => {
             console.error('Error loading rooms:', error);
             roomSelect.innerHTML = '<option value="">Error loading rooms</option>';
-            roomHelp.textContent = 'Error loading rooms. Please try again.';
         });
 }
 
 // Reset room field
 function resetRoomField() {
     const roomSelect = document.getElementById('room_select');
-    const roomLabel = document.getElementById('room_label');
-    const roomHelp = document.getElementById('room_help');
-    
     roomSelect.innerHTML = '<option value="">Choose a room...</option>';
     roomSelect.removeAttribute('required');
-    roomLabel.innerHTML = 'Select Room';
-    roomHelp.textContent = 'Select a patient first to load available rooms';
 }
 
 // Event listeners
@@ -447,10 +435,6 @@ document.getElementById('addAppointmentForm').addEventListener('submit', functio
     e.preventDefault();
     
     // Get form values
-    const patientSelect = document.getElementById('patient_select');
-    const selectedOption = patientSelect.options[patientSelect.selectedIndex];
-    const patientType = selectedOption ? selectedOption.getAttribute('data-type') || 'outpatient' : 'outpatient';
-    
     const patientId = document.querySelector('select[name="patient_id"]').value;
     const doctorId = document.querySelector('select[name="doctor_id"]').value;
     const appointmentDate = document.querySelector('input[name="appointment_date"]').value;
@@ -458,19 +442,9 @@ document.getElementById('addAppointmentForm').addEventListener('submit', functio
     const appointmentType = document.querySelector('select[name="appointment_type"]').value;
     const roomId = document.querySelector('select[name="room_id"]').value;
     
-    // Validate based on patient type
-    if (!patientId || !doctorId || !appointmentDate || !appointmentTime) {
+    // Validate required fields
+    if (!patientId || !doctorId || !appointmentDate || !appointmentTime || !appointmentType) {
         alert('Please fill in all required fields');
-        return false;
-    }
-    
-    if (patientType === 'outpatient' && !appointmentType) {
-        alert('Appointment type is required for outpatient appointments');
-        return false;
-    }
-    
-    if (patientType === 'inpatient' && !roomId) {
-        alert('Room selection is required for inpatient admission');
         return false;
     }
     

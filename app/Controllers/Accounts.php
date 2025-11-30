@@ -11,6 +11,7 @@ use App\Models\PatientModel;
 use App\Models\AppointmentModel;
 use App\Models\PrescriptionModel;
 use App\Models\LabTestRequestModel;
+use App\Models\SettingModel;
 
 class Accounts extends Controller
 {
@@ -1811,6 +1812,65 @@ class Accounts extends Controller
 		];
 
 		return view('auth/dashboard', $data);
+	}
+
+	public function settings()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
+			return redirect()->to('/login');
+		}
+
+		$model = new SettingModel();
+		$defaults = [
+			'accounts_invoice_prefix'     => 'ACC',
+			'accounts_invoice_start'      => '1000',
+			'accounts_tax_rate'           => '12',
+			'accounts_due_days'           => '30',
+			'accounts_payment_terms'      => 'Net 30',
+			'accounts_auto_reminders'     => '1',
+			'accounts_notification_email' => session()->get('email') ?? 'accounts@hospital.local',
+			'accounts_statement_footer'   => 'Thank you for choosing MediCare Hospital.',
+			'accounts_show_currency'      => 'PHP',
+		];
+		$settings = array_merge($defaults, $model->getAllAsMap());
+
+		$data = [
+			'title'     => 'Accountant Settings - HMS',
+			'user_role' => 'accountant',
+			'user_name' => session()->get('name'),
+			'pageTitle' => 'Settings',
+			'settings'  => $settings,
+		];
+
+		return view('accounts/settings', $data);
+	}
+
+	public function saveSettings()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
+			return redirect()->to('/login');
+		}
+
+		$model = new SettingModel();
+		$post  = $this->request->getPost();
+
+		$keys = [
+			'accounts_invoice_prefix',
+			'accounts_invoice_start',
+			'accounts_tax_rate',
+			'accounts_due_days',
+			'accounts_payment_terms',
+			'accounts_auto_reminders',
+			'accounts_notification_email',
+			'accounts_statement_footer',
+			'accounts_show_currency',
+		];
+
+		foreach ($keys as $key) {
+			$model->setValue($key, (string) ($post[$key] ?? ''), 'accounts');
+		}
+
+		return redirect()->to('/accounts/settings')->with('success', 'Account settings saved.');
 	}
 }
 

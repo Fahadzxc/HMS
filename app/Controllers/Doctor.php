@@ -9,6 +9,7 @@ use App\Models\PrescriptionModel;
 use App\Models\MedicationModel;
 use App\Models\LabTestRequestModel;
 use App\Models\LabTestResultModel;
+use App\Models\SettingModel;
 
 class Doctor extends Controller
 {
@@ -325,6 +326,10 @@ class Doctor extends Controller
 		$consultations = [];
 		foreach ($consultationsRaw as $consultation) {
 			$patient = $patientModel->find($consultation['patient_id']);
+			// Skip INPATIENT patients from consultations history
+			if (!empty($patient['patient_type']) && strtolower($patient['patient_type']) === 'inpatient') {
+				continue;
+			}
 			
 			// Get prescription for this consultation
 			// First try by appointment_id, then by patient_id and doctor_id if appointment_id is null
@@ -407,6 +412,37 @@ class Doctor extends Controller
 		];
 
 		return view('doctor/consultations', $data);
+	}
+
+	public function inpatients()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'doctor') {
+			return redirect()->to('/login');
+		}
+
+		$doctorId = session()->get('user_id');
+		$db = \Config\Database::connect();
+
+		// Get active inpatient assignments for this doctor from latest appointments
+		$builder = $db->table('appointments a');
+		$builder->select('a.*, p.full_name as patient_name, p.age, p.gender, r.room_number');
+		$builder->join('patients p', 'p.id = a.patient_id', 'left');
+		$builder->join('rooms r', 'r.id = a.room_id', 'left');
+		$builder->where('a.doctor_id', $doctorId);
+		$builder->where('p.patient_type', 'inpatient');
+		$builder->where('a.status !=', 'cancelled');
+		$builder->orderBy('a.appointment_date', 'DESC');
+		$builder->orderBy('a.appointment_time', 'DESC');
+		$inpatients = $builder->get()->getResultArray();
+
+		$data = [
+			'title' => 'Inpatients - HMS',
+			'user_role' => 'doctor',
+			'user_name' => session()->get('name'),
+			'inpatients' => $inpatients,
+		];
+
+		return view('doctor/inpatients', $data);
 	}
 
 	public function updateSchedule()
@@ -1009,6 +1045,58 @@ class Doctor extends Controller
 
         return view('doctor/reports', $data);
     }
+
+	public function settings()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'doctor') {
+			return redirect()->to('/login');
+		}
+
+		$model = new SettingModel();
+		$defaults = [
+			'doctor_clinic_start'        => '09:00',
+			'doctor_clinic_end'          => '17:00',
+			'doctor_slot_duration'       => '30',
+			'doctor_telemed_enabled'     => '1',
+			'doctor_auto_notify_patient' => '1',
+			'doctor_signature_block'     => "Dr. " . (session()->get('name') ?? 'Doctor') . "\nMediCare Hospital",
+		];
+		$settings = array_merge($defaults, $model->getAllAsMap());
+
+		$data = [
+			'title'     => 'Doctor Settings - HMS',
+			'user_role' => 'doctor',
+			'user_name' => session()->get('name'),
+			'pageTitle' => 'Settings',
+			'settings'  => $settings,
+		];
+
+		return view('doctor/settings', $data);
+	}
+
+	public function saveSettings()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'doctor') {
+			return redirect()->to('/login');
+		}
+
+		$model = new SettingModel();
+		$post = $this->request->getPost();
+		$keys = [
+			'doctor_clinic_start',
+			'doctor_clinic_end',
+			'doctor_slot_duration',
+			'doctor_telemed_enabled',
+			'doctor_auto_notify_patient',
+			'doctor_signature_block',
+		];
+
+		foreach ($keys as $key) {
+			$model->setValue($key, (string)($post[$key] ?? ''), 'doctor');
+		}
+
+		return redirect()->to('/doctor/settings')->with('success', 'Settings saved successfully.');
+	}
 }
 
 

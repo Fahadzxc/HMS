@@ -322,27 +322,21 @@
         <?php if (!empty($activityFeed)): ?>
             <?php foreach ($activityFeed as $activity): ?>
                 <div class="admin-activity-card">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div style="flex: 1;">
-                            <p class="admin-activity-description">
-                                <?= esc($activity['description']) ?>
-                            </p>
-                            <div class="admin-activity-meta">
-                                <span class="admin-module-badge">
-                                    <?= esc($activity['module']) ?>
-                                </span>
-                                <small class="admin-activity-time">
-                                    <?= date('M j, Y g:i A', strtotime($activity['timestamp'])) ?>
-                                </small>
-                            </div>
-                        </div>
+                    <p class="admin-activity-description">
+                        <?= esc($activity['description']) ?>
+                    </p>
+                    <div class="admin-activity-meta">
+                        <span class="admin-module-badge">
+                            <?= esc($activity['module']) ?>
+                        </span>
+                        <small class="admin-activity-time">
+                            <?= date('M j, Y g:i A', strtotime($activity['timestamp'])) ?>
+                        </small>
                     </div>
                 </div>
             <?php endforeach; ?>
         <?php else: ?>
-            <div class="admin-stat-card">
-                <p class="admin-empty-message">No recent activities</p>
-            </div>
+            <div class="admin-empty-message">No recent activities</div>
         <?php endif; ?>
     </div>
 </section>

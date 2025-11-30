@@ -501,7 +501,174 @@ function viewPatient(id) {
                             <p style="color: #1e293b; margin: 0; padding: 0.75rem; background: #f8fafc; border-radius: 6px; white-space: pre-wrap;">${patient.concern || '—'}</p>
                         </div>
                     </div>
+                    
+                    ${patient.patient_type === 'inpatient' ? `
+                    <div style="margin-top: 1.5rem;">
+                        <h4 style="margin: 0 0 1rem 0; color: #1C3F70; border-bottom: 2px solid #1C3F70; padding-bottom: 0.5rem;">Room & Admission Information</h4>
+                        
+                        <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f0f9ff; border-radius: 8px; border-left: 3px solid #3b82f6;">
+                            <h5 style="margin: 0 0 0.75rem 0; color: #1C3F70; font-size: 0.9375rem;">Guardian / Emergency Contact</h5>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Guardian Name</span>
+                                    <strong style="color: #1e293b;">${patient.emergency_name || '—'}</strong>
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Relationship</span>
+                                    <strong style="color: #1e293b;">${patient.relationship || '—'}</strong>
+                                </div>
+                                <div style="grid-column: 1 / -1;">
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Emergency Contact</span>
+                                    <strong style="color: #1e293b;">${patient.emergency_contact || '—'}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${patient.room_number || patient.room_info ? `
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 1rem;">
+                            <div>
+                                <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Room Number</span>
+                                <strong style="color: #1e293b; font-size: 1.125rem;">${patient.room_number || patient.room_info?.room_number || '—'}</strong>
+                                ${patient.room_info ? `
+                                    <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.25rem;">
+                                        ${patient.room_info.room_type ? `Type: ${patient.room_info.room_type.charAt(0).toUpperCase() + patient.room_info.room_type.slice(1)}` : ''}
+                                        ${patient.room_info.floor ? ` • Floor: ${patient.room_info.floor}` : ''}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div>
+                                <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Room Status</span>
+                                ${patient.room_info ? `
+                                    <span class="badge ${patient.room_info.is_available ? 'badge-green' : 'badge-warning'}">
+                                        ${patient.room_info.is_available ? 'Available' : 'Occupied'}
+                                    </span>
+                                    ${patient.room_info.capacity ? `
+                                        <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.25rem;">
+                                            Capacity: ${patient.room_info.current_occupancy || 0}/${patient.room_info.capacity}
+                                        </div>
+                                    ` : ''}
+                                ` : '<span style="color: #6B7280;">No room details</span>'}
+                            </div>
+                        </div>
+                        ` : '<p style="color: #6B7280; font-style: italic; margin-bottom: 1rem;">No room assigned</p>'}
+                        
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 1rem;">
+                            <div>
+                                <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Admission Date</span>
+                                <strong style="color: #1e293b;">${patient.admission_date_formatted || (patient.admission_appointment?.appointment_date ? new Date(patient.admission_appointment.appointment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—')}</strong>
+                                ${patient.admission_appointment?.appointment_time ? `
+                                    <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.25rem;">
+                                        Time: ${patient.admission_appointment.appointment_time}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div>
+                                <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Discharge Date</span>
+                                <strong style="color: ${patient.discharge_date_formatted && patient.discharge_date_formatted !== '—' ? '#1e293b' : '#6B7280'};">${patient.discharge_date_formatted || 'Not discharged'}</strong>
+                            </div>
+                        </div>
+                        ${patient.admission_appointment ? `
+                        <div style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border-left: 3px solid #1C3F70;">
+                            <h5 style="margin: 0 0 0.75rem 0; color: #1C3F70; font-size: 0.9375rem;">Admission Form Details</h5>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Admission Type</span>
+                                    <span class="badge ${patient.admission_appointment.appointment_type === 'emergency' ? 'badge-danger' : 'badge-info'}">
+                                        ${(patient.admission_appointment.appointment_type || 'N/A').charAt(0).toUpperCase() + (patient.admission_appointment.appointment_type || 'N/A').slice(1)}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Attending Doctor</span>
+                                    <strong style="color: #1e293b;">${patient.admission_appointment.doctor_name || '—'}</strong>
+                                </div>
+                            </div>
+                            ${patient.admission_appointment.appointment_notes ? `
+                            <div style="margin-top: 0.75rem;">
+                                <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Admission Notes</span>
+                                <p style="color: #1e293b; margin: 0; padding: 0.5rem; background: white; border-radius: 6px; white-space: pre-wrap; font-size: 0.875rem;">${patient.admission_appointment.appointment_notes}</p>
+                            </div>
+                            ` : ''}
+                        </div>
+                        ` : ''}
+                    </div>
+                    ` : ''}
+                    
                     ${assignedStaffHtml}
+                    
+                    ${patient.insurance_info || patient.insurance_claims?.length > 0 ? `
+                    <div style="margin-top: 1.5rem;">
+                        <h4 style="margin: 0 0 1rem 0; color: #1C3F70; border-bottom: 2px solid #1C3F70; padding-bottom: 0.5rem;">Insurance Information</h4>
+                        ${patient.insurance_info ? `
+                        <div style="margin-bottom: 1rem; padding: 1rem; background: #f0fdf4; border-radius: 8px; border-left: 3px solid #10b981;">
+                            <h5 style="margin: 0 0 0.75rem 0; color: #1C3F70; font-size: 0.9375rem;">Primary Insurance</h5>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Insurance Provider</span>
+                                    <strong style="color: #1e293b;">${patient.insurance_info.insurance_provider || '—'}</strong>
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Policy Number</span>
+                                    <strong style="color: #1e293b;">${patient.insurance_info.policy_number || '—'}</strong>
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Member ID</span>
+                                    <strong style="color: #1e293b;">${patient.insurance_info.member_id || '—'}</strong>
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Status</span>
+                                    <span class="badge ${patient.insurance_info.status === 'approved' ? 'badge-success' : patient.insurance_info.status === 'rejected' ? 'badge-danger' : patient.insurance_info.status === 'paid' ? 'badge-info' : 'badge-warning'}">
+                                        ${(patient.insurance_info.status || 'pending').charAt(0).toUpperCase() + (patient.insurance_info.status || 'pending').slice(1)}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        ` : ''}
+                        ${patient.insurance_claims && patient.insurance_claims.length > 0 ? `
+                        <div style="margin-top: 1rem;">
+                            <h5 style="margin: 0 0 0.75rem 0; color: #1C3F70; font-size: 0.9375rem;">Insurance Claims History</h5>
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                ${patient.insurance_claims.map(claim => `
+                                    <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 0.75rem; border-left: 3px solid #1C3F70;">
+                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                            <div>
+                                                <strong style="color: #1e293b;">${claim.claim_number}</strong>
+                                                <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.25rem;">
+                                                    Provider: ${claim.insurance_provider}
+                                                </div>
+                                            </div>
+                                            <span class="badge ${claim.status === 'approved' ? 'badge-success' : claim.status === 'rejected' ? 'badge-danger' : claim.status === 'paid' ? 'badge-info' : 'badge-warning'}">
+                                                ${(claim.status || 'pending').charAt(0).toUpperCase() + (claim.status || 'pending').slice(1)}
+                                            </span>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; font-size: 0.875rem;">
+                                            <div>
+                                                <span style="color: #6B7280;">Policy:</span>
+                                                <strong style="color: #1e293b; margin-left: 0.5rem;">${claim.policy_number}</strong>
+                                            </div>
+                                            <div>
+                                                <span style="color: #6B7280;">Member ID:</span>
+                                                <strong style="color: #1e293b; margin-left: 0.5rem;">${claim.member_id}</strong>
+                                            </div>
+                                            <div>
+                                                <span style="color: #6B7280;">Claim Amount:</span>
+                                                <strong style="color: #1e293b; margin-left: 0.5rem;">₱${parseFloat(claim.claim_amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>
+                                            </div>
+                                            <div>
+                                                <span style="color: #6B7280;">Approved Amount:</span>
+                                                <strong style="color: #10b981; margin-left: 0.5rem;">₱${parseFloat(claim.approved_amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>
+                                            </div>
+                                        </div>
+                                        <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.5rem;">
+                                            Submitted: ${claim.submitted_date} ${claim.approved_date && claim.approved_date !== '—' ? ` • Approved: ${claim.approved_date}` : ''}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                    ` : ''}
+                    
                     ${prescriptionsHtml}
                     ${labTestsHtml}
                 `;

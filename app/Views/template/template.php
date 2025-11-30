@@ -4161,6 +4161,166 @@
                 align-self: flex-end;
             }
         }
+
+        /* ============================================
+           ENHANCED RECENT ACTIVITY FEED TIMELINE
+           ============================================ */
+
+        /* Activity Feed Container */
+        .stack {
+            position: relative;
+        }
+
+        /* Timeline Card with Vertical Line and Dot */
+        .admin-activity-card {
+            position: relative;
+            padding: 1.5rem 1.75rem 1.5rem 3.5rem;
+            margin-bottom: 1.25rem;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #eef2f7;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        /* Vertical Timeline Line */
+        .admin-activity-card::before {
+            content: '';
+            position: absolute;
+            left: 1.25rem;
+            top: 0;
+            bottom: -1.25rem;
+            width: 2px;
+            background: linear-gradient(180deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+            z-index: 1;
+        }
+
+        /* Last card - no line extension */
+        .admin-activity-card:last-child::before {
+            display: none;
+        }
+
+        /* Timeline Dot */
+        .admin-activity-card::after {
+            content: '';
+            position: absolute;
+            left: 0.875rem;
+            top: 1.75rem;
+            width: 14px;
+            height: 14px;
+            background: #3b82f6;
+            border-radius: 50%;
+            border: 3px solid #ffffff;
+            box-shadow: 0 0 0 3px #3b82f6, 0 2px 8px rgba(59, 130, 246, 0.3);
+            z-index: 2;
+            transition: all 0.3s ease;
+        }
+
+        /* Hover Effect */
+        .admin-activity-card:hover {
+            background: #f8fafc;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            transform: translateX(4px);
+            border-color: #dbeafe;
+        }
+
+        .admin-activity-card:hover::after {
+            background: #2563eb;
+            box-shadow: 0 0 0 3px #2563eb, 0 4px 12px rgba(37, 99, 235, 0.4);
+            transform: scale(1.15);
+        }
+
+        /* Activity Description */
+        .admin-activity-description {
+            margin: 0 0 0.875rem 0;
+            color: #1e293b;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            line-height: 1.6;
+        }
+
+        /* Activity Meta Information */
+        .admin-activity-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* Module Badge */
+        .admin-module-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+            color: #0369a1;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 1px 3px rgba(3, 105, 161, 0.2);
+        }
+
+        /* Timestamp */
+        .admin-activity-time {
+            color: #64748b;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .admin-activity-time::before {
+            content: '🕐';
+            font-size: 0.75rem;
+        }
+
+        /* Empty State */
+        .admin-empty-message {
+            color: #94a3b8;
+            text-align: center;
+            padding: 2.5rem 1rem;
+            font-size: 0.9375rem;
+            font-style: italic;
+        }
+
+        /* Responsive Timeline */
+        @media (max-width: 768px) {
+            .admin-activity-card {
+                padding-left: 3rem;
+            }
+
+            .admin-activity-card::before {
+                left: 1rem;
+            }
+
+            .admin-activity-card::after {
+                left: 0.625rem;
+            }
+
+            .admin-activity-description {
+                font-size: 0.875rem;
+            }
+
+            .admin-activity-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .admin-activity-card {
+                padding: 1.25rem 1.5rem 1.25rem 2.75rem;
+            }
+
+            .admin-activity-card::after {
+                width: 12px;
+                height: 12px;
+                left: 0.5rem;
+            }
+        }
     </style>
     <?php // Sidebar/header/footer are now handled by partials in app/Views/template/*.php ?>
 

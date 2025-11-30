@@ -354,12 +354,142 @@ class Patients extends Controller
             }
         }
 
+        // Get room information if patient has a room
+        $roomInfo = null;
+        $roomNumber = $patient['room_number'] ?? null;
+        
+        // If no room_number in patient record, check appointments table for room_id
+        if (empty($roomNumber) && $db->tableExists('appointments')) {
+            try {
+                $apptRoomBuilder = $db->table('appointments');
+                $apptRoomBuilder->select('room_id');
+                $apptRoomBuilder->where('patient_id', $id);
+                $apptRoomBuilder->where('room_id IS NOT NULL');
+                $apptRoomBuilder->orderBy('created_at', 'DESC');
+                $apptRoomBuilder->limit(1);
+                $apptRoomResult = $apptRoomBuilder->get()->getRowArray();
+                
+                if (!empty($apptRoomResult['room_id']) && $db->tableExists('rooms')) {
+                    $roomFromApptBuilder = $db->table('rooms');
+                    $roomFromApptBuilder->where('id', $apptRoomResult['room_id']);
+                    $roomFromAppt = $roomFromApptBuilder->get()->getRowArray();
+                    if ($roomFromAppt) {
+                        $roomNumber = $roomFromAppt['room_number'];
+                        $roomInfo = $roomFromAppt;
+                    }
+                }
+            } catch (\Exception $e) {
+                log_message('error', 'Error fetching room from appointments: ' . $e->getMessage());
+            }
+        }
+        
+        // If we have room_number but no roomInfo yet, fetch room details
+        if (!empty($roomNumber) && empty($roomInfo) && $db->tableExists('rooms')) {
+            try {
+                $roomBuilder = $db->table('rooms');
+                $roomBuilder->where('room_number', $roomNumber);
+                $roomResult = $roomBuilder->get()->getRowArray();
+                if ($roomResult) {
+                    $roomInfo = $roomResult;
+                }
+            } catch (\Exception $e) {
+                log_message('error', 'Error fetching room info: ' . $e->getMessage());
+            }
+        }
+        
+        // Update patient array with room_number if we found it
+        if (!empty($roomNumber)) {
+            $patient['room_number'] = $roomNumber;
+        }
+
+        // Format admission and discharge dates
+        $admissionDateFormatted = '—';
+        if (!empty($patient['admission_date']) && $patient['admission_date'] !== '0000-00-00') {
+            try {
+                $admissionDate = new \DateTime($patient['admission_date']);
+                $admissionDateFormatted = $admissionDate->format('M j, Y');
+            } catch (\Exception $e) {
+                $admissionDateFormatted = $patient['admission_date'];
+            }
+        }
+
+        $dischargeDateFormatted = '—';
+        if (!empty($patient['discharge_date']) && $patient['discharge_date'] !== '0000-00-00') {
+            try {
+                $dischargeDate = new \DateTime($patient['discharge_date']);
+                $dischargeDateFormatted = $dischargeDate->format('M j, Y');
+            } catch (\Exception $e) {
+                $dischargeDateFormatted = $patient['discharge_date'];
+            }
+        }
+
+        // Get admission appointment details
+        $admissionAppointment = null;
+        if ($assignedDoctor && !empty($assignedDoctor['appointment_type']) && 
+            (strtolower($assignedDoctor['appointment_type']) === 'emergency' || 
+             strtolower($assignedDoctor['appointment_type']) === 'scheduled' ||
+             strtolower($assignedDoctor['appointment_type']) === 'admission')) {
+            $admissionAppointment = $assignedDoctor;
+        }
+
+        // Get insurance information
+        $insuranceInfo = null;
+        $insuranceClaims = [];
+        if ($db->tableExists('insurance_claims')) {
+            try {
+                $insuranceBuilder = $db->table('insurance_claims');
+                $insuranceBuilder->where('patient_id', $id);
+                $insuranceBuilder->orderBy('created_at', 'DESC');
+                $insuranceResults = $insuranceBuilder->get()->getResultArray();
+                
+                if (!empty($insuranceResults)) {
+                    // Get the most recent insurance claim as primary insurance info
+                    $insuranceInfo = $insuranceResults[0];
+                    
+                    // Get all insurance claims for history
+                    foreach ($insuranceResults as $claim) {
+                        $insuranceClaims[] = [
+                            'claim_number' => $claim['claim_number'] ?? 'N/A',
+                            'insurance_provider' => $claim['insurance_provider'] ?? 'N/A',
+                            'policy_number' => $claim['policy_number'] ?? 'N/A',
+                            'member_id' => $claim['member_id'] ?? 'N/A',
+                            'claim_amount' => $claim['claim_amount'] ?? 0,
+                            'approved_amount' => $claim['approved_amount'] ?? 0,
+                            'status' => $claim['status'] ?? 'pending',
+                            'submitted_date' => !empty($claim['submitted_date']) ? date('M j, Y', strtotime($claim['submitted_date'])) : '—',
+                            'approved_date' => !empty($claim['approved_date']) ? date('M j, Y', strtotime($claim['approved_date'])) : '—',
+                            'created_at_formatted' => !empty($claim['created_at']) ? date('M j, Y g:i A', strtotime($claim['created_at'])) : '—'
+                        ];
+                    }
+                }
+            } catch (\Exception $e) {
+                log_message('error', 'Error fetching insurance info: ' . $e->getMessage());
+            }
+        }
+
         $patient['age'] = $age;
         $patient['date_of_birth_formatted'] = $dateOfBirth;
         $patient['assigned_doctor'] = $assignedDoctor;
         $patient['assigned_nurse'] = $assignedNurse;
         $patient['prescriptions'] = $prescriptions;
         $patient['lab_tests'] = $labTests;
+        $patient['room_info'] = $roomInfo;
+        $patient['admission_date_formatted'] = $admissionDateFormatted;
+        $patient['discharge_date_formatted'] = $dischargeDateFormatted;
+        $patient['admission_appointment'] = $admissionAppointment;
+        $patient['insurance_info'] = $insuranceInfo;
+        $patient['insurance_claims'] = $insuranceClaims;
+        
+        // Ensure emergency contact fields are included
+        if (empty($patient['emergency_name'])) {
+            $patient['emergency_name'] = null;
+        }
+        if (empty($patient['emergency_contact'])) {
+            $patient['emergency_contact'] = null;
+        }
+        if (empty($patient['relationship'])) {
+            $patient['relationship'] = null;
+        }
 
         return $this->response->setJSON(['status' => 'success', 'patient' => $patient]);
     }

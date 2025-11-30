@@ -54,3 +54,79 @@ Stack trace:
 #9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
 #10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
 #11 {main}
+CRITICAL - 2025-11-25 08:31:22 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:32:55 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:33:07 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:33:47 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: admin/settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:35:32 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:37:33 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:38:18 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: admin/settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:39:39 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: admin/settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:39:54 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:42:15 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:42:20 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:42:35 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: admin/settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:43:27 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: admin/settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:44:18 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:44:35 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:46:51 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:46:58 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:47:10 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: admin/settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2025-11-25 08:49:10 --> ErrorException: Declaration of App\Models\SettingsModel::set(string $key, $value): bool must be compatible with CodeIgniter\Model::set($key, $value = '', ?bool $escape = null)
+[Method: GET, Route: admin/settings]
+in APPPATH\Models\SettingsModel.php on line 29.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
