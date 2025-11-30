@@ -371,8 +371,64 @@ class Pharmacy extends Controller
 				}
 			}
 			
-			// Find medication by name
+			// Find medication by name (try exact match first, then partial match)
 			$medication = $medicationModel->where('name', $medicineName)->first();
+			
+			// If not found, try partial match
+			if (!$medication) {
+				$medication = $medicationModel->like('name', $medicineName)->first();
+			}
+			
+			// If still not found, try reverse partial match (medicine name contains database name)
+			if (!$medication) {
+				$allMedications = $medicationModel->findAll();
+				$medicineNameLower = strtolower($medicineName);
+				foreach ($allMedications as $med) {
+					$medNameLower = strtolower($med['name'] ?? '');
+					if (strpos($medicineNameLower, $medNameLower) !== false || strpos($medNameLower, $medicineNameLower) !== false) {
+						$medication = $med;
+						break;
+					}
+				}
+			}
+			
+			// Get medication price (from medications table)
+			$medicationPrice = 0;
+			if ($medication && isset($medication['price'])) {
+				$medicationPrice = (float)$medication['price'];
+			}
+			
+			// If no price found in database, use default prices
+			if ($medicationPrice <= 0) {
+				$defaultPrices = [
+					'amoxicillin' => 8.00,
+					'paracetamol' => 25.00,
+					'ibuprofen' => 30.00,
+					'aspirin' => 20.00,
+					'metformin' => 40.00,
+					'losartan' => 45.00,
+					'atorvastatin' => 60.00,
+					'omeprazole' => 35.00,
+					'cefuroxime' => 80.00,
+					'azithromycin' => 75.00,
+				];
+				
+				$medicineNameLower = strtolower($medicineName);
+				// Extract base name (remove units like 500mg)
+				$baseName = preg_replace('/\s*\d+.*?(mg|ml|g|kg|mcg|iu|units?)\s*/i', '', $medicineNameLower);
+				$baseName = trim($baseName);
+				
+				foreach ($defaultPrices as $key => $price) {
+					if (strpos($medicineNameLower, $key) !== false || (!empty($baseName) && strpos($baseName, $key) !== false)) {
+						$medicationPrice = $price;
+						break;
+					}
+				}
+			}
+			
+			// Double the price for patient purchase (if original is 8, becomes 16)
+			$unitPrice = $medicationPrice * 2;
+			$totalPrice = $unitPrice * $quantity;
 			
 			if ($medication && $db->tableExists('pharmacy_inventory')) {
 				// Find or create inventory record
@@ -418,6 +474,8 @@ class Pharmacy extends Controller
 					'patient_id' => $prescription['patient_id'],
 					'medicine_name' => $medicineName,
 					'quantity' => $quantity,
+					'unit_price' => $unitPrice,
+					'total_price' => $totalPrice,
 					'pharmacist_id' => session()->get('user_id'),
 					'dispensed_at' => date('Y-m-d H:i:s'),
 					'created_at' => date('Y-m-d H:i:s'),
@@ -439,6 +497,35 @@ class Pharmacy extends Controller
 
 		// Get all medications
 		$medications = $medicationModel->orderBy('name', 'ASC')->findAll();
+		
+		// Set default prices for medications that don't have prices
+		$defaultPrices = [
+			'amoxicillin' => 8.00,
+			'paracetamol' => 25.00,
+			'ibuprofen' => 30.00,
+			'aspirin' => 20.00,
+			'metformin' => 40.00,
+			'losartan' => 45.00,
+			'atorvastatin' => 60.00,
+			'omeprazole' => 35.00,
+			'cefuroxime' => 80.00,
+			'azithromycin' => 75.00,
+		];
+		
+		foreach ($medications as &$med) {
+			if (empty($med['price']) || (float)$med['price'] <= 0) {
+				$medNameLower = strtolower($med['name'] ?? '');
+				$baseName = preg_replace('/\s*\d+.*?(mg|ml|g|kg|mcg|iu|units?)\s*/i', '', $medNameLower);
+				$baseName = trim($baseName);
+				foreach ($defaultPrices as $key => $price) {
+					if (strpos($medNameLower, $key) !== false || (!empty($baseName) && strpos($baseName, $key) !== false)) {
+						$med['price'] = $price;
+						break;
+					}
+				}
+			}
+		}
+		unset($med);
 
 		// Get inventory data if pharmacy_inventory table exists
 		$inventory = [];
@@ -487,6 +574,59 @@ class Pharmacy extends Controller
 					->limit(500)
 					->get()
 					->getResultArray();
+				
+				// Calculate prices for logs that have 0.00 (old records)
+				$defaultPrices = [
+					'amoxicillin' => 8.00,
+					'paracetamol' => 25.00,
+					'ibuprofen' => 30.00,
+					'aspirin' => 20.00,
+					'metformin' => 40.00,
+					'losartan' => 45.00,
+					'atorvastatin' => 60.00,
+					'omeprazole' => 35.00,
+					'cefuroxime' => 80.00,
+					'azithromycin' => 75.00,
+				];
+				
+				$medicationModel = new MedicationModel();
+				foreach ($dispenseLogsRaw as &$log) {
+					// If unit_price is 0 or null, calculate it
+					if (empty($log['unit_price']) || (float)$log['unit_price'] <= 0) {
+						$medicineName = $log['medicine_name'] ?? '';
+						$quantity = (float)($log['quantity'] ?? 1);
+						
+						// Try to get price from medications table
+						$medication = $medicationModel->where('name', $medicineName)->first();
+						if (!$medication) {
+							$medication = $medicationModel->like('name', $medicineName)->first();
+						}
+						
+						$medicationPrice = 0;
+						if ($medication && isset($medication['price'])) {
+							$medicationPrice = (float)$medication['price'];
+						}
+						
+						// If no price found, use default prices
+						if ($medicationPrice <= 0) {
+							$medicineNameLower = strtolower($medicineName);
+							$baseName = preg_replace('/\s*\d+.*?(mg|ml|g|kg|mcg|iu|units?)\s*/i', '', $medicineNameLower);
+							$baseName = trim($baseName);
+							
+							foreach ($defaultPrices as $key => $price) {
+								if (strpos($medicineNameLower, $key) !== false || (!empty($baseName) && strpos($baseName, $key) !== false)) {
+									$medicationPrice = $price;
+									break;
+								}
+							}
+						}
+						
+						// Double the price for patient and calculate total
+						$log['unit_price'] = $medicationPrice * 2;
+						$log['total_price'] = $log['unit_price'] * $quantity;
+					}
+				}
+				unset($log);
 				
 				$dispenseLogs = $dispenseLogsRaw;
 			} catch (\Exception $e) {
@@ -541,6 +681,49 @@ class Pharmacy extends Controller
 							}
 							if ($quantity <= 0) $quantity = 1;
 						}
+						
+						// Calculate prices
+						$medicationModel = new MedicationModel();
+						$medication = $medicationModel->where('name', $medicineName)->first();
+						if (!$medication) {
+							$medication = $medicationModel->like('name', $medicineName)->first();
+						}
+						
+						$medicationPrice = 0;
+						if ($medication && isset($medication['price'])) {
+							$medicationPrice = (float)$medication['price'];
+						}
+						
+						// If no price found, use default prices
+						if ($medicationPrice <= 0) {
+							$defaultPrices = [
+								'amoxicillin' => 8.00,
+								'paracetamol' => 25.00,
+								'ibuprofen' => 30.00,
+								'aspirin' => 20.00,
+								'metformin' => 40.00,
+								'losartan' => 45.00,
+								'atorvastatin' => 60.00,
+								'omeprazole' => 35.00,
+								'cefuroxime' => 80.00,
+								'azithromycin' => 75.00,
+							];
+							
+							$medicineNameLower = strtolower($medicineName);
+							$baseName = preg_replace('/\s*\d+.*?(mg|ml|g|kg|mcg|iu|units?)\s*/i', '', $medicineNameLower);
+							$baseName = trim($baseName);
+							
+							foreach ($defaultPrices as $key => $price) {
+								if (strpos($medicineNameLower, $key) !== false || (!empty($baseName) && strpos($baseName, $key) !== false)) {
+									$medicationPrice = $price;
+									break;
+								}
+							}
+						}
+						
+						// Double the price for patient and calculate total
+						$unitPrice = $medicationPrice * 2;
+						$totalPrice = $unitPrice * $quantity;
 
 						$dispenseLogs[] = [
 							'id' => null,
@@ -549,6 +732,8 @@ class Pharmacy extends Controller
 							'patient_name' => $patient['full_name'] ?? 'N/A',
 							'medicine_name' => $medicineName,
 							'quantity' => $quantity,
+							'unit_price' => $unitPrice,
+							'total_price' => $totalPrice,
 							'pharmacist_id' => null,
 							'pharmacist_name' => $pharmacist['name'] ?? 'System',
 							'dispensed_at' => $rx['updated_at'] ?? $rx['created_at'],
@@ -652,19 +837,30 @@ class Pharmacy extends Controller
 		$medicationId = $this->request->getPost('medication_id');
 		$supplierName = $this->request->getPost('supplier_name');
 		$quantityOrdered = (int)$this->request->getPost('quantity_ordered');
+		$unitPrice = (float)$this->request->getPost('unit_price');
+		$totalPrice = (float)$this->request->getPost('total_price');
 		$orderDate = $this->request->getPost('order_date');
 		$reference = $this->request->getPost('reference');
 
-		if (empty($medicineName) || empty($supplierName) || $quantityOrdered <= 0 || empty($orderDate)) {
-			return $this->response->setJSON(['success' => false, 'message' => 'Please fill all required fields']);
+		if (empty($medicineName) || empty($supplierName) || $quantityOrdered <= 0 || empty($orderDate) || $unitPrice <= 0) {
+			return $this->response->setJSON(['success' => false, 'message' => 'Please fill all required fields including unit price']);
 		}
 
-		// Get medication name if ID provided
+		// Get medication name and price if ID provided
 		if ($medicationId && empty($medicineName)) {
 			$medication = $medicationModel->find($medicationId);
 			if ($medication) {
 				$medicineName = $medication['name'];
+				// Use medication price if unit price not provided
+				if ($unitPrice <= 0 && isset($medication['price']) && $medication['price'] > 0) {
+					$unitPrice = (float)$medication['price'];
+				}
 			}
+		}
+
+		// Calculate total price if not provided
+		if ($totalPrice <= 0) {
+			$totalPrice = $unitPrice * $quantityOrdered;
 		}
 
 		$orderData = [
@@ -673,6 +869,8 @@ class Pharmacy extends Controller
 			'medicine_name' => $medicineName,
 			'supplier_name' => $supplierName,
 			'quantity_ordered' => $quantityOrdered,
+			'unit_price' => $unitPrice,
+			'total_price' => $totalPrice,
 			'order_date' => $orderDate,
 			'status' => 'pending',
 			'reference' => $reference ?: null,

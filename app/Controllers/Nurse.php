@@ -1462,7 +1462,7 @@ class Nurse extends Controller
     {
         // Default medication pricing (can be customized)
         $defaultPrices = [
-            'amoxicillin' => 50.00,
+            'amoxicillin' => 8.00, // Updated to match actual supplier price
             'paracetamol' => 25.00,
             'ibuprofen' => 30.00,
             'aspirin' => 20.00,
@@ -1474,8 +1474,10 @@ class Nurse extends Controller
             'azithromycin' => 75.00,
         ];
         
-        // Try to get price from database first
         $db = \Config\Database::connect();
+        $basePrice = 0;
+        
+        // Try to get price from database first
         if ($db->tableExists('medications')) {
             $med = $db->table('medications')
                 ->where('name', $medicationName)
@@ -1483,20 +1485,28 @@ class Nurse extends Controller
                 ->first();
             
             if ($med && isset($med['price'])) {
-                return floatval($med['price']);
+                $basePrice = floatval($med['price']);
             }
         }
         
-        // Use default pricing based on medication name
-        $nameLower = strtolower($medicationName);
-        foreach ($defaultPrices as $key => $price) {
-            if (strpos($nameLower, $key) !== false) {
-                return $price;
+        // Use default pricing based on medication name if no database price
+        if ($basePrice <= 0) {
+            $nameLower = strtolower($medicationName);
+            foreach ($defaultPrices as $key => $price) {
+                if (strpos($nameLower, $key) !== false) {
+                    $basePrice = $price;
+                    break;
+                }
             }
         }
         
         // Default price if not found
-        return 50.00;
+        if ($basePrice <= 0) {
+            $basePrice = 50.00;
+        }
+        
+        // Double the price for patient billing (patient pays 2x the inventory price)
+        return $basePrice * 2;
     }
     
     private function ensureBillingTables()

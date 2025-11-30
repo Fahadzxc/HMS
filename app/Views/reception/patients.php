@@ -548,6 +548,7 @@
 			const sel = document.getElementById('attendingDoctor');
 			if (!sel || sel.options.length > 1) return; // already loaded or not present
 			try {
+				// Load all doctors initially (no date filter)
 				const resp = await fetch('<?= base_url('reception/doctors') ?>', { headers: { 'X-Requested-With':'XMLHttpRequest' }});
 				const data = await resp.json();
 				const doctors = Array.isArray(data?.doctors) ? data.doctors : (Array.isArray(data) ? data : []);
@@ -694,19 +695,54 @@
         async function filterDoctorsByAdmission() {
             if (__filterInFlight) return;
             __filterInFlight = true;
-            if (!doctorSelect) return;
-            // Load doctors once and populate (no per-doctor schedule calls to avoid heavy loading)
+            if (!doctorSelect || !admissionDt) return;
+            
+            const admissionDateTime = admissionDt.value;
+            if (!admissionDateTime) {
+                // If no datetime, load all doctors
+                try {
+                    const resp = await fetch('<?= base_url('reception/doctors') ?>', { headers: { 'X-Requested-With':'XMLHttpRequest' }});
+                    const data = await resp.json();
+                    const doctors = Array.isArray(data?.doctors) ? data.doctors : [];
+                    doctorSelect.innerHTML = '<option value=\"\">Select Doctor</option>';
+                    doctors.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d.id;
+                        opt.textContent = d.name;
+                        doctorSelect.appendChild(opt);
+                    });
+                } catch(e) {
+                    doctorSelect.innerHTML = '<option value=\"\">Select Doctor</option>';
+                }
+                __filterInFlight = false;
+                return;
+            }
+            
+            // Convert datetime-local format to format expected by backend (YYYY-MM-DD HH:MM:SS)
+            // datetime-local format is already in local time, so we use it directly without timezone conversion
+            const formattedDateTime = admissionDateTime.replace('T', ' ') + ':00';
+            
+            // Load only available doctors based on admission datetime
             try {
-                const resp = await fetch('<?= base_url('reception/doctors') ?>', { headers: { 'X-Requested-With':'XMLHttpRequest' }});
+                const url = '<?= base_url('reception/doctors') ?>?admission_datetime=' + encodeURIComponent(formattedDateTime);
+                const resp = await fetch(url, { headers: { 'X-Requested-With':'XMLHttpRequest' }});
                 const data = await resp.json();
                 const doctors = Array.isArray(data?.doctors) ? data.doctors : [];
                 doctorSelect.innerHTML = '<option value=\"\">Select Doctor</option>';
-                doctors.forEach(d => {
+                if (doctors.length === 0) {
                     const opt = document.createElement('option');
-                    opt.value = d.id;
-                    opt.textContent = d.name;
+                    opt.value = '';
+                    opt.textContent = 'No available doctors at this time';
+                    opt.disabled = true;
                     doctorSelect.appendChild(opt);
-                });
+                } else {
+                    doctors.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d.id;
+                        opt.textContent = d.name;
+                        doctorSelect.appendChild(opt);
+                    });
+                }
             } catch(e) {
                 doctorSelect.innerHTML = '<option value=\"\">Select Doctor</option>';
             }

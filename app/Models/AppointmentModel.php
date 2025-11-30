@@ -36,7 +36,7 @@ class AppointmentModel extends Model
         'doctor_id' => 'required|integer',
         'appointment_date' => 'required|valid_date',
         'appointment_time' => 'required',
-        'appointment_type' => 'required|in_list[consultation,follow-up,emergency,routine,vaccination,lab_test,xray]',
+        'appointment_type' => 'required|in_list[consultation,follow-up,procedure,laboratory_test,imaging]',
         'status' => 'required|in_list[scheduled,confirmed,completed,cancelled,no-show]'
     ];
 

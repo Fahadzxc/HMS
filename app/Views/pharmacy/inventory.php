@@ -70,6 +70,7 @@
                         <th>Medicine Name</th>
                         <th>Strength</th>
                         <th>Form</th>
+                        <th>Price (₱)</th>
                         <th>Stock Quantity</th>
                         <th>Reorder Level</th>
                         <th>Category</th>
@@ -113,6 +114,40 @@
                                 <td><strong><?= esc($med['name'] ?? 'N/A') ?></strong></td>
                                 <td><?= esc($med['strength'] ?? '—') ?></td>
                                 <td><?= esc($med['form'] ?? '—') ?></td>
+                                <td>
+                                    <?php
+                                    // Get base price from database or use default
+                                    $basePrice = (float)($med['price'] ?? 0);
+                                    if ($basePrice <= 0) {
+                                        // Use default prices if not in database
+                                        $defaultPrices = [
+                                            'amoxicillin' => 8.00,
+                                            'paracetamol' => 25.00,
+                                            'ibuprofen' => 30.00,
+                                            'aspirin' => 20.00,
+                                            'metformin' => 40.00,
+                                            'losartan' => 45.00,
+                                            'atorvastatin' => 60.00,
+                                            'omeprazole' => 35.00,
+                                            'cefuroxime' => 80.00,
+                                            'azithromycin' => 75.00,
+                                        ];
+                                        $medNameLower = strtolower($med['name'] ?? '');
+                                        $baseName = preg_replace('/\s*\d+.*?(mg|ml|g|kg|mcg|iu|units?)\s*/i', '', $medNameLower);
+                                        $baseName = trim($baseName);
+                                        foreach ($defaultPrices as $key => $price) {
+                                            if (strpos($medNameLower, $key) !== false || (!empty($baseName) && strpos($baseName, $key) !== false)) {
+                                                $basePrice = $price;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    // Patient price is doubled
+                                    $patientPrice = $basePrice * 2;
+                                    ?>
+                                    <strong style="color: #059669; font-size: 1rem;">₱<?= number_format($patientPrice, 2) ?></strong>
+                                    <br><small style="color: #64748b; font-size: 0.75rem;">Base: ₱<?= number_format($basePrice, 2) ?></small>
+                                </td>
                                 <td>
                                     <strong style="color: <?= $stockQty <= 0 ? '#ef4444' : ($stockQty <= $reorderLevel ? '#f59e0b' : '#10b981') ?>;">
                                         <?= number_format($stockQty) ?>

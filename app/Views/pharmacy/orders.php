@@ -39,6 +39,8 @@
                         <th>Medicine</th>
                         <th>Supplier</th>
                         <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Total Price</th>
                         <th>Order Date</th>
                         <th>Status</th>
                         <th>Received By</th>
@@ -65,6 +67,8 @@
                                 <td><strong><?= esc($order['medicine_name'] ?? 'N/A') ?></strong></td>
                                 <td><?= esc($order['supplier_name'] ?? 'N/A') ?></td>
                                 <td><strong><?= number_format($order['quantity_ordered'] ?? 0) ?></strong></td>
+                                <td><strong>₱<?= number_format($order['unit_price'] ?? 0, 2) ?></strong></td>
+                                <td><strong style="color: #059669;">₱<?= number_format($order['total_price'] ?? 0, 2) ?></strong></td>
                                 <td><?= !empty($order['order_date']) ? date('M j, Y', strtotime($order['order_date'])) : '—' ?></td>
                                 <td>
                                     <span class="badge <?= $badgeClass ?>" style="padding: 0.35rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
@@ -119,10 +123,17 @@
                     <select id="medication_id" name="medication_id" onchange="onMedicationChange()" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.9rem;" required>
                         <option value="">Select Medicine</option>
                         <?php foreach ($medications ?? [] as $med): ?>
-                            <option value="<?= $med['id'] ?>" data-name="<?= esc($med['name']) ?>"><?= esc($med['name']) ?></option>
+                            <option value="<?= $med['id'] ?>" data-name="<?= esc($med['name']) ?>" data-price="<?= $med['price'] ?? 0 ?>"><?= esc($med['name']) ?> <?= isset($med['price']) && $med['price'] > 0 ? '₱' . number_format($med['price'], 2) : '' ?></option>
                         <?php endforeach; ?>
                     </select>
                     <input type="hidden" id="medicine_name" name="medicine_name">
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-weight: 500; color: #4a5568; margin-bottom: 0.5rem;">
+                        Unit Price (₱) <span style="color: #e53e3e;">*</span>
+                    </label>
+                    <input type="number" id="unit_price" name="unit_price" required min="0" step="0.01" oninput="calculateTotal()" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.9rem;" placeholder="Enter price per unit">
+                    <small style="color: #64748b; font-size: 0.85rem;">Price per unit of medicine</small>
                 </div>
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display: block; font-weight: 500; color: #4a5568; margin-bottom: 0.5rem;">
@@ -134,7 +145,14 @@
                     <label style="display: block; font-weight: 500; color: #4a5568; margin-bottom: 0.5rem;">
                         Quantity Ordered <span style="color: #e53e3e;">*</span>
                     </label>
-                    <input type="number" id="quantity_ordered" name="quantity_ordered" required min="1" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.9rem;" placeholder="Enter quantity">
+                    <input type="number" id="quantity_ordered" name="quantity_ordered" required min="1" oninput="calculateTotal()" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.9rem;" placeholder="Enter quantity">
+                </div>
+                <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 0.5rem;">
+                    <label style="display: block; font-weight: 600; color: #0369a1; margin-bottom: 0.5rem;">
+                        Total Price
+                    </label>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: #0c4a6e;" id="total_price_display">₱0.00</div>
+                    <input type="hidden" id="total_price" name="total_price" value="0">
                 </div>
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display: block; font-weight: 500; color: #4a5568; margin-bottom: 0.5rem;">
@@ -173,7 +191,23 @@ function closeCreateOrderModal() {
 function onMedicationChange() {
     const select = document.getElementById('medication_id');
     const selectedOption = select.options[select.selectedIndex];
-    document.getElementById('medicine_name').value = selectedOption.getAttribute('data-name') || '';
+    const medicineName = selectedOption.getAttribute('data-name') || '';
+    const price = parseFloat(selectedOption.getAttribute('data-price') || 0);
+    
+    document.getElementById('medicine_name').value = medicineName;
+    document.getElementById('unit_price').value = price > 0 ? price.toFixed(2) : '';
+    
+    // Calculate total if quantity is already entered
+    calculateTotal();
+}
+
+function calculateTotal() {
+    const unitPrice = parseFloat(document.getElementById('unit_price').value) || 0;
+    const quantity = parseFloat(document.getElementById('quantity_ordered').value) || 0;
+    const total = unitPrice * quantity;
+    
+    document.getElementById('total_price').value = total.toFixed(2);
+    document.getElementById('total_price_display').textContent = '₱' + total.toFixed(2);
 }
 
 function submitOrder(event) {

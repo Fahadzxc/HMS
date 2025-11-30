@@ -33,7 +33,8 @@ class DoctorScheduleModel extends Model
         'doctor_id' => 'required|integer',
         'day_of_week' => 'required|in_list[monday,tuesday,wednesday,thursday,friday,saturday,sunday]',
         'start_time' => 'required',
-        'end_time' => 'required'
+        'end_time' => 'required',
+        'schedule_date' => 'permit_empty' // Allow NULL for recurring schedules
     ];
 
     // Get doctor's schedule for a specific day

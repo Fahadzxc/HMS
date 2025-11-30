@@ -1295,6 +1295,7 @@ class Reception extends Controller
 		}
 
 		$type = $this->request->getGet('type') ?? 'outpatient';
+		$appointmentType = $this->request->getGet('appointment_type') ?? null;
 		
 		// Validate type
 		if (!in_array($type, ['outpatient', 'inpatient'])) {
@@ -1306,7 +1307,10 @@ class Reception extends Controller
 
 		$roomModel = new \App\Models\RoomModel();
 		
-		if ($type === 'outpatient') {
+		// If appointment type is provided, filter by it
+		if ($appointmentType && $type === 'outpatient') {
+			$rooms = $roomModel->getRoomsByAppointmentType($appointmentType, $type);
+		} else if ($type === 'outpatient') {
 			$rooms = $roomModel->getOutpatientRooms();
 		} else {
 			$rooms = $roomModel->getInpatientRooms();
@@ -1325,16 +1329,148 @@ class Reception extends Controller
 		}
 
 		$userModel = new \App\Models\UserModel();
-		$doctors = $userModel->getDoctors();
+		$allDoctors = $userModel->getDoctors();
+		
+		// Get optional date/time filter
+		$admissionDateTime = $this->request->getGet('admission_datetime');
+		
+		// If no date/time provided, return all doctors
+		if (empty($admissionDateTime)) {
+			return $this->response->setJSON([
+				'status'  => 'success',
+				'doctors' => array_map(static function ($d) {
+					return [
+						'id'   => $d['id'] ?? null,
+						'name' => $d['name'] ?? ($d['email'] ?? 'Doctor')
+					];
+				}, $allDoctors ?? [])
+			]);
+		}
+		
+		// Parse admission datetime
+		try {
+			// Handle both "YYYY-MM-DD HH:MM:SS" and "YYYY-MM-DD HH:MM" formats
+			if (strpos($admissionDateTime, ' ') !== false) {
+				$parts = explode(' ', $admissionDateTime);
+				$admissionDate = $parts[0];
+				$admissionTime = isset($parts[1]) ? $parts[1] : '00:00:00';
+				if (strlen($admissionTime) == 5) {
+					$admissionTime .= ':00'; // Add seconds if missing
+				}
+			} else {
+				$admissionDate = date('Y-m-d', strtotime($admissionDateTime));
+				$admissionTime = date('H:i:s', strtotime($admissionDateTime));
+			}
+			$dayOfWeek = strtolower(date('l', strtotime($admissionDate)));
+			
+			// Debug logging
+			log_message('debug', 'Admission datetime: ' . $admissionDateTime);
+			log_message('debug', 'Parsed date: ' . $admissionDate . ', time: ' . $admissionTime . ', day: ' . $dayOfWeek);
+		} catch (\Exception $e) {
+			// If date parsing fails, return all doctors
+			return $this->response->setJSON([
+				'status'  => 'success',
+				'doctors' => array_map(static function ($d) {
+					return [
+						'id'   => $d['id'] ?? null,
+						'name' => $d['name'] ?? ($d['email'] ?? 'Doctor')
+					];
+				}, $allDoctors ?? [])
+			]);
+		}
+		
+		// Filter doctors by availability
+		$scheduleModel = new \App\Models\DoctorScheduleModel();
+		$availableDoctors = [];
+		
+		foreach ($allDoctors as $doctor) {
+			$doctorId = $doctor['id'] ?? null;
+			if (!$doctorId) continue;
+			
+			$isAvailable = false;
+			
+			// Check for date-specific schedule first
+			$dateSpecificSchedules = $scheduleModel
+				->where('doctor_id', $doctorId)
+				->where('schedule_date', $admissionDate)
+				->where('is_available', true)
+				->findAll();
+			
+			foreach ($dateSpecificSchedules as $schedule) {
+				$startTime = $schedule['start_time'];
+				$endTime = $schedule['end_time'];
+				
+				// Handle overnight schedules (end_time < start_time means it spans midnight)
+				if ($endTime < $startTime) {
+					// Overnight schedule: time is valid if >= start_time OR <= end_time
+					if ($admissionTime >= $startTime || $admissionTime <= $endTime) {
+						$isAvailable = true;
+						break;
+					}
+				} else {
+					// Normal schedule: time must be between start and end
+					if ($admissionTime >= $startTime && $admissionTime <= $endTime) {
+						$isAvailable = true;
+						break;
+					}
+				}
+			}
+			
+			if ($isAvailable) {
+				$availableDoctors[] = [
+					'id'   => $doctorId,
+					'name' => $doctor['name'] ?? ($doctor['email'] ?? 'Doctor')
+				];
+				continue;
+			}
+			
+			// Check for recurring weekly schedule (schedule_date is NULL)
+			$recurringSchedules = $scheduleModel
+				->where('doctor_id', $doctorId)
+				->where('day_of_week', $dayOfWeek)
+				->where('schedule_date IS NULL', null, false)
+				->where('is_available', true)
+				->findAll();
+			
+			log_message('debug', 'Doctor ' . $doctorId . ' has ' . count($recurringSchedules) . ' recurring schedules for ' . $dayOfWeek);
+			
+			foreach ($recurringSchedules as $schedule) {
+				$startTime = $schedule['start_time'];
+				$endTime = $schedule['end_time'];
+				
+				log_message('debug', 'Checking schedule: start=' . $startTime . ', end=' . $endTime . ', admission=' . $admissionTime);
+				
+				// Handle overnight schedules (end_time < start_time means it spans midnight)
+				if ($endTime < $startTime) {
+					// Overnight schedule: time is valid if >= start_time OR <= end_time
+					$timeCheck = ($admissionTime >= $startTime || $admissionTime <= $endTime);
+					log_message('debug', 'Overnight schedule check: ' . ($timeCheck ? 'PASS' : 'FAIL'));
+					if ($timeCheck) {
+						$isAvailable = true;
+						break;
+					}
+				} else {
+					// Normal schedule: time must be between start and end
+					$timeCheck = ($admissionTime >= $startTime && $admissionTime <= $endTime);
+					log_message('debug', 'Normal schedule check: ' . ($timeCheck ? 'PASS' : 'FAIL'));
+					if ($timeCheck) {
+						$isAvailable = true;
+						break;
+					}
+				}
+			}
+			
+			if ($isAvailable) {
+				$availableDoctors[] = [
+					'id'   => $doctorId,
+					'name' => $doctor['name'] ?? ($doctor['email'] ?? 'Doctor')
+				];
+			}
+		}
 
 		return $this->response->setJSON([
 			'status'  => 'success',
-			'doctors' => array_map(static function ($d) {
-				return [
-					'id'   => $d['id'] ?? null,
-					'name' => $d['name'] ?? ($d['email'] ?? 'Doctor')
-				];
-			}, $doctors ?? [])
+			'doctors' => $availableDoctors
 		]);
 	}
 

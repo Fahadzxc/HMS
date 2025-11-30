@@ -61,6 +61,8 @@
                         <th>Patient</th>
                         <th>Medicine</th>
                         <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Total Price</th>
                         <th>Prescription ID</th>
                         <th>Pharmacist</th>
                         <th>Actions</th>
@@ -90,6 +92,12 @@
                                 <td>
                                     <strong style="color: #1e293b; font-size: 1rem;"><?= number_format($log['quantity'] ?? 0) ?></strong>
                                     <br><small style="color: #64748b; font-size: 0.75rem;">units</small>
+                                </td>
+                                <td>
+                                    <strong style="color: #059669;">₱<?= number_format($log['unit_price'] ?? 0, 2) ?></strong>
+                                </td>
+                                <td>
+                                    <strong style="color: #059669; font-size: 1.1rem;">₱<?= number_format($log['total_price'] ?? 0, 2) ?></strong>
                                 </td>
                                 <td>
                                     <?php if (!empty($log['prescription_id'])): ?>

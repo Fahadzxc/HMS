@@ -116,6 +116,8 @@ $routes->get('it/tickets', 'It::tickets');
 // Doctor Routes
 $routes->get('doctor/schedule', 'Doctor::schedule');
 $routes->post('doctor/updateSchedule', 'Doctor::updateSchedule');
+$routes->get('doctor/getRecurringSchedules', 'Doctor::getRecurringSchedules');
+$routes->post('doctor/updateRecurringSchedule', 'Doctor::updateRecurringSchedule');
 $routes->get('doctor/getAvailableSlots', 'Doctor::getAvailableSlots');
 $routes->get('doctor/appointments', 'Doctor::appointments');
 $routes->get('doctor/consultations', 'Doctor::consultations');

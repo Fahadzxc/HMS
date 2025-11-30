@@ -291,11 +291,9 @@
                         <option value="">Select Type</option>
                         <option value="consultation">Consultation</option>
                         <option value="follow-up">Follow-up</option>
-                        <option value="emergency">Emergency</option>
-                        <option value="routine">Routine Checkup</option>
-                        <option value="vaccination">Vaccination</option>
-                        <option value="lab_test">Lab Test</option>
-                        <option value="xray">X-Ray</option>
+                        <option value="procedure">Procedure</option>
+                        <option value="laboratory_test">Laboratory Test</option>
+                        <option value="imaging">Imaging / X-ray / Ultrasound</option>
                     </select>
                     <div class="error" data-error-for="appointment_type"></div>
                     <small class="form-help" style="color: #64748b;">
@@ -386,18 +384,26 @@ function loadPatientDetails() {
     }
 }
 
-// Load OPD rooms for outpatient appointments
+// Load OPD rooms for outpatient appointments based on appointment type
 function loadOPDRooms() {
     const roomSelect = document.getElementById('room_select');
+    const appointmentTypeSelect = document.getElementById('appointment_type_select');
+    const appointmentType = appointmentTypeSelect ? appointmentTypeSelect.value : null;
     
     // Reset room dropdown
     roomSelect.innerHTML = '<option value="">Loading rooms...</option>';
     
+    // Build URL with appointment type if available
+    let url = `<?= base_url('reception/rooms') ?>?type=outpatient`;
+    if (appointmentType) {
+        url += `&appointment_type=${encodeURIComponent(appointmentType)}`;
+    }
+    
     // Fetch OPD rooms from backend
-    fetch(`<?= base_url('reception/rooms') ?>?type=outpatient`)
+    fetch(url)
         .then(response => response.json())
         .then(data => {
-            if (data.status === 'success' && data.rooms) {
+            if (data.status === 'success' && data.rooms && data.rooms.length > 0) {
                 roomSelect.innerHTML = '<option value="">Choose a room...</option>';
                 
                 data.rooms.forEach(room => {
@@ -408,7 +414,7 @@ function loadOPDRooms() {
                     roomSelect.appendChild(option);
                 });
             } else {
-                roomSelect.innerHTML = '<option value="">No OPD rooms available</option>';
+                roomSelect.innerHTML = '<option value="">No rooms available for this appointment type</option>';
             }
         })
         .catch(error => {
@@ -429,6 +435,18 @@ document.getElementById('btnOpenAddAppointment').addEventListener('click', funct
     e.preventDefault();
     showAddAppointmentModal();
 });
+
+// Reload rooms when appointment type changes
+const appointmentTypeSelect = document.getElementById('appointment_type_select');
+if (appointmentTypeSelect) {
+    appointmentTypeSelect.addEventListener('change', function() {
+        // Only reload rooms if a patient is already selected
+        const patientSelect = document.getElementById('patient_select');
+        if (patientSelect && patientSelect.value) {
+            loadOPDRooms();
+        }
+    });
+}
 
 // Add appointment form submission
 document.getElementById('addAppointmentForm').addEventListener('submit', function(e) {

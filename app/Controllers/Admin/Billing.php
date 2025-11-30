@@ -240,9 +240,9 @@ class Billing extends Controller
                 return;
             }
             
-            // Calculate tax and create bill
-            $tax = $subtotal * 0.12;
-            $totalAmount = $subtotal + $tax;
+            // No tax - total is subtotal
+            $tax = 0;
+            $totalAmount = $subtotal;
             $billNumber = $billingModel->generateBillNumber();
             
             $billData = [
@@ -278,7 +278,7 @@ class Billing extends Controller
     private function getMedicationPrice($medicationName)
     {
         $defaultPrices = [
-            'amoxicillin' => 50.00,
+            'amoxicillin' => 8.00, // Updated to match actual supplier price
             'paracetamol' => 25.00,
             'ibuprofen' => 30.00,
             'aspirin' => 20.00,
@@ -291,6 +291,8 @@ class Billing extends Controller
         ];
         
         $db = \Config\Database::connect();
+        $basePrice = 0;
+        
         if ($db->tableExists('medications')) {
             $med = $db->table('medications')
                 ->where('name', $medicationName)
@@ -298,18 +300,28 @@ class Billing extends Controller
                 ->first();
             
             if ($med && isset($med['price'])) {
-                return floatval($med['price']);
+                $basePrice = floatval($med['price']);
             }
         }
         
-        $nameLower = strtolower($medicationName);
-        foreach ($defaultPrices as $key => $price) {
-            if (strpos($nameLower, $key) !== false) {
-                return $price;
+        // If no price from database, use default prices
+        if ($basePrice <= 0) {
+            $nameLower = strtolower($medicationName);
+            foreach ($defaultPrices as $key => $price) {
+                if (strpos($nameLower, $key) !== false) {
+                    $basePrice = $price;
+                    break;
+                }
             }
         }
         
-        return 50.00; // Default price
+        // If still no price, use default
+        if ($basePrice <= 0) {
+            $basePrice = 50.00;
+        }
+        
+        // Double the price for patient billing (patient pays 2x the inventory price)
+        return $basePrice * 2;
     }
     
     private function ensureBillingTables()

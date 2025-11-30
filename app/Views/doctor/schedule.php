@@ -19,6 +19,9 @@
                 <a href="<?= base_url('doctor/schedule?month=' . $prevMonth . '&year=' . $prevYear) ?>" style="padding: 0.6rem 1rem; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center;">← Prev</a>
                 <a href="<?= base_url('doctor/schedule?month=' . date('n') . '&year=' . date('Y')) ?>" style="padding: 0.6rem 1rem; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center;">Today</a>
                 <a href="<?= base_url('doctor/schedule?month=' . $nextMonth . '&year=' . $nextYear) ?>" style="padding: 0.6rem 1rem; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center;">Next →</a>
+                <button class="btn-secondary" onclick="editRecurringSchedule()" style="padding: 0.6rem 1.2rem; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-weight: 500; cursor: pointer; margin-left: 0.5rem;">
+                    <span>✏️</span> Edit Schedule
+                </button>
                 <button class="btn-primary" onclick="showAddScheduleModal()" style="padding: 0.6rem 1.2rem; background: #3b82f6; color: white; border: none; border-radius: 0.5rem; font-weight: 500; cursor: pointer; margin-left: 0.5rem;">
                     <span>➕</span> Add Schedule
                 </button>
@@ -80,7 +83,7 @@
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="calendar-no-schedule">No schedule</div>
+                            <div class="calendar-no-schedule">Not Available</div>
                         <?php endif; ?>
                         
                         <?php if (!empty($dayAppointments)): ?>
@@ -117,21 +120,29 @@
             <?= csrf_field() ?>
             <input type="hidden" id="schedule_id" name="schedule_id">
             <div class="form-grid">
-                <div class="form-field">
-                    <label>Selected Date <span class="req">*</span></label>
-                    <input type="date" name="schedule_date" id="schedule_date" required style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;">
-                    <small style="color: #64748b; margin-top: 0.25rem; display: block;" id="selected_date_label"></small>
-                    <input type="hidden" name="day_of_week" id="day_of_week">
-                    <div class="error" data-error-for="day_of_week"></div>
-                </div>
-                
-                <div class="form-field">
-                    <label>Available <span class="req">*</span></label>
-                    <select name="is_available" id="is_available" required>
-                        <option value="1">Yes - Available</option>
-                        <option value="0">No - Not Available</option>
-                    </select>
-                    <div class="error" data-error-for="is_available"></div>
+                <div class="form-field form-field--full">
+                    <label>Select Days <span class="req">*</span></label>
+                    <small style="color: #64748b; margin-bottom: 0.75rem; display: block;">Select the days of the week for your recurring schedule. This will apply to the whole year.</small>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem;">
+                        <?php 
+                        $daysOfWeek = [
+                            'monday' => 'Monday',
+                            'tuesday' => 'Tuesday',
+                            'wednesday' => 'Wednesday',
+                            'thursday' => 'Thursday',
+                            'friday' => 'Friday',
+                            'saturday' => 'Saturday',
+                            'sunday' => 'Sunday'
+                        ];
+                        foreach ($daysOfWeek as $dayValue => $dayLabel): 
+                        ?>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;">
+                                <input type="checkbox" name="selected_days[]" value="<?= $dayValue ?>" class="day-checkbox" style="width: 18px; height: 18px; cursor: pointer;">
+                                <span style="font-weight: 500; color: #1e293b;"><?= $dayLabel ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="error" data-error-for="selected_days"></div>
                 </div>
                 
                 <div class="form-field">
@@ -271,9 +282,12 @@
 
 .calendar-no-schedule {
     font-size: 0.7rem;
-    color: #94a3b8;
-    font-style: italic;
+    color: #dc2626;
+    font-weight: 500;
     padding: 0.25rem 0.5rem;
+    background: #fee2e2;
+    border-radius: 4px;
+    border-left: 3px solid #ef4444;
 }
 
 .calendar-appointment-item {
@@ -462,58 +476,98 @@
 .btn-secondary:hover {
     background: #e2e8f0;
 }
+
+/* Day checkbox styling */
+label:has(input.day-checkbox) {
+    transition: all 0.2s;
+}
+
+label:has(input.day-checkbox):hover {
+    background: #f1f5f9 !important;
+    border-color: #3b82f6 !important;
+}
+
+label:has(input.day-checkbox:checked) {
+    background: #eff6ff !important;
+    border-color: #3b82f6 !important;
+}
+
+label:has(input.day-checkbox:checked) span {
+    color: #3b82f6;
+    font-weight: 600;
+}
 </style>
 
 <script>
 function showAddScheduleModal() {
-    document.getElementById('scheduleModalTitle').textContent = 'Add Schedule';
+    document.getElementById('scheduleModalTitle').textContent = 'Add Weekly Recurring Schedule';
     document.getElementById('scheduleForm').reset();
     document.getElementById('schedule_id').value = '';
-    document.getElementById('schedule_date').value = '';
-    document.getElementById('day_of_week').value = '';
-    document.getElementById('selected_date_label').textContent = '';
+    // Uncheck all day checkboxes
+    document.querySelectorAll('.day-checkbox').forEach(cb => cb.checked = false);
+    // Reset time fields
+    document.getElementById('start_time').value = '';
+    document.getElementById('end_time').value = '';
+    document.getElementById('notes').value = '';
     document.getElementById('scheduleModal').style.display = 'flex';
     document.getElementById('scheduleModal').setAttribute('aria-hidden', 'false');
 }
 
-function openDateSchedule(date, dayOfWeek) {
-    showAddScheduleModal();
-    const dateInput = document.getElementById('schedule_date');
-    const dayOfWeekInput = document.getElementById('day_of_week');
-    const dateLabel = document.getElementById('selected_date_label');
-    
-    dateInput.value = date;
-    dayOfWeekInput.value = dayOfWeek;
-    
-    // Show formatted date
-    const dateObj = new Date(date + 'T00:00:00'); // Add time to avoid timezone issues
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const formattedDate = dayNames[dateObj.getDay()] + ', ' + monthNames[dateObj.getMonth()] + ' ' + dateObj.getDate() + ', ' + dateObj.getFullYear();
-    dateLabel.textContent = formattedDate;
+function editRecurringSchedule() {
+    // Fetch existing recurring schedules
+    fetch('<?= base_url('doctor/getRecurringSchedules') ?>', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            document.getElementById('scheduleModalTitle').textContent = 'Edit Weekly Recurring Schedule';
+            document.getElementById('scheduleForm').reset();
+            
+            const schedules = data.schedules || [];
+            
+            // Uncheck all checkboxes first
+            document.querySelectorAll('.day-checkbox').forEach(cb => cb.checked = false);
+            
+            if (schedules.length > 0) {
+                // Get the first schedule's time and notes (assuming all have same time)
+                const firstSchedule = schedules[0];
+                document.getElementById('start_time').value = firstSchedule.start_time || '';
+                document.getElementById('end_time').value = firstSchedule.end_time || '';
+                document.getElementById('notes').value = firstSchedule.notes || '';
+                
+                // Check the days that have schedules
+                schedules.forEach(schedule => {
+                    const dayCheckbox = document.querySelector(`input.day-checkbox[value="${schedule.day_of_week}"]`);
+                    if (dayCheckbox) {
+                        dayCheckbox.checked = true;
+                    }
+                });
+            }
+            
+            document.getElementById('scheduleModal').style.display = 'flex';
+            document.getElementById('scheduleModal').setAttribute('aria-hidden', 'false');
+        } else {
+            alert('Error: ' + (data.message || 'Failed to load schedules'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while loading schedules');
+    });
 }
 
-// Auto-update day_of_week when date changes
-document.addEventListener('DOMContentLoaded', function() {
-    const dateInput = document.getElementById('schedule_date');
-    const dayOfWeekInput = document.getElementById('day_of_week');
-    const dateLabel = document.getElementById('selected_date_label');
-    
-    if (dateInput) {
-        dateInput.addEventListener('change', function() {
-            if (this.value) {
-                const dateObj = new Date(this.value + 'T00:00:00');
-                const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-                const dayLabels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                const dayOfWeek = dayNames[dateObj.getDay()];
-                const dayLabel = dayLabels[dateObj.getDay()];
-                
-                dayOfWeekInput.value = dayOfWeek;
-                dateLabel.textContent = dayLabel + ', ' + this.value;
-            }
-        });
+function openDateSchedule(date, dayOfWeek) {
+    showAddScheduleModal();
+    // Pre-select the day of week for the clicked date
+    const dayCheckbox = document.querySelector(`input.day-checkbox[value="${dayOfWeek}"]`);
+    if (dayCheckbox) {
+        dayCheckbox.checked = true;
     }
-});
+}
 
 function closeScheduleModal() {
     const modal = document.getElementById('scheduleModal');
@@ -540,19 +594,54 @@ function deleteSchedule(scheduleId) {
 document.getElementById('scheduleForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    const formData = new FormData(this);
+    // Get selected days
+    const selectedDays = Array.from(document.querySelectorAll('.day-checkbox:checked')).map(cb => cb.value);
     
-    fetch('<?= base_url('doctor/updateSchedule') ?>', {
+    if (selectedDays.length === 0) {
+        alert('Please select at least one day');
+        return;
+    }
+    
+    const startTime = document.getElementById('start_time').value;
+    const endTime = document.getElementById('end_time').value;
+    const notes = document.getElementById('notes').value;
+    
+    if (!startTime || !endTime) {
+        alert('Please enter start time and end time');
+        return;
+    }
+    
+    // Prepare data for all selected days
+    const schedules = selectedDays.map(day => ({
+        day_of_week: day,
+        schedule_date: null, // NULL for recurring weekly schedule
+        start_time: startTime,
+        end_time: endTime,
+        is_available: true,
+        notes: notes || null
+    }));
+    
+    // Determine if this is edit mode (check if modal title says "Edit")
+    const isEditMode = document.getElementById('scheduleModalTitle').textContent.includes('Edit');
+    
+    fetch('<?= base_url('doctor/updateRecurringSchedule') ?>', {
         method: 'POST',
         headers: {
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json'
         },
-        body: formData
+        body: JSON.stringify({ 
+            schedules: schedules,
+            action: isEditMode ? 'replace' : 'add' // Replace all if editing, add if new
+        })
     })
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            alert('Schedule saved successfully!');
+            const message = isEditMode ? 
+                'Weekly recurring schedule updated successfully! This will apply to the whole year.' :
+                'Weekly recurring schedule saved successfully! This will apply to the whole year.';
+            alert(message);
             closeScheduleModal();
             location.reload();
         } else {

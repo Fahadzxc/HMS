@@ -527,6 +527,152 @@ class Doctor extends Controller
 		]);
 	}
 
+	public function getRecurringSchedules()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'doctor') {
+			return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
+		}
+
+		$doctorId = session()->get('user_id');
+		$scheduleModel = new DoctorScheduleModel();
+		
+		// Get all recurring schedules (where schedule_date is NULL)
+		$recurringSchedules = $scheduleModel
+			->where('doctor_id', $doctorId)
+			->where('schedule_date IS NULL', null, false)
+			->orderBy('FIELD(day_of_week, "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")')
+			->findAll();
+		
+		return $this->response->setJSON([
+			'status' => 'success',
+			'schedules' => $recurringSchedules
+		]);
+	}
+
+	public function updateRecurringSchedule()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'doctor') {
+			return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
+		}
+
+		$doctorId = session()->get('user_id');
+		$scheduleModel = new DoctorScheduleModel();
+		
+		$requestData = json_decode($this->request->getBody(), true);
+		$schedules = $requestData['schedules'] ?? [];
+		$action = $requestData['action'] ?? 'add';
+		
+		if (empty($schedules)) {
+			return $this->response->setJSON(['status' => 'error', 'message' => 'No schedules provided']);
+		}
+
+		$db = \Config\Database::connect();
+		$db->transStart();
+
+		try {
+			if ($action === 'add') {
+				// For adding new schedules, check if schedule already exists for each day
+				foreach ($schedules as $schedule) {
+					$dayOfWeek = $schedule['day_of_week'] ?? '';
+					$startTime = $schedule['start_time'] ?? '';
+					$endTime = $schedule['end_time'] ?? '';
+					
+					if (empty($dayOfWeek) || empty($startTime) || empty($endTime)) {
+						throw new \Exception('Missing required fields: day_of_week, start_time, or end_time');
+					}
+					
+					// Check if recurring schedule already exists for this day and time
+					$existing = $scheduleModel->where('doctor_id', $doctorId)
+											 ->where('day_of_week', $dayOfWeek)
+											 ->where('schedule_date IS NULL', null, false)
+											 ->where('start_time', $startTime)
+											 ->where('end_time', $endTime)
+											 ->first();
+					
+					if (!$existing) {
+						$data = [
+							'doctor_id' => $doctorId,
+							'day_of_week' => $dayOfWeek,
+							'schedule_date' => null, // NULL for recurring weekly schedule
+							'start_time' => $startTime,
+							'end_time' => $endTime,
+							'is_available' => true,
+							'notes' => $schedule['notes'] ?? null
+						];
+						
+						// Use direct database insert to bypass validation if needed
+						$insertId = $scheduleModel->insert($data);
+						if (!$insertId) {
+							$errors = $scheduleModel->errors();
+							$errorMsg = !empty($errors) ? implode(', ', $errors) : 'Unknown error';
+							throw new \Exception('Failed to insert schedule for ' . $dayOfWeek . ': ' . $errorMsg);
+						}
+					}
+				}
+			} else {
+				// For replacing all schedules, delete existing recurring schedules first
+				$scheduleModel->where('doctor_id', $doctorId)
+							 ->where('schedule_date IS NULL', null, false)
+							 ->delete();
+
+				// Insert new recurring schedules
+				foreach ($schedules as $schedule) {
+					$dayOfWeek = $schedule['day_of_week'] ?? '';
+					$startTime = $schedule['start_time'] ?? '';
+					$endTime = $schedule['end_time'] ?? '';
+					
+					if (empty($dayOfWeek) || empty($startTime) || empty($endTime)) {
+						throw new \Exception('Missing required fields: day_of_week, start_time, or end_time');
+					}
+					
+					$data = [
+						'doctor_id' => $doctorId,
+						'day_of_week' => $dayOfWeek,
+						'schedule_date' => null, // NULL for recurring weekly schedule
+						'start_time' => $startTime,
+						'end_time' => $endTime,
+						'is_available' => true,
+						'notes' => $schedule['notes'] ?? null
+					];
+					
+					$insertId = $scheduleModel->insert($data);
+					if (!$insertId) {
+						$errors = $scheduleModel->errors();
+						$errorMsg = !empty($errors) ? implode(', ', $errors) : 'Unknown error';
+						throw new \Exception('Failed to insert schedule for ' . $dayOfWeek . ': ' . $errorMsg);
+					}
+				}
+			}
+
+			$db->transComplete();
+
+			if ($db->transStatus() === false) {
+				return $this->response->setJSON([
+					'status' => 'error',
+					'message' => 'Failed to save recurring schedule'
+				]);
+			}
+
+			return $this->response->setJSON([
+				'status' => 'success',
+				'message' => 'Recurring weekly schedule saved successfully. This will apply to the whole year.'
+			]);
+		} catch (\Exception $e) {
+			$db->transRollback();
+			log_message('error', 'updateRecurringSchedule error: ' . $e->getMessage());
+			log_message('error', 'Request data: ' . json_encode($requestData));
+			return $this->response->setJSON([
+				'status' => 'error',
+				'message' => 'Error: ' . $e->getMessage(),
+				'debug' => [
+					'schedules_count' => count($schedules),
+					'action' => $action,
+					'doctor_id' => $doctorId
+				]
+			]);
+		}
+	}
+
 	public function getAvailableSlots()
 	{
 		if (!session()->get('isLoggedIn')) {

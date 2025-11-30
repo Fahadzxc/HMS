@@ -47,6 +47,49 @@ class RoomModel extends Model
         return $this->getAvailableRooms('outpatient');
     }
 
+    /**
+     * Get rooms filtered by appointment type
+     * Maps appointment types to room specializations
+     */
+    public function getRoomsByAppointmentType($appointmentType, $roomType = 'outpatient')
+    {
+        // Map appointment types to room specializations (based on actual database values)
+        $specializationMap = [
+            'consultation' => ['General Medicine', 'Cardiology', 'Pediatrics', 'Consultation', 'General Practice', 'Family Medicine'],
+            'follow-up' => ['General Medicine', 'Cardiology', 'Pediatrics', 'Consultation', 'General Practice', 'Family Medicine'],
+            'procedure' => ['Procedure Room', 'Surgery', 'Operating Room', 'General Medicine', 'Cardiology', 'Pediatrics'],
+            'laboratory_test' => ['Laboratory', 'Lab', 'Clinical Laboratory', 'Pathology'],
+            'imaging' => ['Radiology', 'X-Ray', 'Imaging', 'Diagnostic Imaging', 'Ultrasound'],
+        ];
+
+        $builder = $this->builder();
+        $builder->where('room_type', $roomType);
+        $builder->where('is_available', true);
+        $builder->where('current_occupancy <', 'capacity', false);
+
+        // If appointment type has specific specializations, filter by them
+        if (isset($specializationMap[$appointmentType])) {
+            $specializations = $specializationMap[$appointmentType];
+            $builder->whereIn('specialization', $specializations);
+            
+            // Get filtered results
+            $filteredRooms = $builder->orderBy('room_number', 'ASC')
+                                   ->get()
+                                   ->getResultArray();
+            
+            // If no rooms found with specific specialization, fallback to all outpatient rooms
+            if (empty($filteredRooms) && in_array($appointmentType, ['consultation', 'follow-up', 'procedure'])) {
+                // Fallback: return all available outpatient rooms
+                return $this->getAvailableRooms($roomType);
+            }
+            
+            return $filteredRooms;
+        } else {
+            // For unknown appointment types, return all outpatient rooms
+            return $this->getAvailableRooms($roomType);
+        }
+    }
+
     public function updateOccupancy($roomId, $increment = true)
     {
         $room = $this->find($roomId);

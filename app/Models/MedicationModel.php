@@ -16,6 +16,7 @@ class MedicationModel extends Model
         'name',        // Amoxicillin
         'strength',    // 500mg
         'form',        // tablet, capsule, syrup
+        'price',       // Price per unit
         'default_dosage',
         'default_quantity',
         'notes',

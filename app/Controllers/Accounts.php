@@ -213,32 +213,57 @@ class Accounts extends Controller
 				return $this->response->setJSON(['success' => false, 'message' => 'Bill total must be greater than zero']);
 			}
 			
-			// Calculate discount based on PhilHealth insurance if applicable
+			// Calculate discount based on patient's insurance provider
 			$discount = floatval($postData['discount'] ?? 0);
 			
-			// If discount is 0, check if patient has PhilHealth insurance
+			// If discount is 0, check if patient has insurance
 			if ($discount == 0) {
 				$insuranceModel = new InsuranceModel();
-				// Check if patient has an active PhilHealth claim or insurance
-				$philHealthClaim = $insuranceModel->where('patient_id', $postData['patient_id'])
-					->where('insurance_provider', 'PhilHealth')
+				// Get patient's most recent insurance claim
+				$insuranceClaim = $insuranceModel->where('patient_id', $postData['patient_id'])
 					->whereIn('status', ['pending', 'submitted', 'approved', 'paid'])
 					->orderBy('created_at', 'DESC')
 					->first();
 				
-				// If patient has PhilHealth, apply 15% discount (patient pays 85%)
-				if ($philHealthClaim) {
-					$discount = $subtotal * 0.15; // 15% discount
+				if ($insuranceClaim && !empty($insuranceClaim['insurance_provider'])) {
+					$provider = $insuranceClaim['insurance_provider'];
+					
+					// Discount rates by insurance provider
+					$discountRates = [
+						'PhilHealth' => 0.15,        // 15% discount
+						'Maxicare' => 0.10,           // 10% discount
+						'Medicard' => 0.10,           // 10% discount
+						'Intellicare' => 0.10,        // 10% discount
+						'PhilCare' => 0.10,          // 10% discount
+						'Insular Healthcare' => 0.10, // 10% discount
+						'Avega' => 0.10,             // 10% discount
+						'Pacific Cross' => 0.10,     // 10% discount
+					];
+					
+					// Normalize provider name (handle variations)
+					$providerLower = strtolower($provider);
+					$discountRate = 0;
+					
+					foreach ($discountRates as $key => $rate) {
+						if (strpos($providerLower, strtolower($key)) !== false) {
+							$discountRate = $rate;
+							break;
+						}
+					}
+					
+					// Apply discount if provider is found
+					if ($discountRate > 0) {
+						$discount = $subtotal * $discountRate;
+					}
 				}
 			}
 			
 			// Ensure discount doesn't exceed subtotal
 			$discount = min($discount, $subtotal);
 			
-			// Tax is automatically 12% of (subtotal - discount)
-			$taxableAmount = $subtotal - $discount;
-			$tax = $taxableAmount * 0.12;
-			$totalAmount = $taxableAmount + $tax;
+			// No tax - total is subtotal minus discount
+			$tax = 0;
+			$totalAmount = $subtotal - $discount;
 			
 			// Create bill
 			$billData = [
@@ -599,25 +624,52 @@ class Accounts extends Controller
 		try {
 			$insuranceModel = new InsuranceModel();
 			
-			// Check if patient has PhilHealth insurance
-			$philHealthClaim = $insuranceModel->where('patient_id', $patientId)
-				->where('insurance_provider', 'PhilHealth')
+			// Get patient's most recent insurance claim
+			$insuranceClaim = $insuranceModel->where('patient_id', $patientId)
 				->whereIn('status', ['pending', 'submitted', 'approved', 'paid'])
 				->orderBy('created_at', 'DESC')
 				->first();
 			
-			$hasPhilHealth = !empty($philHealthClaim);
-			$discountPercentage = $hasPhilHealth ? 15 : 0; // PhilHealth covers 15%
-			$coPaymentPercentage = $hasPhilHealth ? 85 : 0; // Patient pays 85%
+			$hasInsurance = !empty($insuranceClaim) && !empty($insuranceClaim['insurance_provider']);
+			$provider = $hasInsurance ? $insuranceClaim['insurance_provider'] : null;
+			
+			// Discount rates by insurance provider
+			$discountRates = [
+				'PhilHealth' => 15,        // 15% discount
+				'Maxicare' => 10,          // 10% discount
+				'Medicard' => 10,          // 10% discount
+				'Intellicare' => 10,       // 10% discount
+				'PhilCare' => 10,          // 10% discount
+				'Insular Healthcare' => 10, // 10% discount
+				'Avega' => 10,             // 10% discount
+				'Pacific Cross' => 10,     // 10% discount
+			];
+			
+			$discountPercentage = 0;
+			$coPaymentPercentage = 100;
+			
+			if ($hasInsurance && $provider) {
+				// Normalize provider name (handle variations)
+				$providerLower = strtolower($provider);
+				
+				foreach ($discountRates as $key => $rate) {
+					if (strpos($providerLower, strtolower($key)) !== false) {
+						$discountPercentage = $rate;
+						$coPaymentPercentage = 100 - $rate;
+						break;
+					}
+				}
+			}
 			
 			return $this->response->setJSON([
 				'success' => true,
-				'has_philhealth' => $hasPhilHealth,
+				'has_insurance' => $hasInsurance,
+				'has_philhealth' => $hasInsurance && stripos($provider ?? '', 'philhealth') !== false, // For backward compatibility
 				'discount_percentage' => $discountPercentage,
 				'copay_percentage' => $coPaymentPercentage,
-				'provider' => $philHealthClaim['insurance_provider'] ?? null,
-				'policy_number' => $philHealthClaim['policy_number'] ?? null,
-				'member_id' => $philHealthClaim['member_id'] ?? null
+				'provider' => $provider,
+				'policy_number' => $insuranceClaim['policy_number'] ?? null,
+				'member_id' => $insuranceClaim['member_id'] ?? null
 			]);
 		} catch (\Exception $e) {
 			log_message('error', 'Error getting patient insurance discount: ' . $e->getMessage());
@@ -874,12 +926,12 @@ class Accounts extends Controller
 				}
 			}
 			
-			// Get medication prices (medications table doesn't have price column, use defaults)
+			// Get medication prices from database or defaults, then double for patient billing
 			$medicationPrices = [];
-			// Note: medications table doesn't have a 'price' column, so we'll use default prices
 			
+			// Default base prices (will be doubled for patient) - only used if not found in database
 			$defaultPrices = [
-				'amoxicillin' => 50.00,
+				'amoxicillin' => 8.00, // Updated to match actual supplier price
 				'paracetamol' => 25.00,
 				'ibuprofen' => 30.00,
 				'aspirin' => 20.00,
@@ -890,6 +942,30 @@ class Accounts extends Controller
 				'cefuroxime' => 80.00,
 				'azithromycin' => 75.00,
 			];
+			
+			// Get prices from medications table and double them
+			if ($db->tableExists('medications')) {
+				$medications = $db->table('medications')->get()->getResultArray();
+				foreach ($medications as $med) {
+					$name = strtolower(trim($med['name'] ?? ''));
+					if (!empty($name) && isset($med['price'])) {
+						$basePrice = floatval($med['price']);
+						// Only add if price is greater than 0
+						if ($basePrice > 0) {
+							// Double the price for patient billing
+							$medicationPrices[$name] = $basePrice * 2;
+						}
+					}
+				}
+			}
+			
+			// Fill in defaults for medications not in database (doubled)
+			foreach ($defaultPrices as $key => $basePrice) {
+				$nameLower = $key;
+				if (!isset($medicationPrices[$nameLower])) {
+					$medicationPrices[$nameLower] = $basePrice * 2; // Double for patient
+				}
+			}
 			
 			foreach ($prescriptions as $prescription) {
 				try {
@@ -946,17 +1022,55 @@ class Accounts extends Controller
 								}
 							}
 							
-							// Get price
-							$unitPrice = 50.00;
-							$nameLower = strtolower($medicationName);
+							// Get price (already doubled from medicationPrices array)
+							$unitPrice = 0;
+							$nameLower = strtolower(trim($medicationName));
+							
+							// Extract base medication name (remove numbers, units like mg, ml, etc.)
+							$baseName = preg_replace('/\s*\d+.*?(mg|ml|g|kg|mcg|iu|units?)\s*/i', '', $nameLower);
+							$baseName = trim($baseName);
+							
+							// First try exact match
 							if (isset($medicationPrices[$nameLower])) {
 								$unitPrice = $medicationPrices[$nameLower];
+							} elseif (!empty($baseName) && isset($medicationPrices[$baseName])) {
+								$unitPrice = $medicationPrices[$baseName];
 							} else {
-								foreach ($defaultPrices as $key => $price) {
-									if (strpos($nameLower, $key) !== false) {
+								// Try to match by partial name (check if medication name contains key or vice versa)
+								$found = false;
+								foreach ($medicationPrices as $key => $price) {
+									if (strpos($nameLower, $key) !== false || strpos($key, $nameLower) !== false) {
 										$unitPrice = $price;
+										$found = true;
 										break;
 									}
+								}
+								
+								// If still not found, try with base name
+								if (!$found && !empty($baseName)) {
+									foreach ($medicationPrices as $key => $price) {
+										if (strpos($baseName, $key) !== false || strpos($key, $baseName) !== false) {
+											$unitPrice = $price;
+											$found = true;
+											break;
+										}
+									}
+								}
+								
+								// If still not found, try default prices and double
+								if (!$found) {
+									foreach ($defaultPrices as $key => $basePrice) {
+										if (strpos($nameLower, $key) !== false || (!empty($baseName) && strpos($baseName, $key) !== false)) {
+											$unitPrice = $basePrice * 2; // Double for patient
+											$found = true;
+											break;
+										}
+									}
+								}
+								
+								// If still not found, use default doubled price (8 * 2 = 16)
+								if (!$found || $unitPrice <= 0) {
+									$unitPrice = 16.00; // default doubled price for amoxicillin
 								}
 							}
 							
@@ -1127,14 +1241,13 @@ class Accounts extends Controller
 				$items = [];
 			}
 			
-			// Get medication prices (medications table doesn't have price column, use defaults)
+			// Get medication prices from database or defaults, then double for patient billing
 			$db = \Config\Database::connect();
 			$medicationPrices = [];
-			// Note: medications table doesn't have a 'price' column, so we'll use default prices
 			
-			// Default prices
+			// Default base prices (will be doubled for patient) - only used if not found in database
 			$defaultPrices = [
-				'amoxicillin' => 50.00,
+				'amoxicillin' => 8.00, // Updated to match actual supplier price
 				'paracetamol' => 25.00,
 				'ibuprofen' => 30.00,
 				'aspirin' => 20.00,
@@ -1145,6 +1258,30 @@ class Accounts extends Controller
 				'cefuroxime' => 80.00,
 				'azithromycin' => 75.00,
 			];
+			
+			// Get prices from medications table and double them
+			if ($db->tableExists('medications')) {
+				$medications = $db->table('medications')->get()->getResultArray();
+				foreach ($medications as $med) {
+					$name = strtolower(trim($med['name'] ?? ''));
+					if (!empty($name) && isset($med['price'])) {
+						$basePrice = floatval($med['price']);
+						// Only add if price is greater than 0
+						if ($basePrice > 0) {
+							// Double the price for patient billing
+							$medicationPrices[$name] = $basePrice * 2;
+						}
+					}
+				}
+			}
+			
+			// Fill in defaults for medications not in database (doubled)
+			foreach ($defaultPrices as $key => $basePrice) {
+				$nameLower = $key;
+				if (!isset($medicationPrices[$nameLower])) {
+					$medicationPrices[$nameLower] = $basePrice * 2; // Double for patient
+				}
+			}
 			
 			// Process items with prices
 			$processedItems = [];
@@ -1176,17 +1313,55 @@ class Accounts extends Controller
 					}
 				}
 				
-				// Get price
-				$unitPrice = 50.00; // default
-				$nameLower = strtolower($medicationName);
+				// Get price (already doubled from medicationPrices array)
+				$unitPrice = 0;
+				$nameLower = strtolower(trim($medicationName));
+				
+				// Extract base medication name (remove numbers, units like mg, ml, etc.)
+				$baseName = preg_replace('/\s*\d+.*?(mg|ml|g|kg|mcg|iu|units?)\s*/i', '', $nameLower);
+				$baseName = trim($baseName);
+				
+				// First try exact match
 				if (isset($medicationPrices[$nameLower])) {
 					$unitPrice = $medicationPrices[$nameLower];
+				} elseif (!empty($baseName) && isset($medicationPrices[$baseName])) {
+					$unitPrice = $medicationPrices[$baseName];
 				} else {
-					foreach ($defaultPrices as $key => $price) {
-						if (strpos($nameLower, $key) !== false) {
+					// Try to match by partial name (check if medication name contains key or vice versa)
+					$found = false;
+					foreach ($medicationPrices as $key => $price) {
+						if (strpos($nameLower, $key) !== false || strpos($key, $nameLower) !== false) {
 							$unitPrice = $price;
+							$found = true;
 							break;
 						}
+					}
+					
+					// If still not found, try with base name
+					if (!$found && !empty($baseName)) {
+						foreach ($medicationPrices as $key => $price) {
+							if (strpos($baseName, $key) !== false || strpos($key, $baseName) !== false) {
+								$unitPrice = $price;
+								$found = true;
+								break;
+							}
+						}
+					}
+					
+					// If still not found, try default prices and double
+					if (!$found) {
+						foreach ($defaultPrices as $key => $basePrice) {
+							if (strpos($nameLower, $key) !== false || (!empty($baseName) && strpos($baseName, $key) !== false)) {
+								$unitPrice = $basePrice * 2; // Double for patient
+								$found = true;
+								break;
+							}
+						}
+					}
+					
+					// If still not found, use default doubled price (8 * 2 = 16)
+					if (!$found || $unitPrice <= 0) {
+						$unitPrice = 16.00; // default doubled price for amoxicillin
 					}
 				}
 				

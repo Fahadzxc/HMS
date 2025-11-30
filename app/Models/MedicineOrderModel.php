@@ -17,6 +17,8 @@ class MedicineOrderModel extends Model
         'medicine_name',
         'supplier_name',
         'quantity_ordered',
+        'unit_price',
+        'total_price',
         'order_date',
         'status',
         'received_by',
