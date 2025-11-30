@@ -68,7 +68,6 @@ $menus = [
         ['label' => 'Dashboard', 'url' => base_url('accounts/dashboard')],
         ['label' => 'Billing', 'url' => base_url('accounts/billing')],
         ['label' => 'Payments', 'url' => base_url('accounts/payments')],
-        ['label' => 'Insurance', 'url' => base_url('accounts/insurance')],
         ['label' => 'Reports', 'url' => base_url('accounts/reports')],
         ['label' => 'Financial', 'url' => base_url('accounts/financial')],
         ['label' => 'Settings', 'url' => base_url('admin/settings')],

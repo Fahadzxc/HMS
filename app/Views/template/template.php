@@ -2099,6 +2099,97 @@
         .modal-footer{display:flex;justify-content:flex-end;gap:12px;margin-top:16px}
         .modal-close{border:none;background:transparent;font-size:28px;cursor:pointer;line-height:1;color:#6b7280;padding:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:4px;transition:all 0.2s}
         .modal-close:hover{background:#f3f4f6;color:#111827}
+        
+        /* View Bill Modal Styles */
+        .view-bill-modal {
+            max-width: 900px;
+            width: 100%;
+        }
+        
+        .view-bill-section {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .view-bill-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .view-bill-section h4 {
+            margin: 0 0 1rem 0;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .view-bill-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .view-bill-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .view-bill-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .view-bill-value {
+            font-size: 0.9375rem;
+            color: #1e293b;
+        }
+        
+        .view-bill-summary {
+            background: #f8fafc;
+            padding: 1.25rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .view-bill-summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .view-bill-summary-row:last-child {
+            border-bottom: none;
+        }
+        
+        .view-bill-summary-row.view-bill-total {
+            border-top: 2px solid #3B82F6;
+            border-bottom: 2px solid #3B82F6;
+            margin-top: 0.5rem;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+        
+        .view-bill-summary-label {
+            font-size: 0.9375rem;
+            color: #475569;
+        }
+        
+        .view-bill-summary-value {
+            font-size: 1rem;
+            color: #1e293b;
+        }
+        
+        .view-bill-total .view-bill-summary-label,
+        .view-bill-total .view-bill-summary-value {
+            font-size: 1.125rem;
+            color: #1e293b;
+        }
+        
         .lab-result-modal-dialog{width:min(680px,92vw);max-height:90vh;overflow-y:auto}
         .lab-result-modal-card{background:#fff;border-radius:20px;box-shadow:0 25px 80px rgba(15,23,42,0.18);padding:28px;display:flex;flex-direction:column;gap:24px;font-family:'Inter','Segoe UI',sans-serif}
         .lab-result-modal-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}

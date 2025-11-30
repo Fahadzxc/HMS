@@ -18,7 +18,6 @@ class Accounts extends Controller
 	public function __construct()
 	{
 		$this->ensureBillingTables();
-		$this->ensureInsuranceTables();
 	}
 
 	// ---------- Helpers for Lab billing ----------
@@ -560,7 +559,8 @@ class Accounts extends Controller
 	
 	public function getBillDetails($billId)
 	{
-		if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
+		$userRole = session()->get('role');
+		if (!session()->get('isLoggedIn') || !in_array($userRole, ['accountant', 'admin'])) {
 			return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(401);
 		}
 		
@@ -572,47 +572,6 @@ class Accounts extends Controller
 		}
 		
 		return $this->response->setJSON(['success' => false, 'message' => 'Bill not found']);
-	}
-	
-	public function getPatientInsuranceInfo($billId)
-	{
-		if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
-			return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(401);
-		}
-		
-		try {
-			$billingModel = new BillingModel();
-			$bill = $billingModel->find($billId);
-			
-			if (!$bill) {
-				return $this->response->setJSON(['success' => false, 'message' => 'Bill not found']);
-			}
-			
-			$patientId = $bill['patient_id'];
-			$insuranceModel = new InsuranceModel();
-			
-			// Get patient's most recent insurance claim for reference
-			$lastClaim = $insuranceModel->where('patient_id', $patientId)
-				->orderBy('created_at', 'DESC')
-				->first();
-			
-			$insuranceInfo = [
-				'policy_number' => $lastClaim['policy_number'] ?? '',
-				'member_id' => $lastClaim['member_id'] ?? '',
-				'last_provider' => $lastClaim['insurance_provider'] ?? ''
-			];
-			
-			return $this->response->setJSON([
-				'success' => true,
-				'insurance_info' => $insuranceInfo
-			]);
-		} catch (\Exception $e) {
-			log_message('error', 'Error getting patient insurance info: ' . $e->getMessage());
-			return $this->response->setJSON([
-				'success' => false,
-				'message' => 'Error: ' . $e->getMessage()
-			]);
-		}
 	}
 	
 	public function getPatientInsuranceDiscount($patientId)
@@ -673,33 +632,6 @@ class Accounts extends Controller
 			]);
 		} catch (\Exception $e) {
 			log_message('error', 'Error getting patient insurance discount: ' . $e->getMessage());
-			return $this->response->setJSON([
-				'success' => false,
-				'message' => 'Error: ' . $e->getMessage()
-			]);
-		}
-	}
-	
-	public function getClaimDetails($claimId)
-	{
-		if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
-			return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(401);
-		}
-		
-		try {
-			$insuranceModel = new InsuranceModel();
-			$claim = $insuranceModel->find($claimId);
-			
-			if (!$claim) {
-				return $this->response->setJSON(['success' => false, 'message' => 'Claim not found']);
-			}
-			
-			return $this->response->setJSON([
-				'success' => true,
-				'claim' => $claim
-			]);
-		} catch (\Exception $e) {
-			log_message('error', 'Error getting claim details: ' . $e->getMessage());
 			return $this->response->setJSON([
 				'success' => false,
 				'message' => 'Error: ' . $e->getMessage()
@@ -1553,344 +1485,6 @@ class Accounts extends Controller
 		return view('accounts/payments', $data);
 	}
 
-	public function insurance()
-	{
-		if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
-			return redirect()->to('/login');
-		}
-
-		$insuranceModel = new InsuranceModel();
-		$billingModel = new BillingModel();
-		$patientModel = new PatientModel();
-		
-		// Get filters
-		$filters = [
-			'status' => $this->request->getGet('status'),
-			'patient_id' => $this->request->getGet('patient_id'),
-			'insurance_provider' => $this->request->getGet('insurance_provider'),
-			'date_from' => $this->request->getGet('date_from'),
-			'date_to' => $this->request->getGet('date_to'),
-		];
-		
-		// Get all insurance claims
-		$claims = $insuranceModel->getClaimsWithPatient($filters);
-		
-		// Get stats
-		$totalClaims = $insuranceModel->selectSum('claim_amount')->get()->getRowArray();
-		$approvedClaims = $insuranceModel->selectSum('approved_amount')
-			->where('status', 'approved')
-			->get()->getRowArray();
-		$pendingClaims = $insuranceModel->where('status', 'pending')->orWhere('status', 'submitted')->countAllResults();
-		
-		// Get patients for dropdown
-		$patients = $patientModel->select('id, full_name, patient_id')->orderBy('full_name', 'ASC')->findAll();
-		
-		// Get insurance providers list
-		$providers = $insuranceModel->select('insurance_provider')
-			->distinct()
-			->orderBy('insurance_provider', 'ASC')
-			->findAll();
-		
-		// Get bills that can be claimed (unpaid bills)
-		$unclaimedBills = $billingModel->where('status', 'pending')
-			->orWhere('status', 'partial')
-			->getBillsWithPatient();
-
-		$data = [
-			'title' => 'Insurance - HMS',
-			'user_role' => 'accountant',
-			'user_name' => session()->get('name'),
-			'claims' => $claims,
-			'patients' => $patients,
-			'providers' => $providers,
-			'unclaimed_bills' => $unclaimedBills,
-			'total_claims' => $totalClaims['claim_amount'] ?? 0,
-			'approved_claims' => $approvedClaims['approved_amount'] ?? 0,
-			'pending_claims_count' => $pendingClaims,
-			'filters' => $filters,
-		];
-
-		return view('accounts/insurance', $data);
-	}
-	
-	public function createInsuranceClaim()
-	{
-		// Set JSON response header first
-		$this->response->setContentType('application/json');
-		
-		try {
-			if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
-				return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(401);
-			}
-			
-			// Ensure insurance tables exist
-			$this->ensureInsuranceTables();
-			
-			$insuranceModel = new InsuranceModel();
-			$billingModel = new BillingModel();
-			
-			// Get JSON data
-			$postData = $this->request->getJSON(true);
-			
-			// If getJSON returns null, try getPost
-			if (empty($postData)) {
-				$postData = $this->request->getPost();
-			}
-			
-			if (empty($postData)) {
-				return $this->response->setJSON(['success' => false, 'message' => 'No data received']);
-			}
-			
-			$billId = $postData['bill_id'] ?? null;
-			if (!$billId) {
-				return $this->response->setJSON(['success' => false, 'message' => 'Bill ID is required']);
-			}
-			
-			$bill = $billingModel->find($billId);
-			if (!$bill) {
-				return $this->response->setJSON(['success' => false, 'message' => 'Bill not found']);
-			}
-			
-			// Generate claim number
-			$claimNumber = $insuranceModel->generateClaimNumber();
-			
-			// Create insurance claim
-			$claimData = [
-				'claim_number' => $claimNumber,
-				'bill_id' => $billId,
-				'patient_id' => $bill['patient_id'],
-				'insurance_provider' => $postData['insurance_provider'] ?? '',
-				'policy_number' => !empty($postData['policy_number']) ? $postData['policy_number'] : null,
-				'member_id' => !empty($postData['member_id']) ? $postData['member_id'] : null,
-				'claim_amount' => floatval($postData['claim_amount'] ?? $bill['balance']),
-				'approved_amount' => 0,
-				'deductible' => floatval($postData['deductible'] ?? 0),
-				'co_payment' => floatval($postData['co_payment'] ?? 0),
-				'status' => 'submitted',
-				'submitted_date' => date('Y-m-d'),
-				'notes' => !empty($postData['notes']) ? $postData['notes'] : null,
-				'created_by' => session()->get('user_id'),
-			];
-			
-			$claimId = $insuranceModel->insert($claimData);
-			
-			if ($claimId) {
-				return $this->response->setJSON([
-					'success' => true,
-					'message' => 'Insurance claim created successfully',
-					'claim_id' => $claimId,
-					'claim_number' => $claimNumber
-				]);
-			}
-			
-			$errors = $insuranceModel->errors();
-			return $this->response->setJSON([
-				'success' => false, 
-				'message' => 'Failed to create insurance claim: ' . (is_array($errors) ? implode(', ', $errors) : 'Unknown error')
-			]);
-			
-		} catch (\Exception $e) {
-			log_message('error', 'Error creating insurance claim: ' . $e->getMessage());
-			log_message('error', 'Stack trace: ' . $e->getTraceAsString());
-			log_message('error', 'File: ' . $e->getFile() . ' Line: ' . $e->getLine());
-			return $this->response->setJSON([
-				'success' => false,
-				'message' => 'Error: ' . $e->getMessage()
-			]);
-		}
-	}
-	
-	public function updateInsuranceClaim()
-	{
-		try {
-			if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
-				return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(401);
-			}
-			
-			$insuranceModel = new InsuranceModel();
-			$paymentModel = new PaymentModel();
-			$billingModel = new BillingModel();
-			
-			$postData = $this->request->getJSON(true);
-			
-			if (!$postData) {
-				return $this->response->setJSON(['success' => false, 'message' => 'Invalid request data']);
-			}
-			
-			$claimId = $postData['claim_id'] ?? null;
-			$status = $postData['status'] ?? null;
-			
-			if (!$claimId || !$status) {
-				return $this->response->setJSON(['success' => false, 'message' => 'Claim ID and status are required']);
-			}
-			
-			$claim = $insuranceModel->find($claimId);
-			if (!$claim) {
-				return $this->response->setJSON(['success' => false, 'message' => 'Claim not found']);
-			}
-			
-			$updateData = [
-				'status' => $status,
-			];
-			
-			if ($status === 'approved') {
-				$approvedAmount = floatval($postData['approved_amount'] ?? $claim['claim_amount']);
-				if ($approvedAmount <= 0) {
-					return $this->response->setJSON(['success' => false, 'message' => 'Approved amount must be greater than zero']);
-				}
-				
-				$updateData['approved_amount'] = $approvedAmount;
-				$updateData['approved_date'] = date('Y-m-d');
-				
-				// Auto-create payment if approved
-				if ($postData['auto_create_payment'] ?? false) {
-					$bill = $billingModel->find($claim['bill_id']);
-					if ($bill) {
-						// Check if there's already an insurance payment for this bill
-						$existingInsurancePayment = $paymentModel->where('bill_id', $claim['bill_id'])
-							->where('payment_method', 'insurance')
-							->where('status', 'completed')
-							->first();
-						
-						if ($existingInsurancePayment) {
-							// Insurance payment already exists, don't create duplicate
-							return $this->response->setJSON([
-								'success' => false,
-								'message' => 'Insurance payment already exists for this bill. Cannot create duplicate payment.'
-							]);
-						}
-						
-						// Check all existing payments for this bill
-						$existingPayments = $paymentModel->where('bill_id', $claim['bill_id'])
-							->where('status', 'completed')
-							->findAll();
-						
-						// Calculate total already paid (including all payment methods)
-						$totalAlreadyPaid = 0;
-						foreach ($existingPayments as $existingPayment) {
-							$totalAlreadyPaid += floatval($existingPayment['amount']);
-						}
-						
-						// If bill is already fully paid, don't create insurance payment
-						if ($totalAlreadyPaid >= $bill['total_amount']) {
-							return $this->response->setJSON([
-								'success' => false,
-								'message' => 'Bill is already fully paid (₱' . number_format($totalAlreadyPaid, 2) . '). Cannot create insurance payment.'
-							]);
-						}
-						
-						// Calculate remaining balance
-						$remainingBalance = $bill['total_amount'] - $totalAlreadyPaid;
-						
-						// Don't create insurance payment if it exceeds remaining balance
-						if ($updateData['approved_amount'] > $remainingBalance) {
-							return $this->response->setJSON([
-								'success' => false,
-								'message' => 'Approved amount (₱' . number_format($updateData['approved_amount'], 2) . ') exceeds remaining balance (₱' . number_format($remainingBalance, 2) . ').'
-							]);
-						}
-						
-						$paymentNumber = $paymentModel->generatePaymentNumber();
-						
-						$paymentData = [
-							'bill_id' => $claim['bill_id'],
-							'patient_id' => $claim['patient_id'],
-							'payment_number' => $paymentNumber,
-							'amount' => $updateData['approved_amount'],
-							'payment_method' => 'insurance',
-							'payment_date' => date('Y-m-d'),
-							'reference_number' => $claim['claim_number'],
-							'notes' => 'Insurance claim: ' . $claim['claim_number'],
-							'status' => 'completed',
-							'processed_by' => session()->get('user_id'),
-						];
-						
-						$paymentId = $paymentModel->insert($paymentData);
-						
-						if ($paymentId) {
-							$newPaidAmount = $bill['paid_amount'] + $updateData['approved_amount'];
-							$newBalance = $bill['total_amount'] - $newPaidAmount;
-							$newStatus = $newBalance <= 0 ? 'paid' : ($newBalance < $bill['total_amount'] ? 'partial' : 'pending');
-							
-							$billingModel->update($claim['bill_id'], [
-								'paid_amount' => $newPaidAmount,
-								'balance' => max(0, $newBalance),
-								'status' => $newStatus,
-							]);
-						}
-					}
-				}
-			} elseif ($status === 'rejected') {
-				$rejectionReason = $postData['rejection_reason'] ?? null;
-				if (empty($rejectionReason)) {
-					return $this->response->setJSON(['success' => false, 'message' => 'Rejection reason is required']);
-				}
-				$updateData['rejected_date'] = date('Y-m-d');
-				$updateData['rejection_reason'] = $rejectionReason;
-			}
-			
-			$result = $insuranceModel->update($claimId, $updateData);
-			
-			if ($result) {
-				return $this->response->setJSON([
-					'success' => true,
-					'message' => 'Insurance claim updated successfully'
-				]);
-			}
-			
-			$errors = $insuranceModel->errors();
-			return $this->response->setJSON([
-				'success' => false, 
-				'message' => 'Failed to update insurance claim: ' . (is_array($errors) ? implode(', ', $errors) : 'Unknown error')
-			]);
-			
-		} catch (\Exception $e) {
-			log_message('error', 'Error updating insurance claim: ' . $e->getMessage());
-			log_message('error', 'Stack trace: ' . $e->getTraceAsString());
-			return $this->response->setJSON([
-				'success' => false,
-				'message' => 'Error: ' . $e->getMessage()
-			]);
-		}
-	}
-	
-	private function ensureInsuranceTables()
-	{
-		$db = \Config\Database::connect();
-		
-		// Create insurance_claims table
-		if (!$db->tableExists('insurance_claims')) {
-			$forge = \Config\Database::forge();
-			$forge->addField([
-				'id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'auto_increment' => true],
-				'claim_number' => ['type' => 'VARCHAR', 'constraint' => 50],
-				'bill_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true],
-				'patient_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true],
-				'insurance_provider' => ['type' => 'VARCHAR', 'constraint' => 255],
-				'policy_number' => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
-				'member_id' => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
-				'claim_amount' => ['type' => 'DECIMAL', 'constraint' => '10,2'],
-				'approved_amount' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'default' => 0],
-				'deductible' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'default' => 0],
-				'co_payment' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'default' => 0],
-				'status' => ['type' => 'ENUM', 'constraint' => ['pending', 'submitted', 'approved', 'rejected', 'paid', 'cancelled'], 'default' => 'pending'],
-				'submitted_date' => ['type' => 'DATE', 'null' => true],
-				'approved_date' => ['type' => 'DATE', 'null' => true],
-				'rejected_date' => ['type' => 'DATE', 'null' => true],
-				'rejection_reason' => ['type' => 'TEXT', 'null' => true],
-				'notes' => ['type' => 'TEXT', 'null' => true],
-				'created_by' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
-				'created_at' => ['type' => 'DATETIME', 'null' => true],
-				'updated_at' => ['type' => 'DATETIME', 'null' => true],
-			]);
-			$forge->addKey('id', true);
-			$forge->addKey('bill_id');
-			$forge->addKey('patient_id');
-			$forge->addKey('claim_number');
-			$forge->createTable('insurance_claims', true);
-		}
-	}
-
 	public function reports()
 	{
 		if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
@@ -1899,7 +1493,6 @@ class Accounts extends Controller
 
 		$billingModel = new BillingModel();
 		$paymentModel = new PaymentModel();
-		$insuranceModel = new InsuranceModel();
 		
 		// Get filters
 		$reportType = $this->request->getGet('type') ?? 'bills';
@@ -1915,12 +1508,10 @@ class Accounts extends Controller
 			'date_to' => $dateTo,
 			'bills' => [],
 			'payments' => [],
-			'insurance_claims' => [],
 			'summary' => [
 				'total_revenue' => 0,
 				'total_bills' => 0,
 				'total_payments' => 0,
-				'total_claims' => 0,
 				'pending_bills' => 0,
 			]
 		];
@@ -1951,21 +1542,6 @@ class Accounts extends Controller
 			$data['payments'] = $payments;
 			$data['summary']['total_payments'] = count($payments);
 			$data['summary']['total_revenue'] = array_sum(array_column($payments, 'amount'));
-
-			// Insurance Claims Report
-			$db = \Config\Database::connect();
-			$claims = $db->table('insurance_claims ic')
-				->select('ic.*, p.full_name as patient_name, b.bill_number')
-				->join('patients p', 'p.id = ic.patient_id', 'left')
-				->join('bills b', 'b.id = ic.bill_id', 'left')
-				->where('DATE(ic.created_at) >=', $dateFrom)
-				->where('DATE(ic.created_at) <=', $dateTo)
-				->orderBy('ic.created_at', 'DESC')
-				->get()
-				->getResultArray();
-			
-			$data['insurance_claims'] = $claims;
-			$data['summary']['total_claims'] = count($claims);
 
 		} catch (\Exception $e) {
 			log_message('error', 'Error fetching accounts reports: ' . $e->getMessage());

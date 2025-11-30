@@ -49,7 +49,8 @@ class BillingModel extends Model
     public function getBillsWithPatient($filters = [])
     {
         $builder = $this->db->table('bills b');
-        $builder->select('b.*, p.full_name as patient_name, p.patient_id as patient_code, p.contact, p.email');
+        $builder->select('b.*, p.full_name as patient_name, p.patient_id as patient_code, p.contact, p.email,
+            (SELECT payment_method FROM payments WHERE bill_id = b.id AND status = "completed" ORDER BY created_at DESC LIMIT 1) as payment_method');
         $builder->join('patients p', 'p.id = b.patient_id', 'left');
         
         if (!empty($filters['status'])) {
@@ -70,7 +71,24 @@ class BillingModel extends Model
         
         $builder->orderBy('b.created_at', 'DESC');
         
-        return $builder->get()->getResultArray();
+        $bills = $builder->get()->getResultArray();
+        
+        // Determine bill_type from related records if it's 'other'
+        foreach ($bills as &$bill) {
+            if ($bill['bill_type'] === 'other') {
+                if (!empty($bill['prescription_id'])) {
+                    $bill['bill_type'] = 'prescription';
+                } elseif (!empty($bill['appointment_id'])) {
+                    $bill['bill_type'] = 'appointment';
+                } elseif (!empty($bill['lab_test_id'])) {
+                    $bill['bill_type'] = 'lab_test';
+                } elseif (!empty($bill['room_id'])) {
+                    $bill['bill_type'] = 'room';
+                }
+            }
+        }
+        
+        return $bills;
     }
 
     public function getBillWithItems($billId)
