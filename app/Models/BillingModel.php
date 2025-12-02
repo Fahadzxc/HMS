@@ -69,6 +69,12 @@ class BillingModel extends Model
             $builder->where('b.created_at <=', $filters['date_to']);
         }
         
+        // Exclude prescription bills (handled by Pharmacy module)
+        if (!empty($filters['exclude_prescription'])) {
+            $builder->where('b.bill_type !=', 'prescription');
+            $builder->where('b.prescription_id IS NULL');
+        }
+        
         $builder->orderBy('b.created_at', 'DESC');
         
         $bills = $builder->get()->getResultArray();

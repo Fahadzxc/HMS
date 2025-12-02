@@ -30,7 +30,8 @@ class Billing extends Controller
             'date_to' => $this->request->getGet('date_to'),
         ];
         
-        // Get all bills
+        // Get all bills (exclude prescription bills - those are handled by Pharmacy)
+        $filters['exclude_prescription'] = true;
         $bills = $billingModel->getBillsWithPatient($filters);
         
         // Get stats

@@ -753,7 +753,7 @@ class Accounts extends Controller
 			
 			if ($hasInsurance && $provider) {
 				$insuranceProviderModel = new InsuranceProviderModel();
-				
+			
 				// Try to get coverage by provider name
 				$coverage = $insuranceProviderModel->getCoverageByName($provider);
 				
@@ -776,8 +776,8 @@ class Accounts extends Controller
 							];
 							log_message('debug', 'Provider match found: ' . $provider . ' -> ' . $prov['name']);
 							break;
-						}
-					}
+		}
+	}
 				}
 				
 				if ($coverage) {
@@ -1849,13 +1849,51 @@ class Accounts extends Controller
 			return redirect()->to('/login');
 		}
 
+		$db = \Config\Database::connect();
+		$billingModel = new BillingModel();
+		$paymentModel = new PaymentModel();
+		
+		// Get today's revenue
+		$today = date('Y-m-d');
+		$todayRevenue = $db->table('payments')
+			->selectSum('amount')
+			->where('payment_date', $today)
+			->where('status', 'completed')
+			->get()->getRowArray();
+		
+		// Get pending bills
+		$pendingBills = $billingModel->getBillsWithPatient(['status' => 'pending']);
+		
+		// Get insurance claims count
+		$insuranceClaims = $db->table('insurance_claims')->countAllResults();
+		
+		// Get overdue payments count
+		$overduePayments = $db->table('bills')
+			->where('status', 'overdue')
+			->countAllResults();
+		
+		// Get recent payments with patient info
+		$recentPayments = $db->table('payments p')
+			->select('p.*, pat.full_name as patient_name, b.bill_number')
+			->join('patients pat', 'pat.id = p.patient_id', 'left')
+			->join('bills b', 'b.id = p.bill_id', 'left')
+			->orderBy('p.created_at', 'DESC')
+			->limit(10)
+			->get()->getResultArray();
+
 		$data = [
 			'title' => 'Financial - HMS',
 			'user_role' => 'accountant',
 			'user_name' => session()->get('name'),
+			'today_revenue' => $todayRevenue['amount'] ?? 0,
+			'pending_bills' => $pendingBills,
+			'pending_bills_count' => count($pendingBills),
+			'insurance_claims' => $insuranceClaims,
+			'overdue_payments' => $overduePayments,
+			'recent_payments' => $recentPayments,
 		];
 
-		return view('auth/dashboard', $data);
+		return view('accounts/dashboard', $data);
 	}
 
 	public function settings()

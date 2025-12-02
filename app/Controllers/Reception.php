@@ -1546,9 +1546,9 @@ class Reception extends Controller
 			log_message('error', 'Error fetching reception reports: ' . $e->getMessage());
 		}
 
-        $html = view('reception/reports', $data);
-        return $this->response->setBody($html);
-    }
+		$html = view('reception/reports', $data);
+		return $this->response->setBody($html);
+	}
 
     public function settings()
     {

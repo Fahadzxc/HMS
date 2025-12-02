@@ -1,5 +1,8 @@
 <?php
 
+// Set timezone to Philippine Time
+date_default_timezone_set('Asia/Manila');
+
 use CodeIgniter\Boot;
 use Config\Paths;
 

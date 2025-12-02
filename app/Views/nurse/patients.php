@@ -181,18 +181,20 @@ $readyList = isset($ready_for_discharge) && is_array($ready_for_discharge) ? $re
     </header>
     
     <div class="stack">
-        <!-- Table Header (matches patients table schema) -->
-        <div class="card table-header">
-            <div class="row patients-grid">
-                <div class="col-id">Patient ID</div>
-                <div class="col-name">Name</div>
-                <div class="col-age">AGE/GENDER</div>
-                <div class="col-contact">CONTACT</div>
-                <div class="col-status">Status</div>
-                <div class="col-room">ROOM</div>
-                <div class="col-doctor">DOCTOR</div>
+        <!-- Table Container -->
+        <div class="table-wrapper" style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+            <!-- Table Header (matches patients table schema) -->
+            <div class="card table-header" style="margin: 0; border-radius: 0;">
+                <div class="row patients-grid">
+                    <div class="col-id">Patient ID</div>
+                    <div class="col-name">Name</div>
+                    <div class="col-age">AGE/GENDER</div>
+                    <div class="col-contact">CONTACT</div>
+                    <div class="col-status">Status</div>
+                    <div class="col-room">ROOM</div>
+                    <div class="col-doctor">DOCTOR</div>
+                </div>
             </div>
-        </div>
 
         <!-- Patient Rows (from database) -->
         <?php if (!empty($patientsList)): ?>
@@ -234,7 +236,7 @@ $readyList = isset($ready_for_discharge) && is_array($ready_for_discharge) ? $re
                     // Get blood type or default to O+
                     $bloodType = !empty($p['blood_type']) ? $p['blood_type'] : 'O+';
                 ?>
-        <div class="card table-row">
+        <div class="card table-row" style="margin: 0; border-radius: 0;">
             <div class="row patients-grid">
                         <div class="col-id patient-id"><?= esc($pid) ?></div>
                         <div class="col-name">
@@ -318,12 +320,13 @@ $readyList = isset($ready_for_discharge) && is_array($ready_for_discharge) ? $re
         </div>
             <?php endforeach; ?>
         <?php else: ?>
-        <div class="card table-row">
-            <div class="row between">
-                    <div class="col-name">No patients found.</div>
+        <div class="card table-row" style="margin: 0; border-radius: 0;">
+            <div class="row between" style="padding: 2rem; justify-content: center;">
+                    <div class="col-name" style="text-align: center; color: #64748b;">No patients found.</div>
                 </div>
             </div>
         <?php endif; ?>
+        </div><!-- end table-wrapper -->
         </div>
 </section>
 
@@ -342,30 +345,39 @@ $readyList = isset($ready_for_discharge) && is_array($ready_for_discharge) ? $re
     background: #f8fafc;
     border-bottom: 2px solid #e2e8f0;
     font-weight: 600;
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     color: #475569;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: 0;
+    margin: 0;
+    border-radius: 8px 8px 0 0;
 }
 
 /* Table row styling */
 .table-row {
     border-bottom: 1px solid #f1f5f9;
     padding: 0;
+    margin: 0;
+    background: white;
 }
 
 .table-row:last-child {
     border-bottom: none;
+    border-radius: 0 0 8px 8px;
+}
+
+.table-row:hover {
+    background: #f8fafc;
 }
 
 /* Grid layout to guarantee perfect alignment */
 .patients-grid {
     display: grid;
-    grid-template-columns: 90px 280px 130px 220px 130px 100px 200px; /* ID, Name, Age, Contact, Status, Room, Doctor */
+    grid-template-columns: 100px 280px 130px 220px 130px 160px 1fr; /* ID, Name, Age, Contact, Status, Room, Doctor */
     align-items: center;
-    column-gap: 20px;
-    padding: 0 1.25rem;
+    column-gap: 40px;
+    padding: 0 3rem;
     min-height: 60px;
 }
 
@@ -533,8 +545,8 @@ $readyList = isset($ready_for_discharge) && is_array($ready_for_discharge) ? $re
 /* Responsive adjustments */
 @media (max-width: 1200px) {
     .patients-grid {
-        grid-template-columns: 80px 240px 120px 200px 120px 90px 180px;
-        column-gap: 16px;
+        grid-template-columns: 90px 250px 120px 200px 120px 150px 1fr;
+        column-gap: 36px;
         padding: 0 1rem;
     }
     
@@ -546,7 +558,10 @@ $readyList = isset($ready_for_discharge) && is_array($ready_for_discharge) ? $re
 
 @media (max-width: 768px) {
     .patients-grid {
-        grid-template-columns: 70px 200px 100px 180px 110px 0px 160px;
+        grid-template-columns: 80px 200px 110px 180px 110px 140px 1fr;
+        column-gap: 32px;
+        font-size: 0.85rem;
+        padding: 0 2.5rem;
     }
     
     .col-room {

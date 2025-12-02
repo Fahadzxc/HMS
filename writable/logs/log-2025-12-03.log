@@ -1,0 +1,276 @@
+CRITICAL - 2025-12-03 02:26:20 --> Exception: Failed to parse time string (04/56/2005) at position 4 (6): Double date specification
+[Method: POST, Route: reception/patients/store]
+in APPPATH\Controllers\Reception.php on line 142.
+ 1 APPPATH\Controllers\Reception.php(142): DateTime->__construct('04/56/2005')
+ 2 APPPATH\Controllers\Reception.php(425): App\Controllers\Reception->extractPayload([...])
+ 3 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->store()
+ 4 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-12-03 02:26:39 --> Exception: Failed to parse time string (04/56/2005) at position 4 (6): Double date specification
+[Method: POST, Route: reception/patients/store]
+in APPPATH\Controllers\Reception.php on line 142.
+ 1 APPPATH\Controllers\Reception.php(142): DateTime->__construct('04/56/2005')
+ 2 APPPATH\Controllers\Reception.php(425): App\Controllers\Reception->extractPayload([...])
+ 3 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->store()
+ 4 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-12-03 02:54:15 --> mysqli_sql_exception: Unknown column 'u.id' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('\r\n            S...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('\r\n            S...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('\r\n            S...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Admin\Doctors.php(61): CodeIgniter\Database\BaseConnection->query('\r\n            S...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Admin\Doctors->index()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Doctors))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}
+CRITICAL - 2025-12-03 02:54:15 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'u.id' in 'where clause'
+[Method: GET, Route: admin/doctors]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 APPPATH\Controllers\Admin\Doctors.php(61): CodeIgniter\Database\BaseConnection->query('
+            SELECT u.id, u.name, u.email, u.status, u.created_at,
+                   (
+                       SELECT COUNT(DISTINCT patient_id) 
+                       FROM (
+                           SELECT patient_id FROM appointments WHERE doctor_id = u.id AND status != \'cancelled\'
+                           UNION
+                           SELECT patient_id FROM admissions WHERE doctor_id = u.id
+                       ) combined
+                   ) as total_patients,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND status != \'cancelled\'
+                   ) + (
+                       SELECT COUNT(*) FROM admissions WHERE doctor_id = u.id AND status = \'Admitted\'
+                   ) as total_appointments,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND appointment_date = CURDATE() AND status != \'cancelled\'
+                   ) as todays_appointments,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND appointment_date > CURDATE() AND status != \'cancelled\'
+                   ) + (
+                       SELECT COUNT(*) FROM admissions WHERE doctor_id = u.id AND status = \'Admitted\'
+                   ) as upcoming_appointments
+            FROM users u
+            WHERE u.role = \'doctor\' AND u.status = \'active\'
+            ORDER BY u.name ASC
+        ')
+ 2 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Doctors->index()
+ 3 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Doctors))
+ 4 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 7 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-12-03 02:54:15 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'u.id' in 'where clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('
+            SELECT u.id, u.name, u.email, u.status, u.created_at,
+                   (
+                       SELECT COUNT(DISTINCT patient_id) 
+                       FROM (
+                           SELECT patient_id FROM appointments WHERE doctor_id = u.id AND status != \'cancelled\'
+                           UNION
+                           SELECT patient_id FROM admissions WHERE doctor_id = u.id
+                       ) combined
+                   ) as total_patients,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND status != \'cancelled\'
+                   ) + (
+                       SELECT COUNT(*) FROM admissions WHERE doctor_id = u.id AND status = \'Admitted\'
+                   ) as total_appointments,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND appointment_date = CURDATE() AND status != \'cancelled\'
+                   ) as todays_appointments,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND appointment_date > CURDATE() AND status != \'cancelled\'
+                   ) + (
+                       SELECT COUNT(*) FROM admissions WHERE doctor_id = u.id AND status = \'Admitted\'
+                   ) as upcoming_appointments
+            FROM users u
+            WHERE u.role = \'doctor\' AND u.status = \'active\'
+            ORDER BY u.name ASC
+        ')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('
+            SELECT u.id, u.name, u.email, u.status, u.created_at,
+                   (
+                       SELECT COUNT(DISTINCT patient_id) 
+                       FROM (
+                           SELECT patient_id FROM appointments WHERE doctor_id = u.id AND status != \'cancelled\'
+                           UNION
+                           SELECT patient_id FROM admissions WHERE doctor_id = u.id
+                       ) combined
+                   ) as total_patients,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND status != \'cancelled\'
+                   ) + (
+                       SELECT COUNT(*) FROM admissions WHERE doctor_id = u.id AND status = \'Admitted\'
+                   ) as total_appointments,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND appointment_date = CURDATE() AND status != \'cancelled\'
+                   ) as todays_appointments,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND appointment_date > CURDATE() AND status != \'cancelled\'
+                   ) + (
+                       SELECT COUNT(*) FROM admissions WHERE doctor_id = u.id AND status = \'Admitted\'
+                   ) as upcoming_appointments
+            FROM users u
+            WHERE u.role = \'doctor\' AND u.status = \'active\'
+            ORDER BY u.name ASC
+        ')
+ 3 APPPATH\Controllers\Admin\Doctors.php(61): CodeIgniter\Database\BaseConnection->query('
+            SELECT u.id, u.name, u.email, u.status, u.created_at,
+                   (
+                       SELECT COUNT(DISTINCT patient_id) 
+                       FROM (
+                           SELECT patient_id FROM appointments WHERE doctor_id = u.id AND status != \'cancelled\'
+                           UNION
+                           SELECT patient_id FROM admissions WHERE doctor_id = u.id
+                       ) combined
+                   ) as total_patients,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND status != \'cancelled\'
+                   ) + (
+                       SELECT COUNT(*) FROM admissions WHERE doctor_id = u.id AND status = \'Admitted\'
+                   ) as total_appointments,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND appointment_date = CURDATE() AND status != \'cancelled\'
+                   ) as todays_appointments,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND appointment_date > CURDATE() AND status != \'cancelled\'
+                   ) + (
+                       SELECT COUNT(*) FROM admissions WHERE doctor_id = u.id AND status = \'Admitted\'
+                   ) as upcoming_appointments
+            FROM users u
+            WHERE u.role = \'doctor\' AND u.status = \'active\'
+            ORDER BY u.name ASC
+        ')
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Doctors->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Doctors))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-12-03 02:54:15 --> [Caused by] mysqli_sql_exception: Unknown column 'u.id' in 'where clause'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('
+            SELECT u.id, u.name, u.email, u.status, u.created_at,
+                   (
+                       SELECT COUNT(DISTINCT patient_id) 
+                       FROM (
+                           SELECT patient_id FROM appointments WHERE doctor_id = u.id AND status != \'cancelled\'
+                           UNION
+                           SELECT patient_id FROM admissions WHERE doctor_id = u.id
+                       ) combined
+                   ) as total_patients,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND status != \'cancelled\'
+                   ) + (
+                       SELECT COUNT(*) FROM admissions WHERE doctor_id = u.id AND status = \'Admitted\'
+                   ) as total_appointments,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND appointment_date = CURDATE() AND status != \'cancelled\'
+                   ) as todays_appointments,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND appointment_date > CURDATE() AND status != \'cancelled\'
+                   ) + (
+                       SELECT COUNT(*) FROM admissions WHERE doctor_id = u.id AND status = \'Admitted\'
+                   ) as upcoming_appointments
+            FROM users u
+            WHERE u.role = \'doctor\' AND u.status = \'active\'
+            ORDER BY u.name ASC
+        ', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('
+            SELECT u.id, u.name, u.email, u.status, u.created_at,
+                   (
+                       SELECT COUNT(DISTINCT patient_id) 
+                       FROM (
+                           SELECT patient_id FROM appointments WHERE doctor_id = u.id AND status != \'cancelled\'
+                           UNION
+                           SELECT patient_id FROM admissions WHERE doctor_id = u.id
+                       ) combined
+                   ) as total_patients,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND status != \'cancelled\'
+                   ) + (
+                       SELECT COUNT(*) FROM admissions WHERE doctor_id = u.id AND status = \'Admitted\'
+                   ) as total_appointments,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND appointment_date = CURDATE() AND status != \'cancelled\'
+                   ) as todays_appointments,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND appointment_date > CURDATE() AND status != \'cancelled\'
+                   ) + (
+                       SELECT COUNT(*) FROM admissions WHERE doctor_id = u.id AND status = \'Admitted\'
+                   ) as upcoming_appointments
+            FROM users u
+            WHERE u.role = \'doctor\' AND u.status = \'active\'
+            ORDER BY u.name ASC
+        ')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('
+            SELECT u.id, u.name, u.email, u.status, u.created_at,
+                   (
+                       SELECT COUNT(DISTINCT patient_id) 
+                       FROM (
+                           SELECT patient_id FROM appointments WHERE doctor_id = u.id AND status != \'cancelled\'
+                           UNION
+                           SELECT patient_id FROM admissions WHERE doctor_id = u.id
+                       ) combined
+                   ) as total_patients,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND status != \'cancelled\'
+                   ) + (
+                       SELECT COUNT(*) FROM admissions WHERE doctor_id = u.id AND status = \'Admitted\'
+                   ) as total_appointments,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND appointment_date = CURDATE() AND status != \'cancelled\'
+                   ) as todays_appointments,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND appointment_date > CURDATE() AND status != \'cancelled\'
+                   ) + (
+                       SELECT COUNT(*) FROM admissions WHERE doctor_id = u.id AND status = \'Admitted\'
+                   ) as upcoming_appointments
+            FROM users u
+            WHERE u.role = \'doctor\' AND u.status = \'active\'
+            ORDER BY u.name ASC
+        ')
+ 4 APPPATH\Controllers\Admin\Doctors.php(61): CodeIgniter\Database\BaseConnection->query('
+            SELECT u.id, u.name, u.email, u.status, u.created_at,
+                   (
+                       SELECT COUNT(DISTINCT patient_id) 
+                       FROM (
+                           SELECT patient_id FROM appointments WHERE doctor_id = u.id AND status != \'cancelled\'
+                           UNION
+                           SELECT patient_id FROM admissions WHERE doctor_id = u.id
+                       ) combined
+                   ) as total_patients,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND status != \'cancelled\'
+                   ) + (
+                       SELECT COUNT(*) FROM admissions WHERE doctor_id = u.id AND status = \'Admitted\'
+                   ) as total_appointments,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND appointment_date = CURDATE() AND status != \'cancelled\'
+                   ) as todays_appointments,
+                   (
+                       SELECT COUNT(*) FROM appointments WHERE doctor_id = u.id AND appointment_date > CURDATE() AND status != \'cancelled\'
+                   ) + (
+                       SELECT COUNT(*) FROM admissions WHERE doctor_id = u.id AND status = \'Admitted\'
+                   ) as upcoming_appointments
+            FROM users u
+            WHERE u.role = \'doctor\' AND u.status = \'active\'
+            ORDER BY u.name ASC
+        ')
+ 5 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Admin\Doctors->index()
+ 6 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Admin\Doctors))
+ 7 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 9 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+10 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))

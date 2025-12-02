@@ -2,6 +2,82 @@
 
 <?= $this->section('content') ?>
 
+<style>
+/* Lab Results Table Alignment */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 1rem 0.75rem;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.data-table th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    background: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.data-table td {
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.data-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* Status cell alignment */
+.lab-status-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: flex-start;
+}
+
+/* Badge styles */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.bg-warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.bg-success {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.bg-danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.bg-info {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.bg-secondary {
+    background: #e2e8f0;
+    color: #475569;
+}
+</style>
+
 <section class="panel lab-section">
     <header class="panel-header lab-header">
         <div class="page-header-content">
@@ -163,17 +239,17 @@
     </header>
     
     <div class="stack">
-        <div class="table-container">
-            <table class="data-table">
+        <div class="table-container" style="overflow-x: auto;">
+            <table class="data-table" style="width: 100%;">
                 <thead>
-                    <tr class="lab-row">
-                        <th class="lab-cell">Result ID</th>
-                        <th class="lab-cell">Patient</th>
-                        <th class="lab-cell">Test Type</th>
-                        <th class="lab-cell">Result Summary</th>
-                        <th class="lab-cell">Status</th>
-                        <th class="lab-cell">Released Date</th>
-                        <th class="lab-cell">Actions</th>
+                    <tr>
+                        <th style="width: 90px;">Result ID</th>
+                        <th style="width: 150px;">Patient</th>
+                        <th style="width: 100px;">Test Type</th>
+                        <th style="width: 280px;">Result Summary</th>
+                        <th style="width: 100px;">Status</th>
+                        <th style="width: 140px;">Released Date</th>
+                        <th style="width: 80px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -188,31 +264,32 @@
                                 'completed' => 'bg-success',
                                 default => 'bg-secondary'
                             };
+                            
+                            // If critical, override status display
+                            if ($isCritical) {
+                                $statusClass = 'bg-danger';
+                                $statusText = 'Critical';
+                            } else {
+                                $statusText = ucfirst($status);
+                            }
                             ?>
-                            <tr class="lab-row">
-                                <td class="lab-cell"><strong>#<?= str_pad((string)($result['id'] ?? 0), 6, '0', STR_PAD_LEFT) ?></strong></td>
-                                <td class="lab-cell"><?= esc($result['patient_name'] ?? 'N/A') ?></td>
-                                <td class="lab-cell"><?= esc($result['test_type'] ?? '—') ?></td>
-                                <td class="lab-cell">
-                                <?= esc($result['result_summary'] ?? '—') ?>
+                            <tr>
+                                <td><strong>#<?= str_pad((string)($result['id'] ?? 0), 6, '0', STR_PAD_LEFT) ?></strong></td>
+                                <td><?= esc($result['patient_name'] ?? 'N/A') ?></td>
+                                <td><?= esc($result['test_type'] ?? '—') ?></td>
+                                <td><?= esc($result['result_summary'] ?? '—') ?></td>
+                                <td>
+                                    <span class="badge <?= $statusClass ?>"><?= $statusText ?></span>
                                 </td>
-                                <td class="lab-cell">
-                                <div class="lab-status-cell">
-                                    <span class="badge <?= $statusClass ?>"><?= ucfirst($status) ?></span>
-                                    <?php if ($isCritical): ?>
-                                        <span class="badge bg-danger">Critical</span>
-                                    <?php endif; ?>
-                                </div>
-                                </td>
-                                <td class="lab-cell"><?= !empty($result['released_at']) ? date('M j, Y g:i A', strtotime($result['released_at'])) : '—' ?></td>
-                                <td class="lab-cell">
+                                <td><?= !empty($result['released_at']) ? date('M j, Y g:i A', strtotime($result['released_at'])) : '—' ?></td>
+                                <td>
                                     <a href="#" class="btn btn-sm btn-primary" onclick="viewResult(<?= $result['id'] ?>)">View</a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr class="lab-row">
-                            <td colspan="7" class="text-center py-4 text-muted">No test results found.</td>
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">No test results found.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

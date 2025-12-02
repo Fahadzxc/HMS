@@ -23,8 +23,8 @@ class Patients extends Controller
             FROM patients p
             LEFT JOIN (
                 SELECT patient_id, doctor_id, appointment_date, status,
-                       ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
-                FROM appointments 
+                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                         FROM appointments 
                 WHERE status != 'cancelled'
             ) a ON a.patient_id = p.id AND a.rn = 1
             LEFT JOIN users appt_doc ON appt_doc.id = a.doctor_id

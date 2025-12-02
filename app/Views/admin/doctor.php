@@ -49,19 +49,27 @@
 
                     <?php if (!empty($doctor['recent_appointments'])): ?>
                         <div class="appointments-section-modern">
-                            <h4 class="appointments-title">Recent Patient Appointments</h4>
+                            <h4 class="appointments-title">Recent Patient Assignments</h4>
                             <div class="appointments-grid">
                                 <?php foreach ($doctor['recent_appointments'] as $appointment): ?>
                                     <div class="appointment-card">
                                         <div class="appointment-main">
                                             <div class="appointment-patient-info">
                                                 <strong class="appointment-patient-name"><?= esc($appointment['patient_name']) ?></strong>
-                                                <span class="appointment-type-badge"><?= ucfirst($appointment['appointment_type'] ?? 'Consultation') ?></span>
+                                                <?php if (($appointment['source'] ?? '') === 'admission'): ?>
+                                                    <span class="appointment-type-badge" style="background: #fce7f3; color: #db2777;">Inpatient</span>
+                                                <?php else: ?>
+                                                    <span class="appointment-type-badge"><?= ucfirst($appointment['appointment_type'] ?? 'Consultation') ?></span>
+                                                <?php endif; ?>
                                             </div>
                                             <div class="appointment-meta">
                                                 <div class="appointment-datetime-modern">
-                                                    <span class="appointment-date-modern"><?= date('M j, Y', strtotime($appointment['appointment_date'])) ?></span>
-                                                    <span class="appointment-time-modern"><?= date('g:i A', strtotime($appointment['appointment_time'])) ?></span>
+                                                    <span class="appointment-date-modern"><?= date('M j, Y', strtotime($appointment['date'])) ?></span>
+                                                    <?php if (!empty($appointment['time'])): ?>
+                                                        <span class="appointment-time-modern"><?= date('g:i A', strtotime($appointment['time'])) ?></span>
+                                                    <?php else: ?>
+                                                        <span class="appointment-time-modern" style="color: #db2777;">Admitted</span>
+                                                    <?php endif; ?>
                                                 </div>
                                                 <div class="appointment-room-modern">
                                                     <span class="room-text">Room: </span>
@@ -72,7 +80,8 @@
                                         <div class="appointment-status-modern">
                                             <span class="badge badge-<?= 
                                                 $appointment['status'] === 'confirmed' ? 'success' : 
-                                                ($appointment['status'] === 'scheduled' ? 'warning' : 'info') 
+                                                ($appointment['status'] === 'scheduled' ? 'warning' : 
+                                                ($appointment['status'] === 'Admitted' ? 'info' : 'info'))
                                             ?>">
                                                 <?= strtoupper($appointment['status']) ?>
                                             </span>
@@ -83,7 +92,7 @@
                         </div>
                     <?php else: ?>
                         <div class="no-appointments-modern">
-                            <p class="no-appointments-text">No patient appointments assigned</p>
+                            <p class="no-appointments-text">No patient assignments</p>
                         </div>
                     <?php endif; ?>
                 </div>

@@ -77,6 +77,7 @@
                                 <th>Frequency</th>
                                 <th>Meal Instruction</th>
                                 <th>Duration</th>
+                                <th>Quantity</th>
                                 <th>Notes</th>
                                 <th>Actions</th>
                             </tr>
@@ -237,6 +238,9 @@ function addRxItem() {
             <input type="text" class="form-input form-input-sm" placeholder="e.g., 7 days" data-field="duration" required>
         </td>
         <td>
+            <input type="number" class="form-input form-input-sm" placeholder="Qty" data-field="quantity" min="1" value="1" style="width: 70px;" required>
+        </td>
+        <td>
             <input type="text" class="form-input form-input-sm" placeholder="Additional notes..." data-field="notes">
         </td>
         <td>
@@ -366,6 +370,7 @@ function showPrescriptionPreview(patientId, notes, items, isOutpatient = false, 
                     <div><span class="detail-label">Frequency:</span> ${item.frequency || '—'}</div>
                     <div><span class="detail-label">Meal:</span> ${item.meal_instruction || '—'}</div>
                     <div><span class="detail-label">Duration:</span> ${item.duration || '—'}</div>
+                    <div><span class="detail-label">Quantity:</span> ${item.quantity || '—'}</div>
                     ${item.notes ? `<div><span class="detail-label">Notes:</span> ${item.notes}</div>` : ''}
                 </div>
             </div>
@@ -444,6 +449,7 @@ function printPrescription() {
                 <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.frequency || '—'}</td>
                 <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.meal_instruction || '—'}</td>
                 <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.duration || '—'}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.quantity || '—'}</td>
             </tr>
         `;
     });
@@ -507,6 +513,7 @@ function printPrescription() {
                         <th>Frequency</th>
                         <th>Meal</th>
                         <th>Duration</th>
+                        <th>Qty</th>
                     </tr>
                 </thead>
                 <tbody>

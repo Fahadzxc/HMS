@@ -113,26 +113,33 @@ class Nurse extends Controller
         $model = new \App\Models\PatientModel();
         $appointmentModel = new \App\Models\AppointmentModel();
         
-        // Get patients with their most recent doctor assignment from appointments
+        // Get patients with their doctor from appointments OR admissions
         // Exclude discharged patients
         $db = \Config\Database::connect();
-        $builder = $db->table('patients p');
-        $builder->select('p.*, 
-                         u.name as assigned_doctor_name,
-                         a.appointment_date as last_appointment_date,
-                         a.status as appointment_status,
-                         p.room_number,
-                         r.room_number as appointment_room_number');
-        $builder->join('(SELECT patient_id, doctor_id, appointment_date, status, room_id, 
-                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
-                         FROM appointments 
-                         WHERE status != "cancelled") a', 'a.patient_id = p.id AND a.rn = 1', 'left');
-        $builder->join('users u', 'u.id = a.doctor_id', 'left');
-        $builder->join('rooms r', 'r.id = a.room_id', 'left');
-        $builder->where('p.status !=', 'discharged');
-        $builder->orderBy('p.id', 'DESC');
         
-        $patients = $builder->get()->getResultArray();
+        $sql = "
+            SELECT p.*, 
+                   COALESCE(adm_doc.name, appt_doc.name) as assigned_doctor_name,
+                   COALESCE(adm.admission_date, a.appointment_date) as last_appointment_date,
+                   COALESCE(adm.status, a.status) as appointment_status,
+                   COALESCE(adm_room.room_number, appt_room.room_number, p.room_number) as room_number
+            FROM patients p
+            LEFT JOIN (
+                SELECT patient_id, doctor_id, appointment_date, status, room_id,
+                       ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                FROM appointments 
+                WHERE status != 'cancelled'
+            ) a ON a.patient_id = p.id AND a.rn = 1
+            LEFT JOIN users appt_doc ON appt_doc.id = a.doctor_id
+            LEFT JOIN rooms appt_room ON appt_room.id = a.room_id
+            LEFT JOIN admissions adm ON adm.patient_id = p.id AND adm.status = 'Admitted'
+            LEFT JOIN users adm_doc ON adm_doc.id = adm.doctor_id
+            LEFT JOIN rooms adm_room ON adm_room.id = adm.room_id
+            WHERE p.status != 'discharged'
+            ORDER BY p.id DESC
+        ";
+        
+        $patients = $db->query($sql)->getResultArray();
         
         // Get pending discharge orders (inpatients with discharge ordered but not ready)
         $dischargeOrders = $db->table('admissions a')
@@ -252,10 +259,10 @@ class Nurse extends Controller
             'updated_at' => date('Y-m-d H:i:s')
         ]);
         
-        // Update patient status to discharged (not just outpatient)
+        // Update patient status to discharged (keep patient_type as inpatient for history)
         $patientModel = new \App\Models\PatientModel();
         $patientModel->update($admission['patient_id'], [
-            'patient_type' => 'outpatient',
+            // Don't change patient_type - keep as 'inpatient' for historical record
             'status' => 'discharged',
             'discharge_date' => date('Y-m-d'),
             'updated_at' => date('Y-m-d H:i:s')
@@ -278,13 +285,13 @@ class Nurse extends Controller
                    COALESCE(adm_doc.name, appt_doc.name) as assigned_doctor_name,
                    COALESCE(adm.admission_date, a.appointment_date) as last_appointment_date,
                    COALESCE(adm.status, a.status) as appointment_status,
-                   p.room_number,
+                         p.room_number,
                    COALESCE(adm_room.room_number, appt_room.room_number) as appointment_room_number
             FROM patients p
             LEFT JOIN (
                 SELECT patient_id, doctor_id, appointment_date, status, room_id,
-                       ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
-                FROM appointments 
+                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                         FROM appointments 
                 WHERE status != 'cancelled'
             ) a ON a.patient_id = p.id AND a.rn = 1
             LEFT JOIN users appt_doc ON appt_doc.id = a.doctor_id
@@ -1095,7 +1102,7 @@ class Nurse extends Controller
                     $db->close();
                     $db = \Config\Database::connect();
                 }
-            } catch (\Exception $e) {
+        } catch (\Exception $e) {
                 // Column might already exist from another request, that's fine
                 log_message('debug', 'progress_days column note: ' . $e->getMessage());
             }
@@ -1161,19 +1168,19 @@ class Nurse extends Controller
             $escapedUpdatedAt = $db->escape(date('Y-m-d H:i:s'));
             $escapedProgress = (int) $existingProgress;
             $escapedId = (int) $prescriptionId;
-            
+        
             // Start building the UPDATE query
             $sql = "UPDATE prescriptions SET 
                     status = {$escapedStatus}, 
                     updated_at = {$escapedUpdatedAt}, 
                     progress_days = {$escapedProgress}";
-            
-            // If first time, also update notes with start date
-            if (!$wasCompleted && $startDate) {
+        
+        // If first time, also update notes with start date
+        if (!$wasCompleted && $startDate) {
                 $escapedNotes = $db->escape($notes);
                 $sql .= ", notes = {$escapedNotes}";
-            }
-            
+        }
+        
             $sql .= " WHERE id = {$escapedId}";
             
             log_message('info', "Executing SQL: {$sql}");
@@ -1672,9 +1679,9 @@ class Nurse extends Controller
         
         // Use default pricing based on medication name if no database price
         if ($basePrice <= 0) {
-            $nameLower = strtolower($medicationName);
-            foreach ($defaultPrices as $key => $price) {
-                if (strpos($nameLower, $key) !== false) {
+        $nameLower = strtolower($medicationName);
+        foreach ($defaultPrices as $key => $price) {
+            if (strpos($nameLower, $key) !== false) {
                     $basePrice = $price;
                     break;
                 }

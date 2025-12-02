@@ -144,6 +144,161 @@
     </div>
 </section>
 
+<!-- Patient Type Selection Modal -->
+<div id="patientTypeModal" class="modal" aria-hidden="true" style="display:none;">
+    <div class="modal-backdrop" id="typeModalBackdrop"></div>
+    <div class="modal-dialog" role="dialog" aria-modal="true" style="max-width: 580px; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+        <div style="background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%); padding: 2rem; text-align: center;">
+            <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
+            <h2 style="color: white; font-size: 1.5rem; font-weight: 700; margin: 0;">Register New Patient</h2>
+            <p style="color: rgba(255,255,255,0.85); margin: 0.5rem 0 0; font-size: 0.95rem;">Select the type of patient you're registering</p>
+        </div>
+        <button id="btnCloseTypeModal" style="position: absolute; top: 1rem; right: 1rem; background: rgba(255,255,255,0.2); border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: white; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" aria-label="Close">×</button>
+        
+        <div style="padding: 2rem; background: #f8fafc;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <!-- Outpatient Card -->
+                <button type="button" id="btnSelectOutpatient" class="patient-type-card">
+                    <div class="card-icon outpatient-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M13 4v16"/>
+                            <path d="M17 4v16"/>
+                            <path d="M19 4H9.5a4.5 4.5 0 0 0 0 9H13"/>
+                            <circle cx="5" cy="19" r="2"/>
+                        </svg>
+                    </div>
+                    <div class="card-title">Outpatient</div>
+                    <div class="card-subtitle">Walk-in / Consultation</div>
+                    <div class="card-desc">For patients who will visit for consultation, check-up, or minor procedures and go home the same day.</div>
+                    <div class="card-arrow">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </button>
+                
+                <!-- Inpatient Card -->
+                <button type="button" id="btnSelectInpatient" class="patient-type-card">
+                    <div class="card-icon inpatient-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9 22 9 12 15 12 15 22"/>
+                            <line x1="12" y1="8" x2="12" y2="8"/>
+                            <path d="M9 8h6"/>
+                            <path d="M12 5v6"/>
+                        </svg>
+                    </div>
+                    <div class="card-title">Inpatient</div>
+                    <div class="card-subtitle">Admission / Emergency</div>
+                    <div class="card-desc">For patients requiring hospital admission, overnight stay, surgery, or emergency care.</div>
+                    <div class="card-arrow">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .patient-type-card {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.75rem 1.25rem;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .patient-type-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #0d9488, #0891b2);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+    .patient-type-card:hover {
+        border-color: #0d9488;
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px -8px rgba(13, 148, 136, 0.25);
+    }
+    .patient-type-card:hover::before {
+        transform: scaleX(1);
+    }
+    .patient-type-card:hover .card-icon {
+        transform: scale(1.1);
+    }
+    .patient-type-card:hover .card-arrow {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    .card-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        transition: transform 0.3s ease;
+    }
+    .outpatient-icon {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        color: #2563eb;
+    }
+    .inpatient-icon {
+        background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+        color: #db2777;
+    }
+    .card-title {
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+    }
+    .card-subtitle {
+        font-size: 0.8rem;
+        color: #0d9488;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.75rem;
+    }
+    .card-desc {
+        font-size: 0.85rem;
+        color: #64748b;
+        line-height: 1.5;
+    }
+    .card-arrow {
+        position: absolute;
+        bottom: 1rem;
+        right: 1rem;
+        color: #0d9488;
+        opacity: 0;
+        transform: translateX(-10px);
+        transition: all 0.3s ease;
+    }
+    #btnCloseTypeModal:hover {
+        background: rgba(255,255,255,0.3) !important;
+        transform: rotate(90deg);
+    }
+</style>
+
 <!-- Add Patient Modal -->
 <div id="addPatientModal" class="modal" aria-hidden="true" style="display:none;">
     <div class="modal-backdrop" id="modalBackdrop"></div>
@@ -389,6 +544,53 @@
         const cancelBtn = document.getElementById('btnCancel');
         const backdrop = document.getElementById('modalBackdrop');
         const form = document.getElementById('addPatientForm');
+        
+        // Patient Type Selection Modal
+        const typeModal = document.getElementById('patientTypeModal');
+        const typeBackdrop = document.getElementById('typeModalBackdrop');
+        const closeTypeBtn = document.getElementById('btnCloseTypeModal');
+        const btnOutpatient = document.getElementById('btnSelectOutpatient');
+        const btnInpatient = document.getElementById('btnSelectInpatient');
+        
+        let selectedPatientType = 'outpatient';
+
+        function openTypeModal() {
+            typeModal.style.display = 'block';
+            typeModal.setAttribute('aria-hidden', 'false');
+        }
+        
+        function closeTypeModal() {
+            typeModal.style.display = 'none';
+            typeModal.setAttribute('aria-hidden', 'true');
+        }
+        
+        function selectPatientType(type) {
+            selectedPatientType = type;
+            closeTypeModal();
+            
+            // Set patient type in form and trigger change event
+            const patientTypeField = form.querySelector('[name="patient_type"]');
+            if (patientTypeField) {
+                patientTypeField.value = type;
+                // Trigger change event to activate existing show/hide logic
+                patientTypeField.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            
+            // Update modal title
+            const titleEl = document.getElementById('addPatientTitle');
+            if (titleEl) {
+                titleEl.textContent = type === 'inpatient' ? 'Add New Inpatient' : 'Add New Outpatient';
+            }
+            
+            // Open the main form
+            open();
+        }
+        
+        // Event listeners for type modal
+        closeTypeBtn.addEventListener('click', closeTypeModal);
+        typeBackdrop.addEventListener('click', closeTypeModal);
+        btnOutpatient.addEventListener('click', function() { selectPatientType('outpatient'); });
+        btnInpatient.addEventListener('click', function() { selectPatientType('inpatient'); });
 
         function open(){
             modal.style.display='block';
@@ -408,7 +610,8 @@
         function setError(name, msg){ const el = modal.querySelector('[data-error-for="'+name+'"]'); if(el){ el.textContent = msg || ''; } }
         function clearErrors(){ modal.querySelectorAll('.error').forEach(e=>e.textContent=''); }
 
-        openBtn.addEventListener('click', function(e){ e.preventDefault(); open(); });
+        // Open type selection modal first instead of directly opening form
+        openBtn.addEventListener('click', function(e){ e.preventDefault(); openTypeModal(); });
         closeBtn.addEventListener('click', function(){ close(); });
         cancelBtn.addEventListener('click', function(){ close(); });
         backdrop.addEventListener('click', function(){ close(); });
