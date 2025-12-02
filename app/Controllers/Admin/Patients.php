@@ -10,28 +10,34 @@ class Patients extends Controller
     public function index()
     {
         $model = new PatientModel();
-        $appointmentModel = new \App\Models\AppointmentModel();
-        
-        // Get patients with their most recent doctor assignment from appointments
         $db = \Config\Database::connect();
-        $builder = $db->table('patients p');
-        $builder->select('p.*, 
-                         u.name as assigned_doctor_name,
-                         a.appointment_date as last_appointment_date,
-                         a.status as appointment_status');
-        $builder->join('(SELECT patient_id, doctor_id, appointment_date, status, 
-                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
-                         FROM appointments 
-                         WHERE status != "cancelled") a', 'a.patient_id = p.id AND a.rn = 1', 'left');
-        $builder->join('users u', 'u.id = a.doctor_id', 'left');
-        $builder->orderBy('p.id', 'DESC');
         
-        $patients = $builder->get()->getResultArray();
+        // Get patients with doctor from appointments OR admissions
+        // Using COALESCE to prefer admission doctor for inpatients
+        // For discharged patients, show their last admission's doctor
+        $sql = "
+            SELECT p.*, 
+                   COALESCE(adm_doc.name, appt_doc.name) as assigned_doctor_name,
+                   COALESCE(adm.admission_date, a.appointment_date) as last_appointment_date,
+                   COALESCE(adm.status, a.status) as appointment_status
+            FROM patients p
+            LEFT JOIN (
+                SELECT patient_id, doctor_id, appointment_date, status,
+                       ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                FROM appointments 
+                WHERE status != 'cancelled'
+            ) a ON a.patient_id = p.id AND a.rn = 1
+            LEFT JOIN users appt_doc ON appt_doc.id = a.doctor_id
+            LEFT JOIN (
+                SELECT patient_id, doctor_id, admission_date, status,
+                       ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY admission_date DESC, created_at DESC) as rn
+                FROM admissions
+            ) adm ON adm.patient_id = p.id AND adm.rn = 1
+            LEFT JOIN users adm_doc ON adm_doc.id = adm.doctor_id
+            ORDER BY p.id DESC
+        ";
         
-        // Debug: Log the first patient to see the data structure
-        if (!empty($patients)) {
-            log_message('info', 'First patient data: ' . json_encode($patients[0]));
-        }
+        $patients = $db->query($sql)->getResultArray();
 
         $data = [
             'pageTitle' => 'Patients',
@@ -204,9 +210,26 @@ class Patients extends Controller
             }
         }
 
-        // Get assigned doctor from latest appointment
+        // Get assigned doctor - check admissions first (for inpatients), then appointments
         $assignedDoctor = null;
-        if ($db->tableExists('appointments')) {
+        
+        // First check admissions table for inpatients
+        if ($db->tableExists('admissions') && $patient['patient_type'] === 'inpatient') {
+            $admBuilder = $db->table('admissions adm');
+            $admBuilder->select('u.name as doctor_name, adm.admission_date as appointment_date, NULL as appointment_time');
+            $admBuilder->join('users u', 'u.id = adm.doctor_id', 'left');
+            $admBuilder->where('adm.patient_id', $id);
+            $admBuilder->where('adm.status', 'Admitted');
+            $admBuilder->orderBy('adm.created_at', 'DESC');
+            $admBuilder->limit(1);
+            $admResult = $admBuilder->get()->getRowArray();
+            if ($admResult && !empty($admResult['doctor_name'])) {
+                $assignedDoctor = $admResult;
+            }
+        }
+        
+        // If no admission doctor found, check appointments
+        if (!$assignedDoctor && $db->tableExists('appointments')) {
             $doctorBuilder = $db->table('appointments a');
             $doctorBuilder->select('u.name as doctor_name, a.appointment_date, a.appointment_time');
             $doctorBuilder->join('users u', 'u.id = a.doctor_id', 'left');

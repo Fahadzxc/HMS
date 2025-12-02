@@ -114,6 +114,7 @@ class Nurse extends Controller
         $appointmentModel = new \App\Models\AppointmentModel();
         
         // Get patients with their most recent doctor assignment from appointments
+        // Exclude discharged patients
         $db = \Config\Database::connect();
         $builder = $db->table('patients p');
         $builder->select('p.*, 
@@ -128,18 +129,139 @@ class Nurse extends Controller
                          WHERE status != "cancelled") a', 'a.patient_id = p.id AND a.rn = 1', 'left');
         $builder->join('users u', 'u.id = a.doctor_id', 'left');
         $builder->join('rooms r', 'r.id = a.room_id', 'left');
+        $builder->where('p.status !=', 'discharged');
         $builder->orderBy('p.id', 'DESC');
         
         $patients = $builder->get()->getResultArray();
+        
+        // Get pending discharge orders (inpatients with discharge ordered but not ready)
+        $dischargeOrders = $db->table('admissions a')
+            ->select('a.*, p.full_name as patient_name, p.contact, r.room_number, r.room_type, u.name as doctor_name, ord.name as ordered_by_name')
+            ->join('patients p', 'p.id = a.patient_id', 'left')
+            ->join('rooms r', 'r.id = a.room_id', 'left')
+            ->join('users u', 'u.id = a.doctor_id', 'left')
+            ->join('users ord', 'ord.id = a.discharge_ordered_by', 'left')
+            ->where('a.status', 'Admitted')
+            ->where('a.discharge_ordered_at IS NOT NULL')
+            ->where('a.discharge_ready_at IS NULL')
+            ->orderBy('a.discharge_ordered_at', 'ASC')
+            ->get()->getResultArray();
+        
+        // Get patients ready for final discharge (ready but not yet discharged)
+        $readyForDischarge = $db->table('admissions a')
+            ->select('a.*, p.full_name as patient_name, p.contact, r.room_number, r.room_type, u.name as doctor_name, rdy.name as ready_by_name')
+            ->join('patients p', 'p.id = a.patient_id', 'left')
+            ->join('rooms r', 'r.id = a.room_id', 'left')
+            ->join('users u', 'u.id = a.doctor_id', 'left')
+            ->join('users rdy', 'rdy.id = a.discharge_ready_by', 'left')
+            ->where('a.status', 'Admitted')
+            ->where('a.discharge_ready_at IS NOT NULL')
+            ->orderBy('a.discharge_ready_at', 'ASC')
+            ->get()->getResultArray();
 
         $data = [
             'title' => 'Patient Monitoring - HMS',
             'user_role' => 'nurse',
             'user_name' => session()->get('name'),
             'patients' => $patients,
+            'discharge_orders' => $dischargeOrders,
+            'ready_for_discharge' => $readyForDischarge,
         ];
 
         return view('nurse/patients', $data);
+    }
+    
+    public function markDischargeReady()
+    {
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'nurse') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+        
+        $json = $this->request->getJSON(true);
+        if (!$json) {
+            $json = $this->request->getPost();
+        }
+        
+        $admissionId = $json['admission_id'] ?? null;
+        
+        if (!$admissionId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Admission ID is required']);
+        }
+        
+        $db = \Config\Database::connect();
+        $admission = $db->table('admissions')->where('id', $admissionId)->get()->getRowArray();
+        
+        if (!$admission) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Admission not found']);
+        }
+        
+        if (empty($admission['discharge_ordered_at'])) {
+            return $this->response->setJSON(['success' => false, 'message' => 'No discharge order found for this patient']);
+        }
+        
+        if (!empty($admission['discharge_ready_at'])) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Patient already marked as ready']);
+        }
+        
+        // Mark patient as ready for discharge
+        $db->table('admissions')->where('id', $admissionId)->update([
+            'discharge_ready_at' => date('Y-m-d H:i:s'),
+            'discharge_ready_by' => session()->get('user_id'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+        
+        return $this->response->setJSON(['success' => true, 'message' => 'Patient marked as ready for discharge']);
+    }
+    
+    public function finalDischarge()
+    {
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'nurse') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+        
+        $json = $this->request->getJSON(true);
+        if (!$json) {
+            $json = $this->request->getPost();
+        }
+        
+        $admissionId = $json['admission_id'] ?? null;
+        
+        if (!$admissionId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Admission ID is required']);
+        }
+        
+        $db = \Config\Database::connect();
+        $admission = $db->table('admissions')->where('id', $admissionId)->get()->getRowArray();
+        
+        if (!$admission) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Admission not found']);
+        }
+        
+        if (empty($admission['discharge_ready_at'])) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Patient must be marked as ready first']);
+        }
+        
+        // Check if billing is cleared (optional - can be enforced or not)
+        // For now, we'll allow discharge but show warning if not cleared
+        
+        // Update admission status to Discharged
+        $db->table('admissions')->where('id', $admissionId)->update([
+            'status' => 'Discharged',
+            'discharged_at' => date('Y-m-d H:i:s'),
+            'discharged_by' => session()->get('user_id'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+        
+        // Update patient status to discharged (not just outpatient)
+        $patientModel = new \App\Models\PatientModel();
+        $patientModel->update($admission['patient_id'], [
+            'patient_type' => 'outpatient',
+            'status' => 'discharged',
+            'discharge_date' => date('Y-m-d'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+        
+        return $this->response->setJSON(['success' => true, 'message' => 'Patient discharged successfully']);
     }
 
 
@@ -147,25 +269,34 @@ class Nurse extends Controller
     {
         $model = new \App\Models\PatientModel();
         
-        // Get patients with their most recent doctor assignment
+        // Get patients with their doctor assignment from BOTH appointments AND admissions
         $db = \Config\Database::connect();
-        $builder = $db->table('patients p');
-        $builder->select('p.*, 
-                         u.name as assigned_doctor_name,
-                         a.appointment_date as last_appointment_date,
-                         a.status as appointment_status,
-                         p.room_number,
-                         r.room_number as appointment_room_number');
-        $builder->join('(SELECT patient_id, doctor_id, appointment_date, status, room_id, 
-                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
-                         FROM appointments 
-                         WHERE status != "cancelled") a', 'a.patient_id = p.id AND a.rn = 1', 'left');
-        $builder->join('users u', 'u.id = a.doctor_id', 'left');
-        $builder->join('rooms r', 'r.id = a.room_id', 'left');
-        $builder->where('p.status', 'active');
-        $builder->orderBy('p.id', 'DESC');
         
-        $patients = $builder->get()->getResultArray();
+        // Use COALESCE to prefer admission data for inpatients
+        $sql = "
+            SELECT p.*, 
+                   COALESCE(adm_doc.name, appt_doc.name) as assigned_doctor_name,
+                   COALESCE(adm.admission_date, a.appointment_date) as last_appointment_date,
+                   COALESCE(adm.status, a.status) as appointment_status,
+                   p.room_number,
+                   COALESCE(adm_room.room_number, appt_room.room_number) as appointment_room_number
+            FROM patients p
+            LEFT JOIN (
+                SELECT patient_id, doctor_id, appointment_date, status, room_id,
+                       ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                FROM appointments 
+                WHERE status != 'cancelled'
+            ) a ON a.patient_id = p.id AND a.rn = 1
+            LEFT JOIN users appt_doc ON appt_doc.id = a.doctor_id
+            LEFT JOIN rooms appt_room ON appt_room.id = a.room_id
+            LEFT JOIN admissions adm ON adm.patient_id = p.id AND adm.status = 'Admitted'
+            LEFT JOIN users adm_doc ON adm_doc.id = adm.doctor_id
+            LEFT JOIN rooms adm_room ON adm_room.id = adm.room_id
+            WHERE p.status = 'active'
+            ORDER BY p.id DESC
+        ";
+        
+        $patients = $db->query($sql)->getResultArray();
 
         // Fetch prescriptions for these patients (latest first)
         $prescriptionsByPatient = [];

@@ -577,6 +577,42 @@ class Accounts extends Controller
 				'status' => $newStatus,
 			]);
 			
+			// If bill is fully paid, update related records
+			if ($newStatus === 'paid' && $bill['patient_id']) {
+				$db = \Config\Database::connect();
+				
+				// Update admission billing_cleared for inpatients
+				$admission = $db->table('admissions')
+					->where('patient_id', $bill['patient_id'])
+					->orderBy('id', 'DESC')
+					->get()->getRowArray();
+				
+				if ($admission) {
+					$db->table('admissions')
+						->where('id', $admission['id'])
+						->update(['billing_cleared' => 1]);
+				}
+				
+				// Update insurance claim status to paid
+				$insuranceClaim = $db->table('insurance_claims')
+					->where('patient_id', $bill['patient_id'])
+					->orderBy('id', 'DESC')
+					->get()->getRowArray();
+				
+				if ($insuranceClaim) {
+					$db->table('insurance_claims')
+						->where('id', $insuranceClaim['id'])
+						->update([
+							'bill_id' => $billId,
+							'claim_amount' => $bill['total_amount'],
+							'approved_amount' => $bill['total_amount'],
+							'status' => 'paid',
+							'approved_date' => date('Y-m-d H:i:s'),
+							'updated_at' => date('Y-m-d H:i:s')
+						]);
+				}
+			}
+			
 			return $this->response->setJSON([
 				'success' => true,
 				'message' => 'Payment recorded successfully',
@@ -969,6 +1005,61 @@ class Accounts extends Controller
 				}
 			}
 			
+			// Get unbilled admissions (Doctor Fees for inpatients) - check admissions table
+			if ($db->tableExists('admissions')) {
+				try {
+					// Get billed admission IDs (check by item_type and description containing 'Inpatient')
+					$billedAdmissionIds = [];
+					if ($db->tableExists('bill_items')) {
+						$billedAdmissions = $db->table('bill_items')
+							->select('reference_id')
+							->where('item_type', 'professional')
+							->like('item_name', 'Inpatient Care')
+							->get()->getResultArray();
+						$billedAdmissionIds = array_column($billedAdmissions, 'reference_id');
+					}
+					
+					// Include both Admitted and Discharged for billing (need to bill before or after discharge)
+					$admissionsQuery = $db->table('admissions')
+						->where('patient_id', $patientId)
+						->whereIn('status', ['Admitted', 'Discharged']);
+					
+					if (!empty($billedAdmissionIds)) {
+						$admissionsQuery->whereNotIn('id', $billedAdmissionIds);
+					}
+					
+					$admissions = $admissionsQuery->orderBy('admission_date', 'DESC')->get()->getResultArray();
+					
+					foreach ($admissions as $admission) {
+						// Get doctor name
+						$doctorName = 'Doctor';
+						if (isset($admission['doctor_id']) && $db->tableExists('users')) {
+							try {
+								$doctor = $db->table('users')->where('id', $admission['doctor_id'])->get()->getRowArray();
+								$doctorName = $doctor ? ($doctor['name'] ?? 'Doctor') : 'Doctor';
+							} catch (\Exception $e) {
+								log_message('warning', 'Error fetching doctor: ' . $e->getMessage());
+							}
+						}
+						
+						$admissionDate = $admission['admission_date'] ?? date('Y-m-d');
+						
+						$billableItems[] = [
+							'category' => 'professional',
+							'code' => '500000',
+							'date_time' => date('Y-m-d\TH:i', strtotime($admissionDate)),
+							'item_name' => 'Dr. ' . $doctorName . ' - Inpatient Care',
+							'unit_price' => 500.00, // Default professional fee
+							'quantity' => 1,
+							'reference_id' => $admission['id'],
+							'reference_type' => 'admission'
+						];
+					}
+				} catch (\Exception $e) {
+					log_message('error', 'Error fetching admissions for billing: ' . $e->getMessage());
+				}
+			}
+			
 			// Get billed prescription IDs (only if bills table exists)
 			$billedPrescriptionIds = [];
 			if ($db->tableExists('bills')) {
@@ -1191,17 +1282,68 @@ class Accounts extends Controller
 				}
 			}
 			
+			// Check for unbilled nurse fees from completed prescriptions (even if medications were billed)
+			if ($db->tableExists('prescriptions') && !empty($billedPrescriptionIds)) {
+				try {
+					// Get completed prescriptions that were billed but might not have nurse fee
+					$billedCompletedRx = $db->table('prescriptions')
+						->where('patient_id', $patientId)
+						->where('status', 'completed')
+						->whereIn('id', $billedPrescriptionIds)
+						->get()->getResultArray();
+					
+					foreach ($billedCompletedRx as $rx) {
+						// Check if nurse fee was already billed for this prescription
+						$nurseFeeExists = $db->table('bill_items bi')
+							->join('bills b', 'b.id = bi.bill_id')
+							->where('b.patient_id', $patientId)
+							->where('bi.item_type', 'nursing')
+							->where('bi.reference_id', $rx['id'])
+							->countAllResults();
+						
+						if ($nurseFeeExists == 0) {
+							// Add unbilled nurse fee
+							$nurseName = 'Nurse';
+							if ($db->tableExists('treatment_updates')) {
+								$nurseUpdate = $db->table('treatment_updates')
+									->where('patient_id', $patientId)
+									->where('nurse_name IS NOT NULL')
+									->where('nurse_name !=', '')
+									->orderBy('created_at', 'DESC')
+									->get()->getRowArray();
+								if ($nurseUpdate && !empty($nurseUpdate['nurse_name'])) {
+									$nurseName = $nurseUpdate['nurse_name'];
+								}
+							}
+							
+							$billableItems[] = [
+								'category' => 'nursing',
+								'code' => '102001',
+								'date_time' => date('Y-m-d\TH:i', strtotime($rx['updated_at'] ?? $rx['created_at'])),
+								'item_name' => 'Nurse Fee - ' . $nurseName . ' (Medication Administration)',
+								'unit_price' => 200.00,
+								'quantity' => 1,
+								'reference_id' => $rx['id'],
+								'reference_type' => 'prescription'
+							];
+						}
+					}
+				} catch (\Exception $e) {
+					log_message('warning', 'Error checking unbilled nurse fees: ' . $e->getMessage());
+				}
+			}
+			
 			// Add Room/Bed Charges if patient has a room (inpatient or outpatient)
 			if ($patient && !empty($patient['room_number'])) {
 				// Check if room charges already billed for this patient
 				$billedRoomCharges = [];
-				if ($db->tableExists('bills')) {
+				if ($db->tableExists('bills') && $db->tableExists('bill_items')) {
 					try {
 						$roomBills = $db->table('bills b')
 							->select('bi.reference_id as room_id')
 							->join('bill_items bi', 'bi.bill_id = b.id', 'left')
 							->where('b.patient_id', $patientId)
-							->where('bi.reference_type', 'room')
+							->where('bi.item_type', 'room')
 							->get()->getResultArray();
 						$billedRoomCharges = array_filter(array_column($roomBills, 'room_id'));
 					} catch (\Exception $e) {

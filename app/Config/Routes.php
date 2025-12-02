@@ -34,6 +34,8 @@ $routes->post('nurse/updateVitals', 'Nurse::updateVitals');
 $routes->get('nurse/reports', 'Nurse::reports');
 $routes->post('nurse/saveVitalSigns', 'Nurse::updateVitals'); // New simple endpoint
 $routes->post('nurse/updateTreatment', 'Nurse::updateTreatment');
+$routes->post('nurse/markDischargeReady', 'Nurse::markDischargeReady');
+$routes->post('nurse/finalDischarge', 'Nurse::finalDischarge');
 $routes->post('nurse/assignPatient', 'Nurse::assignPatient');
 $routes->post('nurse/markPrescriptionAsGiven', 'Nurse::markPrescriptionAsGiven');
 
@@ -117,6 +119,7 @@ $routes->get('doctor/getAvailableSlots', 'Doctor::getAvailableSlots');
 $routes->get('doctor/appointments', 'Doctor::appointments');
 $routes->get('doctor/consultations', 'Doctor::consultations');
 $routes->get('doctor/inpatients', 'Doctor::inpatients');
+$routes->post('doctor/orderDischarge', 'Doctor::orderDischarge');
 $routes->get('doctor/consultations/view/(:num)', 'Doctor::viewConsultation/$1');
 $routes->get('doctor/patients', 'Doctor::patients');
 $routes->get('doctor/patients/show/(:num)', 'Doctor::getPatientDetails/$1');

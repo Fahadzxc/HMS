@@ -10,7 +10,9 @@
     <div class="stack">
         <?php
         $patientsList = isset($patients) && is_array($patients) ? $patients : [];
+        $dischargeOrdersList = isset($discharge_orders) && is_array($discharge_orders) ? $discharge_orders : [];
         $totalPatients = count($patientsList);
+        $pendingDischarges = count($dischargeOrdersList);
         $today = date('Y-m-d');
         $todayCount = 0;
         foreach ($patientsList as $pp) {
@@ -36,8 +38,8 @@
             </div>
             <div class="kpi-card">
                 <div class="kpi-content">
-                    <div class="kpi-label">Admitted Patients</div>
-                    <div class="kpi-value">—</div>
+                    <div class="kpi-label">Pending Discharges</div>
+                    <div class="kpi-value" style="color: <?= $pendingDischarges > 0 ? '#f59e0b' : '#64748b' ?>;"><?= $pendingDischarges ?></div>
                     <div class="kpi-change kpi-negative">&nbsp;</div>
                 </div>
             </div>
@@ -51,6 +53,124 @@
         </div>
     </div>
 </section>
+
+<?php 
+$readyList = isset($ready_for_discharge) && is_array($ready_for_discharge) ? $ready_for_discharge : [];
+?>
+
+<?php if (!empty($readyList)): ?>
+<!-- Ready for Final Discharge Section -->
+<section class="panel panel-spaced" style="border-left: 4px solid #10b981;">
+    <header class="panel-header">
+        <h2>✅ Ready for Discharge</h2>
+        <p>Patients prepared and ready - waiting for billing clearance then final discharge</p>
+    </header>
+    <div class="stack">
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Room</th>
+                        <th>Doctor</th>
+                        <th>Ready Since</th>
+                        <th>Prepared By</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($readyList as $ready): ?>
+                        <tr>
+                            <td>
+                                <strong><?= esc($ready['patient_name']) ?></strong><br>
+                                <span style="color: #64748b; font-size: 0.875rem;"><?= esc($ready['contact'] ?? '') ?></span>
+                            </td>
+                            <td>
+                                <?php if (!empty($ready['room_number'])): ?>
+                                    <span class="room-badge"><?= esc($ready['room_number']) ?></span><br>
+                                    <span style="color: #64748b; font-size: 0.875rem;"><?= esc($ready['room_type'] ?? '') ?></span>
+                                <?php else: ?>
+                                    <span style="color: #94a3b8;">—</span>
+                                <?php endif; ?>
+                            </td>
+                            <td><?= esc($ready['doctor_name'] ?? '—') ?></td>
+                            <td>
+                                <strong><?= date('M j, Y', strtotime($ready['discharge_ready_at'])) ?></strong><br>
+                                <span style="color: #64748b; font-size: 0.875rem;"><?= date('g:i A', strtotime($ready['discharge_ready_at'])) ?></span>
+                            </td>
+                            <td><?= esc($ready['ready_by_name'] ?? '—') ?></td>
+                            <td>
+                                <button class="btn btn-discharge-final" onclick="finalDischarge(<?= $ready['id'] ?>, '<?= esc($ready['patient_name']) ?>')">
+                                    🏠 Final Discharge
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
+<?php if (!empty($dischargeOrdersList)): ?>
+<!-- Pending Discharge Orders Section -->
+<section class="panel panel-spaced" style="border-left: 4px solid #f59e0b;">
+    <header class="panel-header">
+        <h2>📋 Pending Discharge Orders</h2>
+        <p>Patients with doctor's discharge order - prepare for discharge</p>
+    </header>
+    <div class="stack">
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Room</th>
+                        <th>Doctor</th>
+                        <th>Ordered</th>
+                        <th>Discharge Notes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($dischargeOrdersList as $order): ?>
+                        <tr>
+                            <td>
+                                <strong><?= esc($order['patient_name']) ?></strong><br>
+                                <span style="color: #64748b; font-size: 0.875rem;"><?= esc($order['contact'] ?? '') ?></span>
+                            </td>
+                            <td>
+                                <?php if (!empty($order['room_number'])): ?>
+                                    <span class="room-badge"><?= esc($order['room_number']) ?></span><br>
+                                    <span style="color: #64748b; font-size: 0.875rem;"><?= esc($order['room_type'] ?? '') ?></span>
+                                <?php else: ?>
+                                    <span style="color: #94a3b8;">—</span>
+                                <?php endif; ?>
+                            </td>
+                            <td><?= esc($order['doctor_name'] ?? '—') ?></td>
+                            <td>
+                                <strong><?= date('M j, Y', strtotime($order['discharge_ordered_at'])) ?></strong><br>
+                                <span style="color: #64748b; font-size: 0.875rem;"><?= date('g:i A', strtotime($order['discharge_ordered_at'])) ?></span>
+                            </td>
+                            <td>
+                                <span title="<?= esc($order['discharge_notes'] ?? '') ?>">
+                                    <?= esc(substr($order['discharge_notes'] ?? '—', 0, 40)) ?><?= strlen($order['discharge_notes'] ?? '') > 40 ? '...' : '' ?>
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-prepare" onclick="markReady(<?= $order['id'] ?>, '<?= esc($order['patient_name']) ?>')">
+                                    ✓ Mark Ready
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
 
 <section class="panel panel-spaced">
     <header class="panel-header">
@@ -433,6 +553,234 @@
         display: none;
     }
 }
+
+/* Discharge section styles */
+.btn-prepare {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+.btn-prepare:hover { background: #059669; }
+
+.btn-discharge-final {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+.btn-discharge-final:hover { background: #2563eb; }
+
+.room-badge {
+    background: #dbeafe;
+    color: #1d4ed8;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.data-table th,
+.data-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+.data-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #475569;
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+}
+.data-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+.modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 0;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 450px;
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+    border-radius: 8px 8px 0 0;
+}
+.modal-header h3 { margin: 0; color: #1e293b; }
+.modal-close {
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6b7280;
+    background: none;
+    border: none;
+}
+.modal-body { padding: 1.5rem; }
+.modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+}
+.btn-primary { background: #3b82f6; color: white; }
+.btn-secondary { background: #6b7280; color: white; }
+.btn-success { background: #10b981; color: white; }
 </style>
+
+<!-- Mark Ready Modal -->
+<div id="readyModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>✓ Mark Patient Ready</h3>
+            <button class="modal-close" onclick="closeModal('readyModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Mark <strong id="readyPatientName"></strong> as ready for discharge?</p>
+            <p style="color: #64748b; font-size: 0.875rem;">This confirms the patient has been prepared and is ready to leave after billing clearance.</p>
+            <input type="hidden" id="readyAdmissionId">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('readyModal')">Cancel</button>
+            <button class="btn btn-success" onclick="confirmReady()">Confirm Ready</button>
+        </div>
+    </div>
+</div>
+
+<!-- Final Discharge Modal -->
+<div id="dischargeModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>🏠 Final Discharge</h3>
+            <button class="modal-close" onclick="closeModal('dischargeModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Complete discharge for <strong id="dischargePatientName"></strong>?</p>
+            <p style="color: #64748b; font-size: 0.875rem;">Please ensure billing has been cleared before proceeding.</p>
+            <p style="color: #f59e0b; font-size: 0.875rem;">⚠️ This action will mark the patient as discharged and change their status to outpatient.</p>
+            <input type="hidden" id="dischargeAdmissionId">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('dischargeModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="confirmFinalDischarge()">Complete Discharge</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function markReady(admissionId, patientName) {
+    document.getElementById('readyAdmissionId').value = admissionId;
+    document.getElementById('readyPatientName').textContent = patientName;
+    document.getElementById('readyModal').style.display = 'block';
+}
+
+function finalDischarge(admissionId, patientName) {
+    document.getElementById('dischargeAdmissionId').value = admissionId;
+    document.getElementById('dischargePatientName').textContent = patientName;
+    document.getElementById('dischargeModal').style.display = 'block';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function confirmReady() {
+    const admissionId = document.getElementById('readyAdmissionId').value;
+    
+    fetch('<?= site_url('nurse/markDischargeReady') ?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ admission_id: admissionId })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('✅ ' + result.message);
+            closeModal('readyModal');
+            location.reload();
+        } else {
+            alert('❌ ' + (result.message || 'Failed to mark patient ready'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ An error occurred. Please try again.');
+    });
+}
+
+function confirmFinalDischarge() {
+    const admissionId = document.getElementById('dischargeAdmissionId').value;
+    
+    fetch('<?= site_url('nurse/finalDischarge') ?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ admission_id: admissionId })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('✅ ' + result.message);
+            closeModal('dischargeModal');
+            location.reload();
+        } else {
+            alert('❌ ' + (result.message || 'Failed to discharge patient'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ An error occurred. Please try again.');
+    });
+}
+
+// Close modal when clicking outside
+window.addEventListener('click', function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+    }
+});
+</script>
 
 <?= $this->endSection() ?>

@@ -118,24 +118,59 @@ class Doctor extends Controller
 			return redirect()->to('/login');
 		}
 
-		$model = new \App\Models\PatientModel();
 		$doctorId = session()->get('user_id');
-		
-		// Get only patients assigned to this doctor through appointments
 		$db = \Config\Database::connect();
-		$builder = $db->table('patients p');
-		$builder->select('p.*, 
-						 u.name as assigned_doctor_name,
-						 a.appointment_date as last_appointment_date,
-						 a.status as appointment_status');
-		$builder->join('(SELECT patient_id, doctor_id, appointment_date, status, 
-								ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
-						 FROM appointments 
-						 WHERE status != "cancelled" AND doctor_id = ' . (int)$doctorId . ') a', 'a.patient_id = p.id AND a.rn = 1', 'inner');
-		$builder->join('users u', 'u.id = a.doctor_id', 'left');
-		$builder->orderBy('p.id', 'DESC');
 		
-		$patients = $builder->get()->getResultArray();
+		// Get patients from APPOINTMENTS (outpatients) - exclude discharged patients
+		$appointmentPatients = $db->table('patients p')
+			->select('p.*, 
+					 u.name as assigned_doctor_name,
+					 a.appointment_date as last_appointment_date,
+					 a.status as appointment_status,
+					 "appointment" as source')
+			->join('(SELECT patient_id, doctor_id, appointment_date, status, 
+							ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+					 FROM appointments 
+					 WHERE status != "cancelled" AND doctor_id = ' . (int)$doctorId . ') a', 'a.patient_id = p.id AND a.rn = 1', 'inner')
+			->join('users u', 'u.id = a.doctor_id', 'left')
+			->where('p.status !=', 'discharged')
+			->get()->getResultArray();
+		
+		// Get patients from ADMISSIONS (inpatients) - only Admitted status
+		$admissionPatients = $db->table('patients p')
+			->select('p.*, 
+					 u.name as assigned_doctor_name,
+					 adm.admission_date as last_appointment_date,
+					 adm.status as appointment_status,
+					 "admission" as source')
+			->join('admissions adm', 'adm.patient_id = p.id AND adm.doctor_id = ' . (int)$doctorId, 'inner')
+			->join('users u', 'u.id = adm.doctor_id', 'left')
+			->where('adm.status', 'Admitted')
+			->where('p.status !=', 'discharged')
+			->get()->getResultArray();
+		
+		// Merge and remove duplicates (prefer admission over appointment for same patient)
+		$patientIds = [];
+		$patients = [];
+		
+		// Add admission patients first (priority)
+		foreach ($admissionPatients as $p) {
+			if (!in_array($p['id'], $patientIds)) {
+				$patientIds[] = $p['id'];
+				$patients[] = $p;
+			}
+		}
+		
+		// Add appointment patients (if not already added from admissions)
+		foreach ($appointmentPatients as $p) {
+			if (!in_array($p['id'], $patientIds)) {
+				$patientIds[] = $p['id'];
+				$patients[] = $p;
+			}
+		}
+		
+		// Sort by ID descending
+		usort($patients, fn($a, $b) => $b['id'] - $a['id']);
 
 		$data = [
 			'title' => 'Patient Records - HMS',
@@ -424,16 +459,15 @@ class Doctor extends Controller
 		$doctorId = session()->get('user_id');
 		$db = \Config\Database::connect();
 
-		// Get active inpatient assignments for this doctor from latest appointments
-		$builder = $db->table('appointments a');
-		$builder->select('a.*, p.full_name as patient_name, p.age, p.gender, r.room_number');
+		// Get active inpatient assignments for this doctor from admissions table
+		$builder = $db->table('admissions a');
+		$builder->select('a.*, p.full_name as patient_name, p.age, p.gender, p.contact, r.room_number, r.room_type');
 		$builder->join('patients p', 'p.id = a.patient_id', 'left');
 		$builder->join('rooms r', 'r.id = a.room_id', 'left');
 		$builder->where('a.doctor_id', $doctorId);
-		$builder->where('p.patient_type', 'inpatient');
-		$builder->where('a.status !=', 'cancelled');
-		$builder->orderBy('a.appointment_date', 'DESC');
-		$builder->orderBy('a.appointment_time', 'DESC');
+		$builder->where('a.status', 'Admitted');
+		$builder->orderBy('a.admission_date', 'DESC');
+		$builder->orderBy('a.created_at', 'DESC');
 		$inpatients = $builder->get()->getResultArray();
 
 		$data = [
@@ -444,6 +478,47 @@ class Doctor extends Controller
 		];
 
 		return view('doctor/inpatients', $data);
+	}
+	
+	public function orderDischarge()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'doctor') {
+			return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+		}
+		
+		$json = $this->request->getJSON(true);
+		if (!$json) {
+			$json = $this->request->getPost();
+		}
+		
+		$admissionId = $json['admission_id'] ?? null;
+		$dischargeNotes = $json['discharge_notes'] ?? '';
+		
+		if (!$admissionId) {
+			return $this->response->setJSON(['success' => false, 'message' => 'Admission ID is required']);
+		}
+		
+		$db = \Config\Database::connect();
+		$admission = $db->table('admissions')->where('id', $admissionId)->get()->getRowArray();
+		
+		if (!$admission) {
+			return $this->response->setJSON(['success' => false, 'message' => 'Admission not found']);
+		}
+		
+		// Check if already has discharge order
+		if (!empty($admission['discharge_ordered_at'])) {
+			return $this->response->setJSON(['success' => false, 'message' => 'Discharge already ordered for this patient']);
+		}
+		
+		// Update admission with discharge order
+		$db->table('admissions')->where('id', $admissionId)->update([
+			'discharge_ordered_at' => date('Y-m-d H:i:s'),
+			'discharge_ordered_by' => session()->get('user_id'),
+			'discharge_notes' => $dischargeNotes,
+			'updated_at' => date('Y-m-d H:i:s')
+		]);
+		
+		return $this->response->setJSON(['success' => true, 'message' => 'Discharge order created successfully']);
 	}
 
 	public function updateSchedule()
@@ -723,17 +798,51 @@ class Doctor extends Controller
 
         $prescriptions = $rxModel->getDoctorPrescriptions((int) $doctorId);
 
-        // Patients assigned to this doctor for selection - ALL PATIENTS (inpatient & outpatient)
+        // Patients assigned to this doctor for selection - from BOTH appointments AND admissions
         $db = \Config\Database::connect();
-        $builder = $db->table('patients p');
-        $builder->select('p.id, p.full_name, p.date_of_birth, p.gender, p.patient_type');
-        $builder->join('(SELECT patient_id, doctor_id, appointment_date,
-                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
-                         FROM appointments WHERE status != "cancelled" AND doctor_id = ' . (int) $doctorId . ') a', 'a.patient_id = p.id AND a.rn = 1', 'inner');
-        // Show ALL patients (both inpatient and outpatient)
-        $builder->orderBy('p.patient_type', 'DESC'); // Inpatients first
-        $builder->orderBy('p.full_name', 'ASC');
-        $patientsRaw = $builder->get()->getResultArray();
+        
+        // Get patients from appointments (outpatients)
+        $appointmentPatients = $db->table('patients p')
+            ->select('p.id, p.full_name, p.date_of_birth, p.gender, p.patient_type')
+            ->join('(SELECT patient_id, doctor_id, appointment_date,
+                            ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                     FROM appointments WHERE status != "cancelled" AND doctor_id = ' . (int) $doctorId . ') a', 'a.patient_id = p.id AND a.rn = 1', 'inner')
+            ->get()->getResultArray();
+        
+        // Get patients from admissions (inpatients)
+        $admissionPatients = $db->table('patients p')
+            ->select('p.id, p.full_name, p.date_of_birth, p.gender, p.patient_type')
+            ->join('admissions adm', 'adm.patient_id = p.id AND adm.doctor_id = ' . (int) $doctorId, 'inner')
+            ->where('adm.status', 'Admitted')
+            ->get()->getResultArray();
+        
+        // Merge and remove duplicates
+        $patientIds = [];
+        $patientsRaw = [];
+        
+        // Add admission patients first (inpatients)
+        foreach ($admissionPatients as $p) {
+            if (!in_array($p['id'], $patientIds)) {
+                $patientIds[] = $p['id'];
+                $patientsRaw[] = $p;
+            }
+        }
+        
+        // Add appointment patients
+        foreach ($appointmentPatients as $p) {
+            if (!in_array($p['id'], $patientIds)) {
+                $patientIds[] = $p['id'];
+                $patientsRaw[] = $p;
+            }
+        }
+        
+        // Sort by patient_type (inpatients first) then by name
+        usort($patientsRaw, function($a, $b) {
+            if ($a['patient_type'] === $b['patient_type']) {
+                return strcasecmp($a['full_name'], $b['full_name']);
+            }
+            return $a['patient_type'] === 'inpatient' ? -1 : 1;
+        });
         
         // Calculate age for each patient
         $patients = [];
@@ -1047,15 +1156,48 @@ class Doctor extends Controller
             unset($req);
         }
         
-        // Get patients assigned to this doctor for selection
+        // Get patients assigned to this doctor for selection - from BOTH appointments AND admissions
         $db = \Config\Database::connect();
-        $builder = $db->table('patients p');
-        $builder->select('p.id, p.full_name, p.date_of_birth, p.gender, p.patient_id');
-        $builder->join('(SELECT patient_id, doctor_id, appointment_date,
-                                ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
-                         FROM appointments WHERE status != "cancelled" AND doctor_id = ' . (int) $doctorId . ') a', 'a.patient_id = p.id AND a.rn = 1', 'inner');
-        $builder->orderBy('p.full_name', 'ASC');
-        $patientsRaw = $builder->get()->getResultArray();
+        
+        // Get patients from appointments (outpatients)
+        $appointmentPatients = $db->table('patients p')
+            ->select('p.id, p.full_name, p.date_of_birth, p.gender, p.patient_id, p.patient_type')
+            ->join('(SELECT patient_id, doctor_id, appointment_date,
+                            ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
+                     FROM appointments WHERE status != "cancelled" AND doctor_id = ' . (int) $doctorId . ') a', 'a.patient_id = p.id AND a.rn = 1', 'inner')
+            ->get()->getResultArray();
+        
+        // Get patients from admissions (inpatients)
+        $admissionPatients = $db->table('patients p')
+            ->select('p.id, p.full_name, p.date_of_birth, p.gender, p.patient_id, p.patient_type')
+            ->join('admissions adm', 'adm.patient_id = p.id AND adm.doctor_id = ' . (int) $doctorId, 'inner')
+            ->where('adm.status', 'Admitted')
+            ->get()->getResultArray();
+        
+        // Merge and remove duplicates
+        $patientIds = [];
+        $patientsRaw = [];
+        
+        // Add admission patients first (inpatients)
+        foreach ($admissionPatients as $p) {
+            if (!in_array($p['id'], $patientIds)) {
+                $patientIds[] = $p['id'];
+                $patientsRaw[] = $p;
+            }
+        }
+        
+        // Add appointment patients
+        foreach ($appointmentPatients as $p) {
+            if (!in_array($p['id'], $patientIds)) {
+                $patientIds[] = $p['id'];
+                $patientsRaw[] = $p;
+            }
+        }
+        
+        // Sort by name
+        usort($patientsRaw, function($a, $b) {
+            return strcasecmp($a['full_name'], $b['full_name']);
+        });
         
         // Calculate age for each patient
         $patients = [];

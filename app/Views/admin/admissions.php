@@ -100,21 +100,27 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <?php
-                                    $statusClass = match($admission['status'] ?? '') {
-                                        'Admitted' => 'badge-success',
-                                        'Discharged' => 'badge-info',
-                                        'Transferred' => 'badge-warning',
-                                        default => 'badge-secondary'
-                                    };
-                                    ?>
-                                    <span class="badge <?= $statusClass ?>"><?= esc($admission['status'] ?? 'Unknown') ?></span>
+                                    <?php if ($admission['status'] === 'Discharged'): ?>
+                                        <span class="badge badge-info">Discharged</span>
+                                    <?php elseif (!empty($admission['discharge_ready_at'])): ?>
+                                        <span class="badge badge-success">Ready for Discharge</span>
+                                    <?php elseif (!empty($admission['discharge_ordered_at'])): ?>
+                                        <span class="badge badge-warning">Discharge Ordered</span>
+                                    <?php else: ?>
+                                        <span class="badge badge-success">Admitted</span>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="actions-cell">
                                     <a href="#" class="action-link" onclick="viewAdmission(<?= $admission['admission_id'] ?>); return false;">View</a>
                                     <a href="#" class="action-link" onclick="editAdmission(<?= $admission['admission_id'] ?>); return false;">Edit</a>
                                     <?php if ($admission['status'] !== 'Discharged'): ?>
-                                        <a href="#" class="action-link" style="color: #10b981;" onclick="dischargePatient(<?= $admission['admission_id'] ?>); return false;">Discharge</a>
+                                        <?php if (!empty($admission['discharge_ready_at'])): ?>
+                                            <a href="#" class="action-link" style="color: #10b981;" onclick="dischargePatient(<?= $admission['admission_id'] ?>); return false;">Final Discharge</a>
+                                        <?php elseif (empty($admission['discharge_ordered_at'])): ?>
+                                            <span style="color: #94a3b8; font-size: 0.75rem;">Awaiting doctor order</span>
+                                        <?php else: ?>
+                                            <span style="color: #f59e0b; font-size: 0.75rem;">Awaiting nurse prep</span>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                     <a href="#" class="action-link action-delete" onclick="deleteAdmission(<?= $admission['admission_id'] ?>); return false;">Delete</a>
                                 </td>
