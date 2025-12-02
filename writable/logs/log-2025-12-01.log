@@ -1,0 +1,174 @@
+DEBUG - 2025-12-01 06:06:10 --> Session: Class initialized using 'CodeIgniter\Session\Handlers\FileHandler' driver.
+ERROR - 2025-12-01 17:55:34 --> mysqli_sql_exception: Duplicate column name 'progress_days' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE pre...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE pre...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE pre...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(960): CodeIgniter\Database\BaseConnection->query('ALTER TABLE pre...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}
+ERROR - 2025-12-01 17:55:40 --> mysqli_sql_exception: Duplicate column name 'progress_days' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE pre...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE pre...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE pre...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(960): CodeIgniter\Database\BaseConnection->query('ALTER TABLE pre...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}
+ERROR - 2025-12-01 17:55:45 --> mysqli_sql_exception: Duplicate column name 'progress_days' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE pre...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE pre...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE pre...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(960): CodeIgniter\Database\BaseConnection->query('ALTER TABLE pre...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}
+ERROR - 2025-12-01 17:55:49 --> mysqli_sql_exception: Duplicate column name 'progress_days' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE pre...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE pre...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE pre...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(960): CodeIgniter\Database\BaseConnection->query('ALTER TABLE pre...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}
+ERROR - 2025-12-01 17:58:27 --> mysqli_sql_exception: Duplicate column name 'progress_days' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE pre...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE pre...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE pre...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(960): CodeIgniter\Database\BaseConnection->query('ALTER TABLE pre...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}
+CRITICAL - 2025-12-01 17:58:27 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: POST, Route: nurse/markPrescriptionAsGiven]
+in APPPATH\Controllers\Nurse.php on line 1301.
+ 1 APPPATH\Controllers\Nurse.php(1278): App\Controllers\Nurse->autoCreatePrescriptionBill(15, [...])
+ 2 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+ 3 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 4 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 7 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-12-01 18:03:11 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: POST, Route: nurse/markPrescriptionAsGiven]
+in APPPATH\Controllers\Nurse.php on line 1329.
+ 1 APPPATH\Controllers\Nurse.php(1306): App\Controllers\Nurse->autoCreatePrescriptionBill(16, [...])
+ 2 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+ 3 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 4 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 7 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-12-01 18:07:03 --> mysqli_sql_exception: Duplicate column name 'progress_days' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE pre...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE pre...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE pre...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(967): CodeIgniter\Database\BaseConnection->query('ALTER TABLE pre...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}
+CRITICAL - 2025-12-01 18:07:03 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: POST, Route: nurse/markPrescriptionAsGiven]
+in APPPATH\Controllers\Nurse.php on line 1341.
+ 1 APPPATH\Controllers\Nurse.php(1318): App\Controllers\Nurse->autoCreatePrescriptionBill(17, [...])
+ 2 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+ 3 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 4 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 7 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-12-01 18:09:34 --> mysqli_sql_exception: Duplicate column name 'progress_days' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE pre...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE pre...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE pre...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(967): CodeIgniter\Database\BaseConnection->query('ALTER TABLE pre...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}
+CRITICAL - 2025-12-01 18:09:34 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: POST, Route: nurse/markPrescriptionAsGiven]
+in APPPATH\Controllers\Nurse.php on line 1350.
+ 1 APPPATH\Controllers\Nurse.php(1327): App\Controllers\Nurse->autoCreatePrescriptionBill(18, [...])
+ 2 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+ 3 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 4 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 7 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-12-01 18:12:01 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: POST, Route: nurse/markPrescriptionAsGiven]
+in APPPATH\Controllers\Nurse.php on line 1328.
+ 1 APPPATH\Controllers\Nurse.php(1305): App\Controllers\Nurse->autoCreatePrescriptionBill(19, [...])
+ 2 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+ 3 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 4 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 7 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-12-01 18:14:30 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: POST, Route: nurse/markPrescriptionAsGiven]
+in APPPATH\Controllers\Nurse.php on line 1337.
+ 1 APPPATH\Controllers\Nurse.php(1314): App\Controllers\Nurse->autoCreatePrescriptionBill(20, [...])
+ 2 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+ 3 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 4 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 7 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-12-01 18:18:13 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: POST, Route: nurse/markPrescriptionAsGiven]
+in APPPATH\Controllers\Nurse.php on line 1523.
+ 1 APPPATH\Controllers\Nurse.php(1425): App\Controllers\Nurse->getMedicationPrice('Amoxicillin 500mg')
+ 2 APPPATH\Controllers\Nurse.php(1315): App\Controllers\Nurse->autoCreatePrescriptionBill(21, [...])
+ 3 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+ 4 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-12-01 18:20:07 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: POST, Route: nurse/markPrescriptionAsGiven]
+in APPPATH\Controllers\Nurse.php on line 1534.
+ 1 APPPATH\Controllers\Nurse.php(1436): App\Controllers\Nurse->getMedicationPrice('Amoxicillin 500mg')
+ 2 APPPATH\Controllers\Nurse.php(1326): App\Controllers\Nurse->autoCreatePrescriptionBill(22, [...])
+ 3 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+ 4 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 5 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 7 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 8 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))

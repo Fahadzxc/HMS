@@ -6,6 +6,7 @@ use CodeIgniter\Controller;
 use App\Models\DoctorScheduleModel;
 use App\Models\AppointmentModel;
 use App\Models\PrescriptionModel;
+use App\Models\PatientModel;
 use App\Models\MedicationModel;
 use App\Models\LabTestRequestModel;
 use App\Models\LabTestResultModel;
@@ -722,13 +723,15 @@ class Doctor extends Controller
 
         $prescriptions = $rxModel->getDoctorPrescriptions((int) $doctorId);
 
-        // Patients assigned to this doctor for selection
+        // Patients assigned to this doctor for selection - ALL PATIENTS (inpatient & outpatient)
         $db = \Config\Database::connect();
         $builder = $db->table('patients p');
-        $builder->select('p.id, p.full_name, p.date_of_birth, p.gender');
+        $builder->select('p.id, p.full_name, p.date_of_birth, p.gender, p.patient_type');
         $builder->join('(SELECT patient_id, doctor_id, appointment_date,
                                 ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
                          FROM appointments WHERE status != "cancelled" AND doctor_id = ' . (int) $doctorId . ') a', 'a.patient_id = p.id AND a.rn = 1', 'inner');
+        // Show ALL patients (both inpatient and outpatient)
+        $builder->orderBy('p.patient_type', 'DESC'); // Inpatients first
         $builder->orderBy('p.full_name', 'ASC');
         $patientsRaw = $builder->get()->getResultArray();
         
@@ -793,21 +796,63 @@ class Doctor extends Controller
         }
 
         $rxModel = new PrescriptionModel();
+        $patientModel = new PatientModel();
+        
+        // Get patient info
+        $patient = $patientModel->find($patientId);
+        if (!$patient) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Patient not found.']);
+        }
+        
+        $patientType = strtolower($patient['patient_type'] ?? 'outpatient');
+        $isOutpatient = ($patientType !== 'inpatient');
+        
+        // Get latest appointment for this patient
+        $appointmentModel = new AppointmentModel();
+        $latestAppointment = $appointmentModel->where('patient_id', $patientId)
+            ->where('status !=', 'cancelled')
+            ->orderBy('appointment_date', 'DESC')
+            ->orderBy('created_at', 'DESC')
+            ->first();
+        
+        $appointmentId = null;
+        $admissionId = null;
+        
+        if ($latestAppointment && !empty($latestAppointment['id'])) {
+            $appointmentId = $latestAppointment['id'];
+            
+            // Only set admission_id for INPATIENTS
+            if (!$isOutpatient) {
+                $admissionId = $latestAppointment['id'];
+            }
+        }
 
+        // For outpatients: status = 'printed' (direct print, no nurse)
+        // For inpatients: status = 'pending' (nurse will administer)
+        $prescriptionStatus = $isOutpatient ? 'printed' : 'pending';
+        
         $data = [
             'patient_id' => $patientId,
             'doctor_id' => $doctorId,
-            'appointment_id' => $payload['appointment_id'] ?? null,
+            'appointment_id' => $appointmentId, // Set appointment_id for all patients
+            'admission_id' => $admissionId, // Only set for inpatients
             'items_json' => json_encode($items),
             'notes' => $notes,
-            'status' => 'pending',
+            'status' => $prescriptionStatus,
         ];
 
         if (!$rxModel->insert($data)) {
             return $this->response->setJSON(['success' => false, 'message' => 'Failed to save prescription', 'errors' => $rxModel->errors()]);
         }
+        
+        $prescriptionId = $rxModel->getInsertID();
 
-        return $this->response->setJSON(['success' => true]);
+        return $this->response->setJSON([
+            'success' => true, 
+            'is_outpatient' => $isOutpatient,
+            'prescription_id' => $prescriptionId,
+            'message' => $isOutpatient ? 'Prescription saved! Ready to print.' : 'Prescription saved and sent to nurse station.'
+        ]);
     }
 
     /**
@@ -853,7 +898,7 @@ class Doctor extends Controller
             ],
             'status' => [
                 'type'       => 'ENUM',
-                'constraint' => ['pending', 'dispensed', 'cancelled', 'completed'],
+                'constraint' => ['pending', 'dispensed', 'cancelled', 'completed', 'printed'],
                 'default'    => 'pending',
             ],
             'created_at' => [
@@ -1073,9 +1118,30 @@ class Doctor extends Controller
                 ]);
             }
             
+            // Check if patient is inpatient and get admission_id
+            $admissionId = null;
+            $patientModel = new PatientModel();
+            $patient = $patientModel->find($patientId);
+            
+            if ($patient && strtolower($patient['patient_type'] ?? '') === 'inpatient') {
+                // For inpatients, get the latest appointment as admission reference
+                $appointmentModel = new AppointmentModel();
+                $latestAppointment = $appointmentModel->where('patient_id', $patientId)
+                    ->where('status !=', 'cancelled')
+                    ->orderBy('appointment_date', 'DESC')
+                    ->orderBy('created_at', 'DESC')
+                    ->first();
+                
+                // Use appointment_id as admission_id for inpatients
+                if ($latestAppointment && !empty($latestAppointment['id'])) {
+                    $admissionId = $latestAppointment['id'];
+                }
+            }
+            
             $data = [
                 'patient_id' => $patientId,
                 'doctor_id' => $doctorId,
+                'admission_id' => $admissionId, // Set admission_id for inpatients
                 'test_type' => $testType,
                 'priority' => $priority,
                 'status' => 'pending',

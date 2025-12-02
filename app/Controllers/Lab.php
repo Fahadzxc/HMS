@@ -190,10 +190,17 @@ class Lab extends Controller
 				return $this->response->setJSON(['success' => false, 'message' => 'Missing parameters']);
 			}
 			
-			$requestModel->update($requestId, [
+			$updateData = [
 				'status' => $status,
 				'updated_at' => date('Y-m-d H:i:s'),
-			]);
+			];
+			
+			// Assign the lab staff when they start working on the test
+			if ($status === 'in_progress') {
+				$updateData['assigned_staff_id'] = session()->get('user_id');
+			}
+			
+			$requestModel->update($requestId, $updateData);
 			
 			return $this->response->setJSON(['success' => true]);
 			
@@ -294,9 +301,10 @@ class Lab extends Controller
 				$resultModel->insert($resultData);
 			}
 			
-			// Update request status to completed
+			// Update request status to completed and assign the lab staff who processed it
 			$requestModel->update($requestId, [
 				'status' => 'completed',
+				'assigned_staff_id' => session()->get('user_id'),
 				'updated_at' => date('Y-m-d H:i:s'),
 			]);
 			

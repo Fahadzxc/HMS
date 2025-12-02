@@ -270,12 +270,12 @@
                 </div>
                 <div id="insuranceDetails" style="display: none;">
                     <div class="form-field">
-                        <label>Policy Number <small style="color: #6B7280;">(Auto-generated if left blank)</small></label>
+                        <label>Policy Number</label>
                         <input type="text" name="insurance_policy_number" id="insurancePolicyNumber" placeholder="Leave blank to auto-generate">
                         <div class="error" data-error-for="insurance_policy_number"></div>
                     </div>
                     <div class="form-field">
-                        <label>Member ID <small style="color: #6B7280;">(Auto-generated if left blank)</small></label>
+                        <label>Member ID</label>
                         <input type="text" name="insurance_member_id" id="insuranceMemberId" placeholder="Leave blank to auto-generate">
                         <div class="error" data-error-for="insurance_member_id"></div>
                     </div>
@@ -764,6 +764,9 @@
         const policyNumberInput = document.getElementById('insurancePolicyNumber');
         const memberIdInput = document.getElementById('insuranceMemberId');
         
+        // Track previous provider to detect changes
+        let previousProvider = '';
+        
         if (insuranceProvider) {
             insuranceProvider.addEventListener('change', function() {
                 const provider = this.value;
@@ -772,8 +775,11 @@
                 if (provider && provider !== '' && provider !== 'none') {
                     if (insuranceDetails) insuranceDetails.style.display = 'block';
                     
-                    // Auto-generate Policy Number and Member ID if fields are empty
-                    if (policyNumberInput && !policyNumberInput.value.trim()) {
+                    // Auto-generate Policy Number and Member ID when provider changes
+                    // Always regenerate if provider changed (not just when empty)
+                    const providerChanged = (previousProvider !== provider);
+                    
+                    if (policyNumberInput && (providerChanged || !policyNumberInput.value.trim())) {
                         const year = new Date().getFullYear();
                         const month = String(new Date().getMonth() + 1).padStart(2, '0');
                         const providerCode = provider.substring(0, 3).toUpperCase();
@@ -781,20 +787,24 @@
                         policyNumberInput.value = providerCode + '-' + year + month + '-' + randomNum;
                     }
                     
-                    if (memberIdInput && !memberIdInput.value.trim()) {
+                    if (memberIdInput && (providerChanged || !memberIdInput.value.trim())) {
                         const providerCode = provider.substring(0, 2).toUpperCase();
                         const randomNum = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
                         memberIdInput.value = providerCode + randomNum;
                     }
+                    
+                    previousProvider = provider;
                 } else {
                     if (insuranceDetails) insuranceDetails.style.display = 'none';
                     if (policyNumberInput) policyNumberInput.value = '';
                     if (memberIdInput) memberIdInput.value = '';
+                    previousProvider = '';
                 }
             });
             
             // Trigger change event on page load if insurance provider is already selected
             if (insuranceProvider.value && insuranceProvider.value !== '' && insuranceProvider.value !== 'none') {
+                previousProvider = insuranceProvider.value; // Set initial provider
                 insuranceProvider.dispatchEvent(new Event('change'));
             }
         }

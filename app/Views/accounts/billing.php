@@ -724,15 +724,78 @@ async function calculateBillTotal() {
             
             console.log('Insurance discount response:', result);
             
-            if (result.success && result.has_insurance && result.discount_percentage > 0) {
-                // Calculate discount based on insurance provider
-                discount = subtotal * (result.discount_percentage / 100);
-                discountInfo = `${result.provider} discount (${result.discount_percentage}%): Patient pays ${result.copay_percentage}%`;
+            if (result.success && result.has_insurance) {
+                if (result.coverage) {
+                    // Category-based discount calculation
+                    let categoryDiscount = 0;
+                    let coverageDetails = [];
+                    
+                    document.querySelectorAll('.bill-item-row').forEach(row => {
+                        const category = row.querySelector('[name="item_category[]"]')?.value || 'other';
+                        const amount = parseFloat(row.querySelector('.bill-amount')?.value || 0);
+                        
+                        if (amount > 0) {
+                            // Map category to coverage key
+                            let coverageKey = 'professional';
+                            if (category === 'room' || category === 'room/bed') {
+                                coverageKey = 'room';
+                            } else if (category === 'lab' || category === 'laboratory') {
+                                coverageKey = 'laboratory';
+                            } else if (category === 'medication' || category === 'meds') {
+                                coverageKey = 'medication';
+                            } else if (category === 'professional' || category === 'pf') {
+                                coverageKey = 'professional';
+                            } else if (category === 'procedure' || category === 'ot') {
+                                coverageKey = 'procedure';
+                            }
+                            
+                            const coveragePercent = result.coverage[coverageKey] || 0;
+                            const itemDiscount = amount * (coveragePercent / 100);
+                            categoryDiscount += itemDiscount;
+                            
+                            if (coveragePercent > 0) {
+                                coverageDetails.push(`${getCategoryLabel(category)}: ${coveragePercent}%`);
+                            }
+                        }
+                    });
+                    
+                    discount = categoryDiscount;
+                    
+                    if (coverageDetails.length > 0) {
+                        discountInfo = `${result.provider} Coverage:\n${coverageDetails.join('\n')}`;
+                    } else {
+                        discountInfo = `${result.provider} - No coverage available`;
+                    }
+                } else if (result.discount_percentage > 0) {
+                    // Fallback to percentage-based discount
+                    discount = subtotal * (result.discount_percentage / 100);
+                    discountInfo = `${result.provider} discount (${result.discount_percentage}%): Patient pays ${result.copay_percentage}%`;
+                } else {
+                    discount = 0;
+                    discountInfo = `${result.provider} - No discount available`;
+                }
                 console.log(`Discount calculated: ${discount.toFixed(2)} for provider ${result.provider}`);
             } else {
                 discount = 0;
                 discountInfo = '';
                 console.log('No discount - has_insurance:', result.has_insurance, 'discount_percentage:', result.discount_percentage);
+            }
+            
+            function getCategoryLabel(category) {
+                const labels = {
+                    'room': 'Room',
+                    'room/bed': 'Room',
+                    'lab': 'Lab Tests',
+                    'laboratory': 'Lab Tests',
+                    'medication': 'Medicines',
+                    'meds': 'Medicines',
+                    'professional': 'Doctor PF',
+                    'pf': 'Doctor PF',
+                    'procedure': 'Procedures',
+                    'ot': 'Procedures',
+                    'other': 'Other'
+                };
+                return labels[category] || 'Other';
             }
         } catch (error) {
             console.error('Error checking insurance:', error);
@@ -744,7 +807,8 @@ async function calculateBillTotal() {
     const discountInfoEl = document.getElementById('discount_info');
     if (discountInfoEl) {
         if (discountInfo) {
-            discountInfoEl.textContent = discountInfo;
+            // Format discount info with line breaks
+            discountInfoEl.innerHTML = discountInfo.replace(/\n/g, '<br>');
             discountInfoEl.style.display = 'block';
         } else {
             discountInfoEl.style.display = 'none';
@@ -855,6 +919,146 @@ async function viewBill(billId) {
             const items = bill.items || [];
             const payments = bill.payments || [];
             
+            // Fetch insurance information first
+            let insuranceHtml = '';
+            if (bill.patient_id) {
+                try {
+                    const insuranceResponse = await fetch(`<?= base_url('accounts/getPatientInsuranceDiscount') ?>/${bill.patient_id}`);
+                    const insuranceResult = await insuranceResponse.json();
+                    
+                    if (insuranceResult.success && insuranceResult.has_insurance) {
+                        insuranceHtml = `
+                            <div class="view-bill-info">
+                                <span class="view-bill-label">Provider:</span>
+                                <span class="view-bill-value"><strong>${insuranceResult.provider || 'N/A'}</strong></span>
+                            </div>
+                        `;
+                        
+                        if (insuranceResult.coverage) {
+                            const coverage = insuranceResult.coverage;
+                            
+                            // Calculate discount per category from bill items
+                            const categoryTotals = {};
+                            const categoryDiscounts = {};
+                            let totalItemDiscounts = 0; // Track total discount from items
+                            
+                            items.forEach(item => {
+                                // Use saved category from database, fallback to item_type
+                                const category = (item.category || item.item_type || '').toLowerCase();
+                                const amount = parseFloat(item.total_price || item.unit_price * item.quantity || 0);
+                                
+                                // Use saved insurance discount if available, otherwise calculate
+                                const savedDiscount = parseFloat(item.insurance_discount_amount || 0);
+                                const savedCoveragePercent = parseFloat(item.insurance_coverage_percent || 0);
+                                
+                                // Map category to coverage key
+                                let coverageKey = 'professional';
+                                if (category === 'room' || category === 'room/bed') {
+                                    coverageKey = 'room';
+                                } else if (category === 'lab' || category === 'laboratory') {
+                                    coverageKey = 'laboratory';
+                                } else if (category === 'medication' || category === 'meds') {
+                                    coverageKey = 'medication';
+                                } else if (category === 'professional' || category === 'pf' || category === 'nursing') {
+                                    // Nursing fees are covered under professional fees
+                                    coverageKey = 'professional';
+                                } else if (category === 'procedure' || category === 'ot') {
+                                    coverageKey = 'procedure';
+                                }
+                                
+                                if (!categoryTotals[coverageKey]) {
+                                    categoryTotals[coverageKey] = 0;
+                                    categoryDiscounts[coverageKey] = 0;
+                                }
+                                
+                                categoryTotals[coverageKey] += amount;
+                                
+                                // Use saved discount if available, otherwise calculate from coverage
+                                let itemDiscount = 0;
+                                if (savedDiscount > 0) {
+                                    itemDiscount = savedDiscount;
+                                } else {
+                                    const coveragePercent = coverage[coverageKey] || 0;
+                                    itemDiscount = amount * (coveragePercent / 100);
+                                }
+                                
+                                categoryDiscounts[coverageKey] += itemDiscount;
+                                totalItemDiscounts += itemDiscount;
+                            });
+                            
+                            // Update bill discount to match sum of item discounts if different
+                            const savedBillDiscount = parseFloat(bill.discount || 0);
+                            if (Math.abs(totalItemDiscounts - savedBillDiscount) > 0.01) {
+                                console.warn(`Discount mismatch: Bill discount (${savedBillDiscount}) vs Item discounts (${totalItemDiscounts.toFixed(2)})`);
+                                // Use the sum of item discounts for consistency
+                                bill.discount = totalItemDiscounts;
+                                bill.total_amount = parseFloat(bill.subtotal || 0) - totalItemDiscounts;
+                            }
+                            
+                            // Build coverage display with discount amounts - only show categories that have items
+                            const coverageLabels = {
+                                'room': 'Room Coverage',
+                                'laboratory': 'Lab Tests Coverage',
+                                'medication': 'Medicines Coverage',
+                                'professional': 'Doctor PF & Nursing Coverage',
+                                'procedure': 'Procedures Coverage'
+                            };
+                            
+                            // Only show coverage for categories that have items in the bill
+                            Object.keys(coverageLabels).forEach(key => {
+                                const categoryTotal = categoryTotals[key] || 0;
+                                
+                                // Only display if there are items in this category
+                                if (categoryTotal > 0) {
+                                    const coveragePercent = coverage[key] || 0;
+                                    const categoryDiscount = categoryDiscounts[key] || 0;
+                                    const patientPays = categoryTotal - categoryDiscount;
+                                    
+                                    insuranceHtml += `
+                                        <div class="view-bill-info">
+                                            <span class="view-bill-label">${coverageLabels[key]}:</span>
+                                            <span class="view-bill-value">
+                                                ${coveragePercent}% 
+                                                <small style="color: #666; margin-left: 8px;">
+                                                    (Discount: ₱${categoryDiscount.toFixed(2)}, Patient pays: ₱${patientPays.toFixed(2)})
+                                                </small>
+                                            </span>
+                                        </div>
+                                    `;
+                                }
+                            });
+                        } else if (insuranceResult.discount_percentage > 0) {
+                            insuranceHtml += `
+                                <div class="view-bill-info">
+                                    <span class="view-bill-label">Discount:</span>
+                                    <span class="view-bill-value">${insuranceResult.discount_percentage}%</span>
+                                </div>
+                            `;
+                        }
+                        
+                        if (insuranceResult.policy_number) {
+                            insuranceHtml += `
+                                <div class="view-bill-info">
+                                    <span class="view-bill-label">Policy Number:</span>
+                                    <span class="view-bill-value">${insuranceResult.policy_number}</span>
+                                </div>
+                            `;
+                        }
+                        
+                        if (insuranceResult.member_id) {
+                            insuranceHtml += `
+                                <div class="view-bill-info">
+                                    <span class="view-bill-label">Member ID:</span>
+                                    <span class="view-bill-value">${insuranceResult.member_id}</span>
+                                </div>
+                            `;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading insurance info:', error);
+                }
+            }
+            
             // Format bill details HTML
             let html = `
                 <div class="view-bill-section">
@@ -957,7 +1161,14 @@ async function viewBill(billId) {
                         </table>
                     </div>
                 </div>
-                
+                ${insuranceHtml ? `
+                <div class="view-bill-section">
+                    <h4>Insurance Information</h4>
+                    <div class="view-bill-grid">
+                        ${insuranceHtml}
+                    </div>
+                </div>
+                ` : ''}
                 <div class="view-bill-section">
                     <h4>Summary</h4>
                     <div class="view-bill-summary">

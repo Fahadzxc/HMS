@@ -174,6 +174,15 @@ $routes->post('admin/lab/inventory/log/(:num)', 'Admin\\Lab\\Inventory::log/$1')
 $routes->post('admin/lab/inventory/delete/(:num)', 'Admin\\Lab\\Inventory::delete/$1');
 $routes->post('admin/lab/reports/download', 'Admin\\Lab\\Reports::download');
 $routes->get('admin/appointments', 'Admin\\Appointments::index');
+$routes->post('admin/appointments/update', 'Admin\\Appointments::update');
+$routes->post('admin/appointments/delete/(:num)', 'Admin\\Appointments::delete/$1');
+
+// Admin Admissions
+$routes->get('admin/admissions', 'Admin\\Admissions::index');
+$routes->post('admin/admissions/update', 'Admin\\Admissions::update');
+$routes->post('admin/admissions/discharge/(:num)', 'Admin\\Admissions::discharge/$1');
+$routes->post('admin/admissions/delete/(:num)', 'Admin\\Admissions::delete/$1');
+
 $routes->get('admin/billing', 'Admin\\Billing::index');
 $routes->post('admin/billing/createBillsForCompleted', 'Admin\\Billing::createBillsForCompletedPrescriptions');
 $routes->post('admin/billing/createBillForPrescription/(:num)', 'Admin\\Billing::createBillForPrescription/$1');

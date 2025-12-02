@@ -12,6 +12,7 @@ class LabTestRequestModel extends Model
     protected $allowedFields = [
         'patient_id',
         'doctor_id',
+        'admission_id', // Links lab request to specific admission for inpatients
         'test_type',
         'priority',
         'status',
@@ -42,7 +43,7 @@ class LabTestRequestModel extends Model
         
         try {
             // Build select statement based on available tables
-            $selectFields = 'lab_test_requests.*, patients.full_name AS patient_name, doctors.name AS doctor_name';
+            $selectFields = 'lab_test_requests.*, patients.full_name AS patient_name, patients.patient_type AS patient_type, doctors.name AS doctor_name';
             
             if ($db->tableExists('lab_staff')) {
                 $selectFields .= ', staff_user.name AS staff_name';
@@ -92,5 +93,31 @@ class LabTestRequestModel extends Model
             'completed_today' => $this->where('status', 'completed')->where('DATE(updated_at)', $today)->countAllResults(),
             'critical_results' => $this->where('priority', 'critical')->countAllResults(),
         ];
+    }
+
+    /**
+     * Get lab requests by admission_id (for inpatients)
+     */
+    public function getRequestsByAdmission(int $admissionId): array
+    {
+        return $this->where('admission_id', $admissionId)
+                    ->orderBy('requested_at', 'DESC')
+                    ->findAll();
+    }
+
+    /**
+     * Get lab requests for a patient's current admission (inpatient)
+     */
+    public function getCurrentAdmissionRequests(int $patientId): array
+    {
+        $db = \Config\Database::connect();
+        $builder = $db->table('lab_test_requests lr');
+        $builder->select('lr.*, a.appointment_date as admission_date, a.room_id');
+        $builder->join('appointments a', 'a.id = lr.admission_id', 'left');
+        $builder->where('lr.patient_id', $patientId);
+        $builder->where('lr.admission_id IS NOT NULL');
+        $builder->orderBy('lr.requested_at', 'DESC');
+        
+        return $builder->get()->getResultArray();
     }
 }

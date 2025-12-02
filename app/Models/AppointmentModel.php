@@ -84,16 +84,17 @@ class AppointmentModel extends Model
         return $builder->get()->getResultArray();
     }
 
-    // Get appointments for a specific date
+    // Get appointments for a specific date (outpatients only - inpatients are in admissions table)
     public function getAppointmentsByDate($date)
     {
         $builder = $this->db->table($this->table);
-        $builder->select('appointments.*, patients.full_name as patient_name, users.name as doctor_name, rooms.room_number');
+        $builder->select('appointments.*, patients.full_name as patient_name, patients.patient_type, users.name as doctor_name, rooms.room_number');
         $builder->join('patients', 'patients.id = appointments.patient_id', 'left');
         $builder->join('users', 'users.id = appointments.doctor_id', 'left');
         $builder->join('rooms', 'rooms.id = appointments.room_id', 'left');
         $builder->where('appointment_date', $date);
         $builder->where('appointments.status !=', 'cancelled');
+        $builder->where('patients.patient_type', 'outpatient'); // Only outpatients
         $builder->orderBy('appointment_time', 'ASC');
         
         return $builder->get()->getResultArray();
@@ -168,15 +169,17 @@ class AppointmentModel extends Model
     }
 
     // Get upcoming appointments
+    // Get upcoming appointments (outpatients only - inpatients are in admissions table)
     public function getUpcomingAppointments($limit = 10)
     {
         $builder = $this->db->table($this->table);
-        $builder->select('appointments.*, patients.full_name as patient_name, users.name as doctor_name, rooms.room_number');
+        $builder->select('appointments.*, patients.full_name as patient_name, patients.patient_type, users.name as doctor_name, rooms.room_number');
         $builder->join('patients', 'patients.id = appointments.patient_id', 'left');
         $builder->join('users', 'users.id = appointments.doctor_id', 'left');
         $builder->join('rooms', 'rooms.id = appointments.room_id', 'left');
         $builder->where('appointment_date >=', date('Y-m-d'));
         $builder->where('appointments.status !=', 'cancelled');
+        $builder->where('patients.patient_type', 'outpatient'); // Only outpatients
         $builder->orderBy('appointment_date', 'ASC');
         $builder->orderBy('appointment_time', 'ASC');
         $builder->limit($limit);

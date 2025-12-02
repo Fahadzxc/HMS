@@ -193,9 +193,9 @@
 /* Grid layout to guarantee perfect alignment */
 .patients-grid {
     display: grid;
-    grid-template-columns: 80px 1fr 150px 260px 140px 200px 150px; /* ID, Name, Age, Contact, Status, Doctor, Actions */
+    grid-template-columns: 70px 200px 100px 140px 100px 130px 100px; /* ID, Name, Age, Contact, Status, Doctor, Actions */
     align-items: center;
-    gap: 0;
+    gap: 0.5rem;
 }
 
 /* Prevent legacy flex widths from interfering */
@@ -226,7 +226,7 @@
 }
 
 .col-contact {
-    text-align: left;
+    text-align: center;
 }
 
 .col-status {
@@ -234,7 +234,7 @@
 }
 
 .col-doctor {
-    text-align: left;
+    text-align: center;
 }
 
 .col-actions {

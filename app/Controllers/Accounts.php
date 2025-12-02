@@ -7,6 +7,7 @@ use App\Models\BillingModel;
 use App\Models\BillItemModel;
 use App\Models\PaymentModel;
 use App\Models\InsuranceModel;
+use App\Models\InsuranceProviderModel;
 use App\Models\PatientModel;
 use App\Models\AppointmentModel;
 use App\Models\PrescriptionModel;
@@ -227,32 +228,65 @@ class Accounts extends Controller
 				if ($insuranceClaim && !empty($insuranceClaim['insurance_provider'])) {
 					$provider = $insuranceClaim['insurance_provider'];
 					
-					// Discount rates by insurance provider
-					$discountRates = [
-						'PhilHealth' => 0.15,        // 15% discount
-						'Maxicare' => 0.10,           // 10% discount
-						'Medicard' => 0.10,           // 10% discount
-						'Intellicare' => 0.10,        // 10% discount
-						'PhilCare' => 0.10,          // 10% discount
-						'Insular Healthcare' => 0.10, // 10% discount
-						'Avega' => 0.10,             // 10% discount
-						'Pacific Cross' => 0.10,     // 10% discount
-					];
+					// Get coverage from insurance_providers table
+					$insuranceProviderModel = new InsuranceProviderModel();
+					$coverage = $insuranceProviderModel->getCoverageByName($provider);
 					
-					// Normalize provider name (handle variations)
-					$providerLower = strtolower($provider);
-					$discountRate = 0;
-					
-					foreach ($discountRates as $key => $rate) {
-						if (strpos($providerLower, strtolower($key)) !== false) {
-							$discountRate = $rate;
-							break;
+					// If exact match not found, try partial match
+					if (!$coverage) {
+						$allProviders = $insuranceProviderModel->getActiveProviders();
+						$providerLower = strtolower(trim($provider));
+						
+						foreach ($allProviders as $prov) {
+							$provNameLower = strtolower(trim($prov['name']));
+							if ($providerLower === $provNameLower || 
+								strpos($providerLower, $provNameLower) !== false || 
+								strpos($provNameLower, $providerLower) !== false) {
+								$coverage = [
+									'room' => floatval($prov['coverage_room'] ?? 0),
+									'laboratory' => floatval($prov['coverage_lab'] ?? 0),
+									'medication' => floatval($prov['coverage_meds'] ?? 0),
+									'professional' => floatval($prov['coverage_pf'] ?? 0),
+									'procedure' => floatval($prov['coverage_procedure'] ?? 0),
+								];
+								break;
+							}
 						}
 					}
 					
-					// Apply discount if provider is found
-					if ($discountRate > 0) {
-						$discount = $subtotal * $discountRate;
+					// Calculate discount based on category-based coverage
+					if ($coverage) {
+						// Calculate discount per item category
+						$totalDiscount = 0;
+						foreach ($items as $item) {
+							if (empty($item['item_name']) || empty($item['quantity']) || empty($item['unit_price'])) {
+								continue;
+							}
+							
+							$itemCategory = strtolower($item['category'] ?? 'other');
+							$itemAmount = floatval($item['quantity']) * floatval($item['unit_price']);
+							$itemDiscount = 0;
+							
+							// Map category to coverage key
+							$coverageKey = 'professional'; // default
+							if ($itemCategory === 'room' || $itemCategory === 'room/bed') {
+								$coverageKey = 'room';
+							} elseif ($itemCategory === 'lab' || $itemCategory === 'laboratory') {
+								$coverageKey = 'laboratory';
+							} elseif ($itemCategory === 'medication' || $itemCategory === 'meds') {
+								$coverageKey = 'medication';
+							} elseif ($itemCategory === 'professional' || $itemCategory === 'pf') {
+								$coverageKey = 'professional';
+							} elseif ($itemCategory === 'procedure' || $itemCategory === 'ot') {
+								$coverageKey = 'procedure';
+							}
+							
+							$coveragePercent = $coverage[$coverageKey] ?? 0;
+							$itemDiscount = $itemAmount * ($coveragePercent / 100);
+							$totalDiscount += $itemDiscount;
+						}
+						
+						$discount = $totalDiscount;
 					}
 				}
 			}
@@ -293,6 +327,42 @@ class Accounts extends Controller
 				return $this->response->setJSON(['success' => false, 'message' => 'Failed to create bill: ' . (is_array($errors) ? implode(', ', $errors) : 'Unknown error')]);
 			}
 			
+			// Get insurance coverage for item-level tracking
+			$insuranceCoverage = null;
+			if ($discount > 0) {
+				$insuranceModel = new InsuranceModel();
+				$insuranceClaim = $insuranceModel->where('patient_id', $postData['patient_id'])
+					->whereIn('status', ['pending', 'submitted', 'approved', 'paid'])
+					->orderBy('created_at', 'DESC')
+					->first();
+				
+				if ($insuranceClaim && !empty($insuranceClaim['insurance_provider'])) {
+					$provider = $insuranceClaim['insurance_provider'];
+					$insuranceProviderModel = new InsuranceProviderModel();
+					$insuranceCoverage = $insuranceProviderModel->getCoverageByName($provider);
+					
+					if (!$insuranceCoverage) {
+						$allProviders = $insuranceProviderModel->getActiveProviders();
+						$providerLower = strtolower(trim($provider));
+						foreach ($allProviders as $prov) {
+							$provNameLower = strtolower(trim($prov['name']));
+							if ($providerLower === $provNameLower || 
+								strpos($providerLower, $provNameLower) !== false || 
+								strpos($provNameLower, $providerLower) !== false) {
+								$insuranceCoverage = [
+									'room' => floatval($prov['coverage_room'] ?? 0),
+									'laboratory' => floatval($prov['coverage_lab'] ?? 0),
+									'medication' => floatval($prov['coverage_meds'] ?? 0),
+									'professional' => floatval($prov['coverage_pf'] ?? 0),
+									'procedure' => floatval($prov['coverage_procedure'] ?? 0),
+								];
+								break;
+							}
+						}
+					}
+				}
+			}
+			
 			// Create bill items
 			$itemErrors = [];
 			$labResultIdsToBill = [];
@@ -314,6 +384,33 @@ class Accounts extends Controller
 					}
 				}
 				
+				// Calculate insurance coverage per item
+				$itemCategory = strtolower($item['category'] ?? 'other');
+				$itemAmount = floatval($item['quantity']) * floatval($item['unit_price']);
+				$insuranceCoveragePercent = 0;
+				$insuranceDiscountAmount = 0;
+				$patientPaysAmount = $itemAmount;
+				
+				if ($insuranceCoverage) {
+					// Map category to coverage key
+					$coverageKey = 'professional'; // default
+					if ($itemCategory === 'room' || $itemCategory === 'room/bed') {
+						$coverageKey = 'room';
+					} elseif ($itemCategory === 'lab' || $itemCategory === 'laboratory') {
+						$coverageKey = 'laboratory';
+					} elseif ($itemCategory === 'medication' || $itemCategory === 'meds') {
+						$coverageKey = 'medication';
+					} elseif ($itemCategory === 'professional' || $itemCategory === 'pf' || $itemCategory === 'nursing') {
+						$coverageKey = 'professional';
+					} elseif ($itemCategory === 'procedure' || $itemCategory === 'ot') {
+						$coverageKey = 'procedure';
+					}
+					
+					$insuranceCoveragePercent = $insuranceCoverage[$coverageKey] ?? 0;
+					$insuranceDiscountAmount = $itemAmount * ($insuranceCoveragePercent / 100);
+					$patientPaysAmount = $itemAmount - $insuranceDiscountAmount;
+				}
+				
 				$itemData = [
 					'bill_id' => $billId,
 					'item_type' => $item['item_type'] ?? $item['category'] ?? 'service',
@@ -323,6 +420,10 @@ class Accounts extends Controller
 					'unit_price' => floatval($item['unit_price']),
 					'total_price' => floatval($item['quantity']) * floatval($item['unit_price']),
 					'reference_id' => $referenceId,
+					'category' => $itemCategory,
+					'insurance_coverage_percent' => $insuranceCoveragePercent,
+					'insurance_discount_amount' => $insuranceDiscountAmount,
+					'patient_pays_amount' => $patientPaysAmount,
 				];
 				
 				if (!$billItemModel->insert($itemData)) {
@@ -609,52 +710,53 @@ class Accounts extends Controller
 				log_message('warning', 'No insurance claim found for patient ' . $patientId);
 			}
 			
-			// Discount rates by insurance provider
-			$discountRates = [
-				'PhilHealth' => 15,        // 15% discount
-				'Maxicare' => 10,          // 10% discount
-				'Medicard' => 10,          // 10% discount
-				'Intellicare' => 10,       // 10% discount
-				'PhilCare' => 10,          // 10% discount
-				'Insular Healthcare' => 10, // 10% discount
-				'Insular Health Care' => 10, // Alternative spelling
-				'Avega' => 10,             // 10% discount
-				'Pacific Cross' => 10,     // 10% discount
-			];
-			
+			// Get coverage from insurance_providers table
+			$coverage = null;
 			$discountPercentage = 0;
 			$coPaymentPercentage = 100;
 			
 			if ($hasInsurance && $provider) {
-				// Normalize provider name (handle variations)
-				$providerLower = strtolower(trim($provider));
+				$insuranceProviderModel = new InsuranceProviderModel();
 				
-				// Try exact match first
-				foreach ($discountRates as $key => $rate) {
-					$keyLower = strtolower(trim($key));
-					if ($providerLower === $keyLower) {
-						$discountPercentage = $rate;
-						$coPaymentPercentage = 100 - $rate;
-						log_message('debug', 'Exact match found: ' . $provider . ' -> ' . $key . ' = ' . $rate . '%');
-						break;
-					}
-				}
+				// Try to get coverage by provider name
+				$coverage = $insuranceProviderModel->getCoverageByName($provider);
 				
-				// If no exact match, try partial match
-				if ($discountPercentage == 0) {
-					foreach ($discountRates as $key => $rate) {
-						$keyLower = strtolower(trim($key));
-						if (strpos($providerLower, $keyLower) !== false || strpos($keyLower, $providerLower) !== false) {
-							$discountPercentage = $rate;
-							$coPaymentPercentage = 100 - $rate;
-							log_message('debug', 'Partial match found: ' . $provider . ' -> ' . $key . ' = ' . $rate . '%');
+				// If exact match not found, try partial match
+				if (!$coverage) {
+					$allProviders = $insuranceProviderModel->getActiveProviders();
+					$providerLower = strtolower(trim($provider));
+					
+					foreach ($allProviders as $prov) {
+						$provNameLower = strtolower(trim($prov['name']));
+						if ($providerLower === $provNameLower || 
+							strpos($providerLower, $provNameLower) !== false || 
+							strpos($provNameLower, $providerLower) !== false) {
+							$coverage = [
+								'room' => floatval($prov['coverage_room'] ?? 0),
+								'laboratory' => floatval($prov['coverage_lab'] ?? 0),
+								'medication' => floatval($prov['coverage_meds'] ?? 0),
+								'professional' => floatval($prov['coverage_pf'] ?? 0),
+								'procedure' => floatval($prov['coverage_procedure'] ?? 0),
+							];
+							log_message('debug', 'Provider match found: ' . $provider . ' -> ' . $prov['name']);
 							break;
 						}
 					}
 				}
 				
-				if ($discountPercentage == 0) {
-					log_message('warning', 'No discount rate found for provider: ' . $provider);
+				if ($coverage) {
+					// Calculate average discount percentage for backward compatibility
+					$avgCoverage = (
+						$coverage['room'] + 
+						$coverage['laboratory'] + 
+						$coverage['medication'] + 
+						$coverage['professional'] + 
+						$coverage['procedure']
+					) / 5;
+					$discountPercentage = round($avgCoverage, 2);
+					$coPaymentPercentage = 100 - $discountPercentage;
+				} else {
+					log_message('warning', 'No coverage found for provider: ' . $provider);
 				}
 			}
 			
@@ -667,10 +769,12 @@ class Accounts extends Controller
 				'provider' => $provider,
 				'policy_number' => $insuranceClaim['policy_number'] ?? null,
 				'member_id' => $insuranceClaim['member_id'] ?? null,
+				'coverage' => $coverage, // Category-based coverage percentages
 				'debug' => [
 					'insurance_claim_found' => !empty($insuranceClaim),
 					'provider_name' => $provider,
-					'discount_calculated' => $discountPercentage
+					'discount_calculated' => $discountPercentage,
+					'coverage_found' => !empty($coverage)
 				]
 			]);
 		} catch (\Exception $e) {
@@ -1135,9 +1239,9 @@ class Accounts extends Controller
 							->getRowArray();
 						if ($room) {
 							$roomId = $room['id'] ?? null;
-							// Check if room has rate field, otherwise use default
-							if (isset($room['rate'])) {
-								$roomRate = floatval($room['rate']);
+							// Check if room has room_price field, otherwise use default
+							if (isset($room['room_price']) && $room['room_price'] > 0) {
+								$roomRate = floatval($room['room_price']);
 							}
 							$roomNumber = $room['room_number'] ?? $patient['room_number'];
 						}
@@ -1423,6 +1527,10 @@ class Accounts extends Controller
 				'unit_price' => ['type' => 'DECIMAL', 'constraint' => '10,2'],
 				'total_price' => ['type' => 'DECIMAL', 'constraint' => '10,2'],
 				'reference_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
+				'category' => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => true, 'comment' => 'Item category for insurance mapping'],
+				'insurance_coverage_percent' => ['type' => 'DECIMAL', 'constraint' => '5,2', 'default' => 0.00, 'null' => true, 'comment' => 'Insurance coverage percentage'],
+				'insurance_discount_amount' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'default' => 0.00, 'null' => true, 'comment' => 'Discount amount from insurance'],
+				'patient_pays_amount' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'null' => true, 'comment' => 'Amount patient pays after insurance'],
 				'created_at' => ['type' => 'DATETIME', 'null' => true],
 				'updated_at' => ['type' => 'DATETIME', 'null' => true],
 			]);

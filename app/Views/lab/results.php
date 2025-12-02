@@ -83,6 +83,7 @@
                     <tr class="lab-row">
                         <th class="lab-cell">Request ID</th>
                         <th class="lab-cell">Patient</th>
+                        <th class="lab-cell">Patient Type</th>
                         <th class="lab-cell">Test Type</th>
                         <th class="lab-cell">Priority</th>
                         <th class="lab-cell">Date Requested</th>
@@ -104,6 +105,19 @@
                         <tr class="lab-row">
                             <td class="lab-cell"><strong>#<?= str_pad((string)($request['id'] ?? 0), 6, '0', STR_PAD_LEFT) ?></strong></td>
                             <td class="lab-cell"><?= esc($request['patient_name'] ?? 'N/A') ?></td>
+                            <td class="lab-cell">
+                                <?php
+                                // Determine patient type: if admission_id exists = INPATIENT, else = OUTPATIENT
+                                $hasAdmission = !empty($request['admission_id']);
+                                $patientType = $hasAdmission ? 'inpatient' : 'outpatient';
+                                // Fallback to patient_type from patients table if available
+                                if (!empty($request['patient_type'])) {
+                                    $patientType = strtolower($request['patient_type']);
+                                }
+                                $patientTypeClass = ($patientType === 'inpatient') ? 'bg-primary' : 'bg-info';
+                                ?>
+                                <span class="badge <?= $patientTypeClass ?>"><?= ucfirst($patientType) ?></span>
+                            </td>
                             <td class="lab-cell"><?= esc($request['test_type'] ?? '—') ?></td>
                             <td class="lab-cell">
                                 <span class="badge <?= $priorityClass ?>"><?= ucfirst($priority) ?></span>
@@ -415,8 +429,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert(result.message || 'Test result saved successfully!');
                     // Close modal
                     closeResultModal();
-                    // Reload page to show updated results
-                    window.location.reload();
+                    // Reload page without URL parameters to prevent modal from reopening
+                    window.location.href = '<?= base_url('lab/results') ?>';
                 } else {
                     alert(result.message || 'Error saving result. Please try again.');
                     submitBtn.disabled = false;

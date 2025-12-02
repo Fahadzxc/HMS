@@ -112,6 +112,7 @@
                     <tr class="lab-row">
                         <th class="lab-cell">Request ID</th>
                         <th class="lab-cell">Patient</th>
+                        <th class="lab-cell">Patient Type</th>
                         <th class="lab-cell">Doctor</th>
                         <th class="lab-cell">Test Type</th>
                         <th class="lab-cell">Priority</th>
@@ -146,6 +147,19 @@
                             <tr class="lab-row">
                                 <td class="lab-cell"><strong>#<?= str_pad((string)($request['id'] ?? 0), 6, '0', STR_PAD_LEFT) ?></strong></td>
                                 <td class="lab-cell"><?= esc($request['patient_name'] ?? 'N/A') ?></td>
+                                <td class="lab-cell">
+                                    <?php
+                                    // Determine patient type: if admission_id exists = INPATIENT, else = OUTPATIENT
+                                    $hasAdmission = !empty($request['admission_id']);
+                                    $patientType = $hasAdmission ? 'inpatient' : 'outpatient';
+                                    // Fallback to patient_type from patients table if available
+                                    if (!empty($request['patient_type'])) {
+                                        $patientType = strtolower($request['patient_type']);
+                                    }
+                                    $patientTypeClass = ($patientType === 'inpatient') ? 'bg-primary' : 'bg-info';
+                                    ?>
+                                    <span class="badge <?= $patientTypeClass ?>"><?= ucfirst($patientType) ?></span>
+                                </td>
                                 <td class="lab-cell"><?= esc($request['doctor_name'] ?? 'N/A') ?></td>
                                 <td class="lab-cell"><?= esc($request['test_type'] ?? '—') ?></td>
                                 <td class="lab-cell">
@@ -168,7 +182,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr class="lab-row">
-                            <td colspan="8" class="text-center py-4 text-muted">No test requests found.</td>
+                            <td colspan="9" class="text-center py-4 text-muted">No test requests found.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

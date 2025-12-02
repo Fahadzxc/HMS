@@ -20,6 +20,10 @@ class BillItemModel extends Model
         'unit_price',
         'total_price',
         'reference_id',
+        'category',
+        'insurance_coverage_percent',
+        'insurance_discount_amount',
+        'patient_pays_amount',
         'created_at',
         'updated_at'
     ];

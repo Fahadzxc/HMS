@@ -158,6 +158,7 @@
                     <tr>
                         <th>Request ID</th>
                         <th>Patient</th>
+                        <th>Patient Type</th>
                         <th>Test Type</th>
                         <th>Priority</th>
                         <th>Status</th>
@@ -191,6 +192,19 @@
                             <tr>
                                 <td><strong>#<?= str_pad((string)($request['id'] ?? 0), 6, '0', STR_PAD_LEFT) ?></strong></td>
                                 <td><?= esc($request['patient_name'] ?? 'N/A') ?></td>
+                                <td>
+                                    <?php
+                                    // Determine patient type: if admission_id exists = INPATIENT, else = OUTPATIENT
+                                    $hasAdmission = !empty($request['admission_id']);
+                                    $patientType = $hasAdmission ? 'inpatient' : 'outpatient';
+                                    // Fallback to patient_type from patients table if available
+                                    if (!empty($request['patient_type'])) {
+                                        $patientType = strtolower($request['patient_type']);
+                                    }
+                                    $patientTypeClass = ($patientType === 'inpatient') ? 'bg-primary' : 'bg-info';
+                                    ?>
+                                    <span class="badge <?= $patientTypeClass ?>"><?= ucfirst($patientType) ?></span>
+                                </td>
                                 <td><?= esc($request['test_type'] ?? '—') ?></td>
                                 <td>
                                     <span class="badge <?= $priorityClass ?>"><?= ucfirst($priority) ?></span>
@@ -232,7 +246,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">No lab test requests found. Create your first request above.</td>
+                            <td colspan="8" class="text-center py-4 text-muted">No lab test requests found. Create your first request above.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

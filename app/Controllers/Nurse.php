@@ -947,20 +947,27 @@ class Nurse extends Controller
         // Update status to completed - use direct DB query to bypass validation
         $db = \Config\Database::connect();
         
-        // First, try to update the ENUM if 'completed' is not in the list
-        try {
-            $db->query("ALTER TABLE prescriptions MODIFY COLUMN status ENUM('pending', 'dispensed', 'cancelled', 'completed') DEFAULT 'pending'");
-        } catch (\Exception $e) {
-            // ENUM might already be updated, or table doesn't exist - continue
-            log_message('debug', 'ENUM update attempt: ' . $e->getMessage());
-        }
+        // Check if progress_days column exists, add it ONCE only
+        $fields = $db->getFieldNames('prescriptions');
         
-        // Ensure progress tracking column exists
-        try {
-            $db->query("ALTER TABLE prescriptions ADD COLUMN progress_days INT DEFAULT 0");
-        } catch (\Exception $e) {
-            // Column might already exist
-            log_message('debug', 'progress_days column check: ' . $e->getMessage());
+        if (!in_array('progress_days', $fields)) {
+            try {
+                // Double check before adding to avoid duplicate column error
+                $checkQuery = $db->query("SHOW COLUMNS FROM prescriptions LIKE 'progress_days'");
+                $columnExists = $checkQuery->getNumRows() > 0;
+                
+                if (!$columnExists) {
+                    $db->query("ALTER TABLE prescriptions ADD COLUMN progress_days INT DEFAULT 0 AFTER status");
+                    log_message('info', 'Successfully added progress_days column to prescriptions table');
+                    
+                    // Force reconnect to ensure schema is refreshed
+                    $db->close();
+                    $db = \Config\Database::connect();
+                }
+            } catch (\Exception $e) {
+                // Column might already exist from another request, that's fine
+                log_message('debug', 'progress_days column note: ' . $e->getMessage());
+            }
         }
         
         // Determine prescription duration (in days)
@@ -1013,23 +1020,64 @@ class Nurse extends Controller
             }
         }
         
-        // Update using direct query
-        $builder = $db->table('prescriptions');
-        $builder->where('id', $prescriptionId);
+        // Perform the update using RAW SQL to bypass query builder cache
+        $result = false;
+        $sql = '';
         
-        // Always update status to completed and updated_at (for last given check)
-        $updateData = [
-            'status' => 'completed',
-            'updated_at' => date('Y-m-d H:i:s'), // Track last given date
-            'progress_days' => $existingProgress
-        ];
-        
-        // If first time, also update notes with start date
-        if (!$wasCompleted && $startDate) {
-            $updateData['notes'] = $notes;
+        try {
+            // Build the SQL query manually
+            $escapedStatus = $db->escape('completed');
+            $escapedUpdatedAt = $db->escape(date('Y-m-d H:i:s'));
+            $escapedProgress = (int) $existingProgress;
+            $escapedId = (int) $prescriptionId;
+            
+            // Start building the UPDATE query
+            $sql = "UPDATE prescriptions SET 
+                    status = {$escapedStatus}, 
+                    updated_at = {$escapedUpdatedAt}, 
+                    progress_days = {$escapedProgress}";
+            
+            // If first time, also update notes with start date
+            if (!$wasCompleted && $startDate) {
+                $escapedNotes = $db->escape($notes);
+                $sql .= ", notes = {$escapedNotes}";
+            }
+            
+            $sql .= " WHERE id = {$escapedId}";
+            
+            log_message('info', "Executing SQL: {$sql}");
+            
+            // Execute raw query
+            $result = $db->query($sql);
+            
+            if ($result) {
+                log_message('info', "Successfully marked prescription #{$prescriptionId} as given (progress: {$existingProgress}/{$durationDays})");
+            } else {
+                $error = $db->error();
+                log_message('error', "Raw SQL update failed for prescription #{$prescriptionId}. Error: " . json_encode($error));
+                
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Database update failed: ' . ($error['message'] ?? 'Unknown error')
+                ]);
+            }
+        } catch (\Exception $e) {
+            log_message('error', "Exception updating prescription #{$prescriptionId}: " . $e->getMessage());
+            log_message('error', "SQL attempted: " . $sql);
+            log_message('error', "Stack trace: " . $e->getTraceAsString());
+            
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
         }
         
-        $result = $builder->update($updateData);
+        if (!$result) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to update prescription. Please check the logs.'
+            ]);
+        }
 
         // Deduct stock from pharmacy_inventory when nurse marks prescription as given
         // (Only if prescription hasn't been dispensed yet to avoid double deduction)
@@ -1298,7 +1346,8 @@ class Nurse extends Controller
             $db = \Config\Database::connect();
             $existingBill = $db->table('bills')
                 ->where('prescription_id', $prescriptionId)
-                ->first();
+                ->get()
+                ->getFirstRow('array');
             
             if ($existingBill) {
                 log_message('debug', "Bill already exists for prescription #{$prescriptionId}");
@@ -1482,7 +1531,8 @@ class Nurse extends Controller
             $med = $db->table('medications')
                 ->where('name', $medicationName)
                 ->orLike('name', $medicationName)
-                ->first();
+                ->get()
+                ->getFirstRow('array');
             
             if ($med && isset($med['price'])) {
                 $basePrice = floatval($med['price']);

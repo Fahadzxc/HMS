@@ -63,9 +63,20 @@
                                     $schedulesByDay[$schedule['day_of_week']] = $schedule;
                                 }
                                 ?>
+                                <?php 
+                                $dayAbbrev = [
+                                    'monday' => 'Mon',
+                                    'tuesday' => 'Tue', 
+                                    'wednesday' => 'Wed',
+                                    'thursday' => 'Thu',
+                                    'friday' => 'Fri',
+                                    'saturday' => 'Sat',
+                                    'sunday' => 'Sun'
+                                ];
+                                ?>
                                 <?php foreach ($days as $day): ?>
                                     <div class="day-schedule">
-                                        <div class="day-name"><?= ucfirst($day) ?></div>
+                                        <div class="day-name"><?= $dayAbbrev[$day] ?></div>
                                         <?php if (isset($schedulesByDay[$day])): ?>
                                             <?php $schedule = $schedulesByDay[$day]; ?>
                                             <div class="shift-info">
@@ -262,7 +273,7 @@
 <style>
 .nurses-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
     gap: 1.5rem;
     margin-top: 1rem;
 }
@@ -350,35 +361,41 @@
 
 .schedule-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.5rem;
+    grid-template-columns: repeat(7, minmax(60px, 1fr));
+    gap: 0.35rem;
+    overflow-x: auto;
 }
 
 .day-schedule {
     text-align: center;
-    padding: 0.75rem 0.5rem;
+    padding: 0.5rem 0.25rem;
     background: #f8fafc;
     border-radius: 6px;
     border: 1px solid #e2e8f0;
+    min-width: 55px;
 }
 
 .day-name {
     font-weight: 600;
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     color: #374151;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.35rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .shift-info {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
 }
 
 .shift-type {
     display: inline-block;
-    padding: 0.125rem 0.375rem;
+    padding: 0.1rem 0.25rem;
     border-radius: 0.25rem;
     font-weight: 600;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.2rem;
+    font-size: 0.6rem;
 }
 
 .shift-morning { background: #fef3c7; color: #92400e; }
@@ -387,18 +404,20 @@
 
 .shift-time {
     color: #4b5563;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.2rem;
+    font-size: 0.55rem;
+    line-height: 1.3;
 }
 
 .ward-assignment {
     color: #6b7280;
-    font-size: 0.625rem;
+    font-size: 0.5rem;
 }
 
 .no-shift {
     color: #9ca3af;
     font-style: italic;
-    font-size: 0.75rem;
+    font-size: 0.65rem;
 }
 
 .no-schedule {

@@ -19,6 +19,7 @@ class RoomModel extends Model
         'current_occupancy',
         'doctor_id',
         'specialization',
+        'room_price',
         'is_available',
     ];
 

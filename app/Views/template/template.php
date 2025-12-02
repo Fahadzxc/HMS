@@ -2389,14 +2389,28 @@
         }
 
         /* Action Links */
+        .actions-cell {
+            white-space: nowrap;
+        }
+        
         .action-link {
             margin-right: 0.5rem;
             text-decoration: none;
             color: #3b82f6;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+        
+        .action-link:hover {
+            text-decoration: underline;
         }
 
         .action-delete {
             color: #ef4444;
+        }
+        
+        .action-delete:hover {
+            color: #dc2626;
         }
 
         .dot.ok {

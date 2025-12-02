@@ -598,37 +598,35 @@ class Reception extends Controller
                     }
                 }
 
-                // Create an appointment/admission record so nurse view shows assigned doctor
+                // Create an admission record in admissions table (NOT appointments table)
                 try {
-                    if ($db->tableExists('appointments')) {
+                    if ($db->tableExists('admissions')) {
                         $doctorId = (int) ($rawPost['attending_doctor_id'] ?? 0);
                         $apptDate = $admissionDate ?: date('Y-m-d');
-                        $apptTime = null;
-                        if (!empty($admitDt)) {
-                            $parts = explode('T', $admitDt);
-                            $apptTime = isset($parts[1]) ? substr($parts[1], 0, 5) : null;
+                        
+                        // Map admission type to case_type enum (Emergency or Regular)
+                        $admissionType = !empty($rawPost['admission_type']) ? ucfirst(strtolower($rawPost['admission_type'])) : 'Emergency';
+                        if (!in_array($admissionType, ['Emergency', 'Regular'])) {
+                            $admissionType = 'Emergency';
                         }
-                        if (!$apptTime) {
-                            $apptTime = date('H:i');
-                        }
-                        $appointmentPayload = [
-                            'patient_id'        => $newPatientId,
-                            'doctor_id'         => $doctorId ?: null,
-                            'appointment_date'  => $apptDate,
-                            'appointment_time'  => $apptTime,
-                            // Use valid enum value for status (appointments table)
-                            'status'            => 'confirmed',
-                            // Map admission type if provided (fallback to 'emergency' else default handled by DB)
-                            'appointment_type'  => !empty($rawPost['admission_type']) ? strtolower($rawPost['admission_type']) : 'emergency',
-                            'room_id'           => $roomId ?: null,
-                            'created_by'        => (int) (session()->get('user_id') ?? 0),
-                            'created_at'        => date('Y-m-d H:i:s'),
-                            'updated_at'        => date('Y-m-d H:i:s'),
+                        
+                        $admissionPayload = [
+                            'patient_id'           => $newPatientId,
+                            'doctor_id'            => $doctorId ?: 2, // Default to first doctor if none selected
+                            'room_id'              => $roomId ?: null,
+                            'admission_date'       => $apptDate,
+                            'case_type'            => $admissionType,
+                            'reason_for_admission' => $data['concern'] ?? 'Inpatient admission',
+                            'notes'                => '',
+                            'status'               => 'Admitted',
+                            'created_by'           => (int) (session()->get('user_id') ?? 0),
+                            'created_at'           => date('Y-m-d H:i:s'),
+                            'updated_at'           => date('Y-m-d H:i:s'),
                         ];
-                        $db->table('appointments')->insert($appointmentPayload);
+                        $db->table('admissions')->insert($admissionPayload);
                     }
                 } catch (\Throwable $ae) {
-                    log_message('error', 'Failed creating admission appointment for patient '.$newPatientId.': '.$ae->getMessage());
+                    log_message('error', 'Failed creating admission record for patient '.$newPatientId.': '.$ae->getMessage());
                 }
             }
             

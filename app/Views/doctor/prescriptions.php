@@ -37,11 +37,13 @@
                         <select id="rx_patient" class="form-input" required>
                             <option value="">Select patient...</option>
                             <?php foreach (($patients ?? []) as $pt): ?>
+                                <?php $pType = strtolower($pt['patient_type'] ?? 'outpatient'); ?>
                                 <option value="<?= (int) $pt['id'] ?>" 
                                         data-age="<?= esc($pt['age'] ?? '') ?>"
                                         data-gender="<?= esc($pt['gender'] ?? '') ?>"
-                                        data-name="<?= esc($pt['full_name']) ?>">
-                                    <?= esc($pt['full_name']) ?>
+                                        data-name="<?= esc($pt['full_name']) ?>"
+                                        data-type="<?= esc($pType) ?>">
+                                    <?= esc($pt['full_name']) ?> (<?= ucfirst($pType) ?>)
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -106,7 +108,15 @@
 <div id="prescriptionPreview" class="prescription-preview-card" style="display: none;">
     <div class="preview-header">
         <h3>📄 Prescription Preview</h3>
-        <button type="button" class="btn-close-preview" onclick="closePreview()">&times;</button>
+        <div class="preview-actions">
+            <button type="button" class="btn btn-primary btn-sm" onclick="printPrescription()" id="printBtn" style="display: none;">
+                🖨️ Print
+            </button>
+            <button type="button" class="btn btn-success btn-sm" onclick="location.reload()" id="doneBtn" style="display: none;">
+                ✅ Done
+            </button>
+            <button type="button" class="btn-close-preview" onclick="closePreview()">&times;</button>
+        </div>
     </div>
     <div id="previewContent" class="preview-content">
         <!-- Preview content will be generated here -->
@@ -293,6 +303,11 @@ function savePrescription() {
     saveBtn.disabled = true;
     saveBtn.innerHTML = '<span>⏳</span> Saving...';
 
+    // Get patient type
+    const patientSelect = document.getElementById('rx_patient');
+    const selectedOption = patientSelect.options[patientSelect.selectedIndex];
+    const patientType = selectedOption ? selectedOption.dataset.type : 'outpatient';
+    
     fetch('<?= site_url('doctor/prescriptions/create') ?>', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
@@ -302,11 +317,19 @@ function savePrescription() {
         saveBtn.innerHTML = originalText;
         
         if (res.success) {
-            showPrescriptionPreview(patientId, notes, items);
-            alert('✅ Prescription saved successfully!');
-            setTimeout(() => {
-                location.reload();
-            }, 3000);
+            showPrescriptionPreview(patientId, notes, items, res.is_outpatient, res.prescription_id);
+            
+            if (res.is_outpatient) {
+                // For outpatients - show print dialog
+                alert('✅ Prescription saved!\n\nThis is an OUTPATIENT prescription.\nClick the Print button to print it.');
+                // Don't auto-reload for outpatients - let them print first
+            } else {
+                // For inpatients - notify about nurse and reload
+                alert('✅ Prescription saved and sent to nurse station for administration.');
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            }
         } else {
             alert('❌ ' + (res.message || 'Failed to save prescription.'));
         }
@@ -319,15 +342,19 @@ function savePrescription() {
 }
 
 // Show prescription preview
-function showPrescriptionPreview(patientId, notes, items) {
+function showPrescriptionPreview(patientId, notes, items, isOutpatient = false, prescriptionId = null) {
     const patientSelect = document.getElementById('rx_patient');
     const selectedOption = patientSelect.options[patientSelect.selectedIndex];
     const patientName = selectedOption ? selectedOption.dataset.name || selectedOption.text : 'N/A';
     const patientAge = document.getElementById('patient_age').value || '—';
     const patientGender = document.getElementById('patient_gender').value || '—';
+    const patientType = selectedOption ? selectedOption.dataset.type : 'outpatient';
     const doctorName = '<?= esc($user_name ?? session()->get('name') ?? 'Dr. ' . session()->get('name') ?? 'Doctor') ?>';
-    const rxNumber = 'RX#' + String(Date.now()).slice(-3);
+    const rxNumber = prescriptionId ? 'RX#' + String(prescriptionId).padStart(3, '0') : 'RX#' + String(Date.now()).slice(-3);
     const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    
+    // Store for printing
+    window.currentPrescription = { patientName, patientAge, patientGender, patientType, doctorName, rxNumber, currentDate, notes, items, isOutpatient };
 
     let medicationsHtml = '';
     items.forEach((item, index) => {
@@ -387,6 +414,131 @@ function showPrescriptionPreview(patientId, notes, items) {
     document.getElementById('previewContent').innerHTML = previewHtml;
     document.getElementById('prescriptionPreview').style.display = 'block';
     document.getElementById('prescriptionPreview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    // Show print and done buttons for outpatients
+    const printBtn = document.getElementById('printBtn');
+    const doneBtn = document.getElementById('doneBtn');
+    if (printBtn) {
+        printBtn.style.display = isOutpatient ? 'inline-block' : 'none';
+    }
+    if (doneBtn) {
+        doneBtn.style.display = isOutpatient ? 'inline-block' : 'none';
+    }
+}
+
+// Print prescription for outpatients
+function printPrescription() {
+    const rx = window.currentPrescription;
+    if (!rx) {
+        alert('No prescription to print.');
+        return;
+    }
+    
+    let medicationsHtml = '';
+    rx.items.forEach((item, index) => {
+        medicationsHtml += `
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${index + 1}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>${item.name || 'Medication'}</strong></td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.dosage || '—'}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.frequency || '—'}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.meal_instruction || '—'}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.duration || '—'}</td>
+            </tr>
+        `;
+    });
+    
+    const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Prescription - ${rx.rxNumber}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+                .header h1 { margin: 0; color: #1a365d; font-size: 24px; }
+                .header p { margin: 5px 0; color: #666; }
+                .rx-info { display: flex; justify-content: space-between; margin-bottom: 20px; }
+                .patient-info { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+                .patient-info h3 { margin: 0 0 10px 0; color: #333; }
+                .diagnosis { background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                th { background: #1a365d; color: white; padding: 10px; text-align: left; }
+                .footer { margin-top: 40px; display: flex; justify-content: space-between; }
+                .signature-box { width: 45%; }
+                .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; text-align: center; }
+                .outpatient-notice { background: #d4edda; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center; color: #155724; font-weight: bold; }
+                @media print { body { padding: 0; } }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>🏥 Hospital Management System</h1>
+                <p>Medical Prescription</p>
+            </div>
+            
+            <div class="outpatient-notice">
+                📋 OUTPATIENT PRESCRIPTION - For External Pharmacy Use
+            </div>
+            
+            <div class="rx-info">
+                <div><strong>Prescription No:</strong> ${rx.rxNumber}</div>
+                <div><strong>Date:</strong> ${rx.currentDate}</div>
+            </div>
+            
+            <div class="patient-info">
+                <h3>Patient Information</h3>
+                <p><strong>Name:</strong> ${rx.patientName}</p>
+                <p><strong>Age:</strong> ${rx.patientAge} | <strong>Sex:</strong> ${rx.patientGender}</p>
+            </div>
+            
+            <div class="diagnosis">
+                <strong>Diagnosis / Notes:</strong><br>
+                ${rx.notes}
+            </div>
+            
+            <h3>Prescribed Medications</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Medication</th>
+                        <th>Dosage</th>
+                        <th>Frequency</th>
+                        <th>Meal</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${medicationsHtml}
+                </tbody>
+            </table>
+            
+            <div class="footer">
+                <div class="signature-box">
+                    <div class="signature-line">
+                        <strong>${rx.doctorName}, M.D.</strong><br>
+                        <small>Attending Physician</small>
+                    </div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line">
+                        <small>PRC License No: ___________</small><br>
+                        <small>PTR No: ___________</small>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+        printWindow.print();
+    }, 250);
 }
 
 // Close preview
@@ -411,6 +563,31 @@ function clearForm() {
 addRxItem();
 </script>
 
-<!-- All CSS moved to template.php for centralized styling -->
+<style>
+.preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.preview-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+}
+.btn-success {
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.btn-success:hover {
+    background: #059669;
+}
+</style>
 
 <?= $this->endSection() ?>

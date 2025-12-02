@@ -74,9 +74,6 @@
                         <tr>
                             <th>Date & Time</th>
                             <th>Patient</th>
-                            <th>Height (cm)</th>
-                            <th>Weight (kg)</th>
-                            <th>BMI</th>
                             <th>Blood Pressure</th>
                             <th>Heart Rate</th>
                             <th>Temperature</th>
@@ -89,9 +86,6 @@
                                 <tr>
                                     <td><?= !empty($update['created_at']) ? date('M j, Y g:i A', strtotime($update['created_at'])) : '—' ?></td>
                                     <td><?= esc($update['patient_name'] ?? 'N/A') ?></td>
-                                    <td><?= !empty($update['height']) ? number_format((float)$update['height'], 1) . ' cm' : '—' ?></td>
-                                    <td><?= !empty($update['weight']) ? number_format((float)$update['weight'], 1) . ' kg' : '—' ?></td>
-                                    <td><?= !empty($update['bmi']) ? number_format((float)$update['bmi'], 1) : '—' ?></td>
                                     <td><?= esc($update['blood_pressure'] ?? '—') ?></td>
                                     <td><?= !empty($update['heart_rate']) ? $update['heart_rate'] . ' bpm' : '—' ?></td>
                                     <td><?= !empty($update['temperature']) ? $update['temperature'] . ' °C' : '—' ?></td>
@@ -100,7 +94,7 @@
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="9" class="text-center text-muted">No treatment updates found</td>
+                                <td colspan="6" class="text-center text-muted">No treatment updates found</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>

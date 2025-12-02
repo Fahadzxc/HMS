@@ -505,3 +505,257 @@ Stack trace:
 #9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
 #10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
 #11 {main}
+ERROR - 2025-11-30 16:42:48 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(1101): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('20')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-30 16:43:55 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(1101): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('18')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-30 16:44:14 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(1101): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('20')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-30 16:46:54 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(848): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('22')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-30 16:47:29 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(848): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('20')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-30 16:47:29 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(1155): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('20')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-30 16:47:49 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(848): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('18')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-30 16:47:49 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(1155): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('18')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-30 16:48:43 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(1101): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('20')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-30 16:59:28 --> mysqli_sql_exception: Duplicate column name 'progress_days' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE pre...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE pre...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE pre...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(960): CodeIgniter\Database\BaseConnection->query('ALTER TABLE pre...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}
+CRITICAL - 2025-11-30 16:59:28 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: POST, Route: nurse/markPrescriptionAsGiven]
+in APPPATH\Controllers\Nurse.php on line 1301.
+ 1 APPPATH\Controllers\Nurse.php(1278): App\Controllers\Nurse->autoCreatePrescriptionBill(13, [...])
+ 2 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+ 3 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 4 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 7 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-30 16:59:32 --> mysqli_sql_exception: Duplicate column name 'progress_days' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE pre...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE pre...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE pre...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(960): CodeIgniter\Database\BaseConnection->query('ALTER TABLE pre...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}
+ERROR - 2025-11-30 16:59:49 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(1138): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('23')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-30 17:02:09 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(1138): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('23')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-30 17:47:29 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(1205): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('18')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
+ERROR - 2025-11-30 17:52:01 --> mysqli_sql_exception: Duplicate column name 'progress_days' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE pre...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE pre...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE pre...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(960): CodeIgniter\Database\BaseConnection->query('ALTER TABLE pre...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}
+CRITICAL - 2025-11-30 17:52:01 --> Error: Call to undefined method CodeIgniter\Database\MySQLi\Builder::first()
+[Method: POST, Route: nurse/markPrescriptionAsGiven]
+in APPPATH\Controllers\Nurse.php on line 1301.
+ 1 APPPATH\Controllers\Nurse.php(1278): App\Controllers\Nurse->autoCreatePrescriptionBill(14, [...])
+ 2 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+ 3 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+ 4 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 7 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-11-30 17:52:05 --> mysqli_sql_exception: Duplicate column name 'progress_days' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('ALTER TABLE pre...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE pre...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE pre...')
+#3 C:\xampp\htdocs\HMS\app\Controllers\Nurse.php(960): CodeIgniter\Database\BaseConnection->query('ALTER TABLE pre...')
+#4 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Nurse->markPrescriptionAsGiven()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Nurse))
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#7 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#8 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#9 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#10 {main}
+ERROR - 2025-11-30 17:53:49 --> mysqli_sql_exception: Unknown column 'bi.reference_type' in 'where clause' in C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\HMS\system\Database\MySQLi\Connection.php(327): mysqli->query('SELECT `bi`.`re...', 0)
+#1 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `bi`.`re...')
+#2 C:\xampp\htdocs\HMS\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `bi`.`re...')
+#3 C:\xampp\htdocs\HMS\system\Database\BaseBuilder.php(1649): CodeIgniter\Database\BaseConnection->query('SELECT `bi`.`re...', Array, false)
+#4 C:\xampp\htdocs\HMS\app\Controllers\Accounts.php(1205): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp\htdocs\HMS\system\CodeIgniter.php(933): App\Controllers\Accounts->getPatientBillableItems('24')
+#6 C:\xampp\htdocs\HMS\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Accounts))
+#7 C:\xampp\htdocs\HMS\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp\htdocs\HMS\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#9 C:\xampp\htdocs\HMS\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#10 C:\xampp\htdocs\HMS\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#11 {main}
