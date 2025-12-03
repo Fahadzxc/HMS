@@ -36,158 +36,225 @@
 <!-- Statistics Cards -->
 <section class="panel panel-spaced">
     <div class="kpi-grid">
-        <?php
-        $totalRequests = count($requests ?? []);
-        $pendingCount = 0;
-        $inProgressCount = 0;
-        $criticalCount = 0;
-        
-        foreach ($requests ?? [] as $req) {
-            $status = $req['status'] ?? 'pending';
-            if ($status === 'pending') $pendingCount++;
-            elseif ($status === 'in_progress') $inProgressCount++;
-            
-            if (($req['priority'] ?? 'normal') === 'critical') $criticalCount++;
-        }
-        ?>
         <div class="kpi-card">
             <div class="kpi-content">
                 <div class="kpi-label">Total Requests</div>
-                <div class="kpi-value"><?= $totalRequests ?></div>
+                <div class="kpi-value"><?= $totalRequests ?? count($requests ?? []) ?></div>
                 <div class="kpi-change kpi-positive">All requests</div>
             </div>
         </div>
         <div class="kpi-card">
             <div class="kpi-content">
                 <div class="kpi-label">Pending</div>
-                <div class="kpi-value"><?= $pendingCount ?></div>
+                <div class="kpi-value" style="color: #f59e0b;"><?= $pendingCount ?? 0 ?></div>
                 <div class="kpi-change kpi-warning">Awaiting processing</div>
             </div>
         </div>
         <div class="kpi-card">
             <div class="kpi-content">
                 <div class="kpi-label">In Progress</div>
-                <div class="kpi-value"><?= $inProgressCount ?></div>
+                <div class="kpi-value" style="color: #6366f1;"><?= $inProgressCount ?? 0 ?></div>
                 <div class="kpi-change kpi-positive">Being processed</div>
             </div>
         </div>
         <div class="kpi-card">
             <div class="kpi-content">
-                <div class="kpi-label">Critical</div>
-                <div class="kpi-value"><?= $criticalCount ?></div>
-                <div class="kpi-change kpi-negative">Urgent attention</div>
+                <div class="kpi-label">Completed</div>
+                <div class="kpi-value" style="color: #10b981;"><?= $completedCount ?? 0 ?></div>
+                <div class="kpi-change kpi-positive">Tests completed</div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Test Requests Table -->
-<section class="panel panel-spaced lab-section">
-    <header class="panel-header lab-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h3 class="h5 mb-0 fw-bold">All Test Requests</h3>
-            <div class="d-flex gap-2">
-                <select class="form-select form-select-sm shadow-sm" style="max-width: 150px;" onchange="filterByStatus(this.value)">
-                    <option value="">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                </select>
-                <select class="form-select form-select-sm shadow-sm" style="max-width: 150px;" onchange="filterByPriority(this.value)">
-                    <option value="">All Priority</option>
-                    <option value="low">Low</option>
-                    <option value="normal">Normal</option>
-                    <option value="high">High</option>
-                    <option value="critical">Critical</option>
-                </select>
+<!-- Filter Tabs -->
+<section class="panel panel-spaced">
+    <header class="panel-header">
+        <div class="d-flex justify-content-between align-items-center" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <h3 class="h5 mb-0 fw-bold">Test Requests</h3>
+            <div class="filter-tabs" style="display: flex; gap: 8px;">
+                <button class="filter-tab <?= ($status_filter ?? '') === '' ? 'active' : '' ?>" 
+                        onclick="filterByStatus('')" style="padding: 6px 12px; border: 1px solid #ddd; background: <?= ($status_filter ?? '') === '' ? '#3b82f6' : '#fff' ?>; color: <?= ($status_filter ?? '') === '' ? '#fff' : '#333' ?>; border-radius: 4px; cursor: pointer;">
+                    All (<?= $totalRequests ?>)
+                </button>
+                <button class="filter-tab <?= ($status_filter ?? '') === 'sent_to_lab' ? 'active' : '' ?>" 
+                        onclick="filterByStatus('sent_to_lab')" style="padding: 6px 12px; border: 1px solid #ddd; background: <?= ($status_filter ?? '') === 'sent_to_lab' ? '#3b82f6' : '#fff' ?>; color: <?= ($status_filter ?? '') === 'sent_to_lab' ? '#fff' : '#333' ?>; border-radius: 4px; cursor: pointer;">
+                    Sent to Lab (<?= $sentToLabCount ?? 0 ?>)
+                </button>
+                <button class="filter-tab <?= ($status_filter ?? '') === 'pending' ? 'active' : '' ?>" 
+                        onclick="filterByStatus('pending')" style="padding: 6px 12px; border: 1px solid #ddd; background: <?= ($status_filter ?? '') === 'pending' ? '#f59e0b' : '#fff' ?>; color: <?= ($status_filter ?? '') === 'pending' ? '#fff' : '#333' ?>; border-radius: 4px; cursor: pointer;">
+                    Pending (<?= $pendingCount ?>)
+                </button>
+                <button class="filter-tab <?= ($status_filter ?? '') === 'in_progress' ? 'active' : '' ?>" 
+                        onclick="filterByStatus('in_progress')" style="padding: 6px 12px; border: 1px solid #ddd; background: <?= ($status_filter ?? '') === 'in_progress' ? '#6366f1' : '#fff' ?>; color: <?= ($status_filter ?? '') === 'in_progress' ? '#fff' : '#333' ?>; border-radius: 4px; cursor: pointer;">
+                    In Progress (<?= $inProgressCount ?>)
+                </button>
+                <button class="filter-tab <?= ($status_filter ?? '') === 'completed' ? 'active' : '' ?>" 
+                        onclick="filterByStatus('completed')" style="padding: 6px 12px; border: 1px solid #ddd; background: <?= ($status_filter ?? '') === 'completed' ? '#10b981' : '#fff' ?>; color: <?= ($status_filter ?? '') === 'completed' ? '#fff' : '#333' ?>; border-radius: 4px; cursor: pointer;">
+                    Completed (<?= $completedCount ?? 0 ?>)
+                </button>
             </div>
         </div>
     </header>
-    
-    <div class="stack">
-        <div class="table-container">
-            <table class="data-table">
-                <thead>
-                    <tr class="lab-row">
-                        <th class="lab-cell">Request ID</th>
-                        <th class="lab-cell">Patient</th>
-                        <th class="lab-cell">Patient Type</th>
-                        <th class="lab-cell">Doctor</th>
-                        <th class="lab-cell">Test Type</th>
-                        <th class="lab-cell">Priority</th>
-                        <th class="lab-cell">Status</th>
-                        <th class="lab-cell">Date Requested</th>
-                        <th class="lab-cell">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (!empty($requests)): ?>
-                        <?php foreach ($requests as $request): ?>
-                            <?php
-                            $priority = $request['priority'] ?? 'normal';
-                            $status = $request['status'] ?? 'pending';
-                            
-                            $priorityClass = match($priority) {
-                                'low' => 'bg-secondary',
-                                'normal' => 'bg-info',
-                                'high' => 'bg-warning',
-                                'critical' => 'bg-danger',
-                                default => 'bg-secondary'
-                            };
-                            
-                            $statusClass = match($status) {
-                                'pending' => 'bg-warning',
-                                'in_progress' => 'bg-info',
-                                'completed' => 'bg-success',
-                                'cancelled' => 'bg-secondary',
-                                default => 'bg-secondary'
-                            };
-                            ?>
-                            <tr class="lab-row">
-                                <td class="lab-cell"><strong>#<?= str_pad((string)($request['id'] ?? 0), 6, '0', STR_PAD_LEFT) ?></strong></td>
-                                <td class="lab-cell"><?= esc($request['patient_name'] ?? 'N/A') ?></td>
-                                <td class="lab-cell">
-                                    <?php
-                                    // Determine patient type: if admission_id exists = INPATIENT, else = OUTPATIENT
-                                    $hasAdmission = !empty($request['admission_id']);
-                                    $patientType = $hasAdmission ? 'inpatient' : 'outpatient';
-                                    // Fallback to patient_type from patients table if available
-                                    if (!empty($request['patient_type'])) {
-                                        $patientType = strtolower($request['patient_type']);
-                                    }
-                                    $patientTypeClass = ($patientType === 'inpatient') ? 'bg-primary' : 'bg-info';
-                                    ?>
-                                    <span class="badge <?= $patientTypeClass ?>"><?= ucfirst($patientType) ?></span>
-                                </td>
-                                <td class="lab-cell"><?= esc($request['doctor_name'] ?? 'N/A') ?></td>
-                                <td class="lab-cell"><?= esc($request['test_type'] ?? '—') ?></td>
-                                <td class="lab-cell">
-                                    <span class="badge <?= $priorityClass ?>"><?= ucfirst($priority) ?></span>
-                                </td>
-                                <td class="lab-cell">
-                                    <span class="badge <?= $statusClass ?>"><?= ucfirst(str_replace('_', ' ', $status)) ?></span>
-                                </td>
-                                <td class="lab-cell"><?= !empty($request['requested_at']) ? date('M j, Y g:i A', strtotime($request['requested_at'])) : '—' ?></td>
-                                <td class="lab-cell">
-                                    <?php if ($status === 'pending' || $status === 'in_progress'): ?>
-                                        <button type="button" class="btn btn-sm btn-primary" onclick="startTest(<?= $request['id'] ?>)">Start Test</button>
+</section>
+
+<!-- Test Requests Table -->
+<section class="panel panel-spaced">
+    <div class="table-responsive">
+        <table class="data-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                    <th style="padding: 12px; text-align: left; font-weight: 600;">Request ID</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600;">Patient</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600;">Test Type</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600;">Doctor</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600;">Priority</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600;">Status</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600;">Requested At</th>
+                    <th style="padding: 12px; text-align: center; font-weight: 600;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($requests)): ?>
+                    <?php 
+                    $sentToLabCount = 0;
+                    $completedCount = 0;
+                    foreach ($requests as $request): 
+                        $status = $request['status'] ?? 'pending';
+                        if ($status === 'sent_to_lab') $sentToLabCount++;
+                        if ($status === 'completed') $completedCount++;
+                    endforeach;
+                    ?>
+                    <?php foreach ($requests as $request): ?>
+                        <?php 
+                        $status = $request['status'] ?? 'pending';
+                        $priority = $request['priority'] ?? 'normal';
+                        $hasAdmission = !empty($request['admission_id']);
+                        $patientType = $hasAdmission ? 'inpatient' : 'outpatient';
+                        if (!empty($request['patient_type'])) {
+                            $patientType = strtolower($request['patient_type']);
+                        }
+                        ?>
+                        <tr style="border-bottom: 1px solid #e9ecef;">
+                            <td style="padding: 12px;">
+                                <strong>#<?= str_pad((string)($request['id'] ?? 0), 4, '0', STR_PAD_LEFT) ?></strong>
+                            </td>
+                            <td style="padding: 12px;">
+                                <div>
+                                    <strong><?= esc($request['patient_name'] ?? 'N/A') ?></strong>
+                                    <br>
+                                    <small style="color: #666;">
+                                        <?= ucfirst($patientType) ?>
+                                        <?php if ($patientType === 'inpatient'): ?>
+                                            <span style="color: #3b82f6;">🏥</span>
+                                        <?php else: ?>
+                                            <span style="color: #10b981;">🚶</span>
+                                        <?php endif; ?>
+                                    </small>
+                                </div>
+                            </td>
+                            <td style="padding: 12px;">
+                                <?= esc($request['test_type'] ?? 'N/A') ?>
+                            </td>
+                            <td style="padding: 12px;">
+                                <?= esc($request['doctor_name'] ?? 'N/A') ?>
+                            </td>
+                            <td style="padding: 12px;">
+                                <?php
+                                $priorityClass = 'badge-secondary';
+                                $priorityIcon = '';
+                                if ($priority === 'critical') {
+                                    $priorityClass = 'badge-danger';
+                                    $priorityIcon = '🔴';
+                                } elseif ($priority === 'high') {
+                                    $priorityClass = 'badge-warning';
+                                    $priorityIcon = '🟡';
+                                } elseif ($priority === 'normal') {
+                                    $priorityClass = 'badge-info';
+                                    $priorityIcon = '🔵';
+                                } else {
+                                    $priorityClass = 'badge-secondary';
+                                    $priorityIcon = '⚪';
+                                }
+                                ?>
+                                <span class="badge <?= $priorityClass ?>" style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+                                    <?= $priorityIcon ?> <?= ucfirst($priority) ?>
+                                </span>
+                            </td>
+                            <td style="padding: 12px;">
+                                <?php
+                                $statusClass = 'badge-secondary';
+                                $statusText = ucfirst($status);
+                                if ($status === 'pending') {
+                                    $statusClass = 'badge-warning';
+                                    $statusText = $hasAdmission ? '⏳ Pending (Inpatient)' : '⏳ Pending (Outpatient)';
+                                } elseif ($status === 'sent_to_lab') {
+                                    $statusClass = 'badge-info';
+                                    $statusText = '📤 Sent to Lab';
+                                } elseif ($status === 'in_progress') {
+                                    $statusClass = 'badge-primary';
+                                    $statusText = '🔄 In Progress';
+                                } elseif ($status === 'completed') {
+                                    $statusClass = 'badge-success';
+                                    $statusText = '✅ Completed';
+                                } elseif ($status === 'cancelled') {
+                                    $statusClass = 'badge-danger';
+                                    $statusText = '❌ Cancelled';
+                                }
+                                ?>
+                                <span class="badge <?= $statusClass ?>" style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+                                    <?= $statusText ?>
+                                </span>
+                                <?php if ($status === 'sent_to_lab' && !empty($request['sent_at'])): ?>
+                                    <br><small style="color: #999; font-size: 10px;">
+                                        Sent: <?= date('M j, g:i A', strtotime($request['sent_at'])) ?>
+                                    </small>
+                                <?php endif; ?>
+                            </td>
+                            <td style="padding: 12px;">
+                                <small style="color: #666;">
+                                    <?= !empty($request['requested_at']) ? date('M j, Y g:i A', strtotime($request['requested_at'])) : 'N/A' ?>
+                                </small>
+                            </td>
+                            <td style="padding: 12px; text-align: center;">
+                                <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
+                                    <?php if ($status === 'pending' || $status === 'sent_to_lab' || $status === 'in_progress'): ?>
+                                        <button type="button" 
+                                                class="btn-start-test" 
+                                                onclick="startTest(<?= $request['id'] ?? 0 ?>)"
+                                                style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;"
+                                                title="Start Test">
+                                            🔬 Start Test
+                                        </button>
                                     <?php elseif ($status === 'completed'): ?>
-                                        <a href="<?= base_url('lab/results?request_id=' . $request['id']) ?>" class="btn btn-sm btn-success">View Result</a>
+                                        <a href="<?= base_url('lab/results?request_id=' . $request['id']) ?>" 
+                                           style="padding: 4px 8px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; text-decoration: none; display: inline-block;"
+                                           title="View Result">
+                                            ✅ View Result
+                                        </a>
                                     <?php else: ?>
-                                        <span class="text-muted small">—</span>
+                                        <span style="color: #666; font-size: 11px;">—</span>
                                     <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php if (!empty($request['notes'])): ?>
+                            <tr style="background: #f8f9fa;">
+                                <td colspan="8" style="padding: 8px 12px; font-size: 12px; color: #666;">
+                                    <strong>Notes:</strong> <?= esc($request['notes']) ?>
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr class="lab-row">
-                            <td colspan="9" class="text-center py-4 text-muted">No test requests found.</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="8" style="padding: 40px; text-align: center; color: #999;">
+                            <p>No test requests found for the selected filter.</p>
+                        </td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
     </div>
 </section>
 
@@ -202,22 +269,64 @@ function filterByStatus(status) {
     window.location.href = url.toString();
 }
 
-function filterByPriority(priority) {
-    const url = new URL(window.location.href);
-    if (priority) {
-        url.searchParams.set('priority', priority);
-    } else {
-        url.searchParams.delete('priority');
-    }
-    window.location.href = url.toString();
-}
-
 function startTest(requestId) {
     if (confirm('Start processing this test request? You will be redirected to enter the test result.')) {
         window.location.href = '<?= base_url('lab/results') ?>?request_id=' + requestId + '&action=start';
     }
 }
 </script>
+
+<style>
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.badge-warning {
+    background: #fbbf24;
+    color: #78350f;
+}
+
+.badge-info {
+    background: #3b82f6;
+    color: white;
+}
+
+.badge-success {
+    background: #10b981;
+    color: white;
+}
+
+.badge-danger {
+    background: #ef4444;
+    color: white;
+}
+
+.badge-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.badge-primary {
+    background: #6366f1;
+    color: white;
+}
+
+.data-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.filter-tab:hover {
+    opacity: 0.8;
+}
+
+.filter-tab.active {
+    font-weight: 600;
+}
+</style>
 
 <?= $this->endSection() ?>
 

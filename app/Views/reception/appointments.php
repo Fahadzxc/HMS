@@ -293,7 +293,6 @@
                         <option value="follow-up">Follow-up</option>
                         <option value="procedure">Procedure</option>
                         <option value="laboratory_test">Laboratory Test</option>
-                        <option value="imaging">Imaging / X-ray / Ultrasound</option>
                     </select>
                     <div class="error" data-error-for="appointment_type"></div>
                     <small class="form-help" style="color: #64748b;">

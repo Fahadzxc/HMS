@@ -60,7 +60,6 @@ class RoomModel extends Model
             'follow-up' => ['General Medicine', 'Cardiology', 'Pediatrics', 'Consultation', 'General Practice', 'Family Medicine'],
             'procedure' => ['Procedure Room', 'Surgery', 'Operating Room', 'General Medicine', 'Cardiology', 'Pediatrics'],
             'laboratory_test' => ['Laboratory', 'Lab', 'Clinical Laboratory', 'Pathology'],
-            'imaging' => ['Radiology', 'X-Ray', 'Imaging', 'Diagnostic Imaging', 'Ultrasound'],
         ];
 
         $builder = $this->builder();

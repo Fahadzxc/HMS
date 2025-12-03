@@ -34,6 +34,7 @@ $menus = [
         ['label' => 'Dashboard', 'url' => base_url('nurse/dashboard')],
         ['label' => 'Patients', 'url' => base_url('nurse/patients')],
         ['label' => 'Treatment Updates', 'url' => base_url('nurse/treatment-updates')],
+        ['label' => 'Lab Requests', 'url' => base_url('nurse/lab-requests')],
         ['label' => 'Reports', 'url' => base_url('nurse/reports')],
         ['label' => 'Settings', 'url' => base_url('admin/settings')],
         ['label' => 'Logout', 'url' => base_url('auth/logout')],

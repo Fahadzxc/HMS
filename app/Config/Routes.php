@@ -38,6 +38,8 @@ $routes->post('nurse/markDischargeReady', 'Nurse::markDischargeReady');
 $routes->post('nurse/finalDischarge', 'Nurse::finalDischarge');
 $routes->post('nurse/assignPatient', 'Nurse::assignPatient');
 $routes->post('nurse/markPrescriptionAsGiven', 'Nurse::markPrescriptionAsGiven');
+$routes->get('nurse/lab-requests', 'Nurse::labRequests');
+$routes->post('nurse/mark-lab-sent', 'Nurse::markLabRequestAsSent');
 
 // Reception Routes
 $routes->get('reception/patients', 'Reception::patients');

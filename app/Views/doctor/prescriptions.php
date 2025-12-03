@@ -72,14 +72,14 @@
                     <table class="medication-table">
                         <thead>
                             <tr>
-                                <th>Medication</th>
-                                <th>Dosage</th>
-                                <th>Frequency</th>
-                                <th>Meal Instruction</th>
-                                <th>Duration</th>
-                                <th>Quantity</th>
-                                <th>Notes</th>
-                                <th>Actions</th>
+                                <th style="min-width: 200px;">Medication</th>
+                                <th style="min-width: 120px;">Dosage</th>
+                                <th style="min-width: 130px;">Frequency</th>
+                                <th style="min-width: 140px;">Meal Instruction</th>
+                                <th style="min-width: 100px;">Duration</th>
+                                <th style="min-width: 100px;">Quantity</th>
+                                <th style="min-width: 150px;">Notes</th>
+                                <th style="width: 60px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="rx_items_container">
@@ -198,24 +198,47 @@ function addRxItem() {
     const row = document.createElement('tr');
     row.className = 'medication-row';
     row.innerHTML = `
-        <td>
-            <select class="form-input form-input-sm" data-field="med_id" onchange="onMedChange(this)" required>
+        <td style="position: relative;">
+            <select class="form-input form-input-sm" data-field="med_id" onchange="onMedChange(this)" required style="width: 100%;">
                 <option value="">Select medication...</option>
                 <?php foreach (($medications ?? []) as $m): ?>
+                    <?php 
+                    $stockQty = (int)($m['stock_quantity'] ?? 0);
+                    $stockStatus = $m['stock_status'] ?? 'ok';
+                    $stockLabel = '';
+                    $stockClass = '';
+                    
+                    if ($stockStatus === 'out_of_stock') {
+                        $stockLabel = ' (OUT OF STOCK)';
+                        $stockClass = 'stock-out';
+                    } elseif ($stockStatus === 'low_stock') {
+                        $stockLabel = ' (Low Stock: ' . $stockQty . ')';
+                        $stockClass = 'stock-low';
+                    } else {
+                        $stockLabel = ' (Stock: ' . $stockQty . ')';
+                        $stockClass = 'stock-ok';
+                    }
+                    ?>
                     <option value="<?= (int) $m['id'] ?>" 
                             data-name="<?= esc(($m['name'] ?? '') . (!empty($m['strength']) ? ' ' . $m['strength'] : '')) ?>" 
-                            data-dosage="<?= esc($m['default_dosage'] ?? '') ?>">
-                        <?= esc($m['name'] ?? '') ?> <?= esc($m['strength'] ?? '') ?><?= !empty($m['form']) ? ' (' . esc($m['form']) . ')' : '' ?>
+                            data-dosage="<?= esc($m['default_dosage'] ?? '') ?>"
+                            data-stock="<?= $stockQty ?>"
+                            data-stock-status="<?= $stockStatus ?>"
+                            class="<?= $stockClass ?>">
+                        <?= esc($m['name'] ?? '') ?> <?= esc($m['strength'] ?? '') ?><?= !empty($m['form']) ? ' (' . esc($m['form']) . ')' : '' ?><?= $stockLabel ?>
                     </option>
                 <?php endforeach; ?>
             </select>
             <input type="hidden" data-field="name">
+            <div class="stock-indicator" style="display: none; margin-top: 6px;">
+                <span class="stock-badge"></span>
+            </div>
         </td>
         <td>
             <input type="text" class="form-input form-input-sm" placeholder="e.g., 1 capsule" data-field="dosage" required>
         </td>
         <td>
-            <select class="form-input form-input-sm" data-field="frequency" required>
+            <select class="form-input form-input-sm" data-field="frequency" required onchange="calculateQuantity(this)">
                 <option value="">Select...</option>
                 <option value="Once a day">Once a day</option>
                 <option value="2x/day">2x/day</option>
@@ -235,10 +258,13 @@ function addRxItem() {
             </select>
         </td>
         <td>
-            <input type="text" class="form-input form-input-sm" placeholder="e.g., 7 days" data-field="duration" required>
+            <input type="text" class="form-input form-input-sm" placeholder="e.g., 7 days" data-field="duration" required oninput="calculateQuantity(this)">
         </td>
         <td>
-            <input type="number" class="form-input form-input-sm" placeholder="Qty" data-field="quantity" min="1" value="1" style="width: 70px;" required>
+            <div style="display: flex; align-items: center; gap: 4px;">
+                <input type="number" class="form-input form-input-sm" placeholder="Qty" data-field="quantity" min="1" value="1" style="width: 80px; text-align: center;" required readonly title="Auto-calculated: Duration × Frequency">
+                <span class="quantity-info" style="font-size: 10px; color: #666; white-space: nowrap;" title="Auto-calculated based on Duration and Frequency">🔢</span>
+            </div>
         </td>
         <td>
             <input type="text" class="form-input form-input-sm" placeholder="Additional notes..." data-field="notes">
@@ -255,12 +281,144 @@ function addRxItem() {
 // Medication change handler
 function onMedChange(sel) {
     const opt = sel.selectedOptions[0];
-    if (!opt) return;
+    if (!opt) {
+        // Hide stock indicator if no medication selected
+        const row = sel.closest('tr');
+        if (row) {
+            const stockIndicator = row.querySelector('.stock-indicator');
+            if (stockIndicator) stockIndicator.style.display = 'none';
+        }
+        return;
+    }
+    
     const row = sel.closest('tr');
     const dosage = row.querySelector('[data-field="dosage"]');
     const nameHidden = row.querySelector('[data-field="name"]');
+    const stockIndicator = row.querySelector('.stock-indicator');
+    const stockBadge = row.querySelector('.stock-badge');
+    
     if (dosage && opt.dataset.dosage) dosage.value = opt.dataset.dosage;
     if (nameHidden) nameHidden.value = opt.dataset.name || opt.textContent;
+    
+    // Show stock information
+    if (stockIndicator && stockBadge && opt.dataset.stock !== undefined) {
+        const stockQty = parseInt(opt.dataset.stock) || 0;
+        const stockStatus = opt.dataset.stockStatus || 'ok';
+        
+        stockIndicator.style.display = 'block';
+        stockBadge.textContent = '';
+        stockBadge.style.backgroundColor = '';
+        stockBadge.style.color = '';
+        stockBadge.style.border = '';
+        
+        if (stockStatus === 'out_of_stock') {
+            stockBadge.textContent = '⚠️ OUT OF STOCK';
+            stockBadge.style.backgroundColor = '#dc3545';
+            stockBadge.style.color = '#fff';
+            stockBadge.style.border = '1px solid #c82333';
+        } else if (stockStatus === 'low_stock') {
+            stockBadge.textContent = `⚠️ Low Stock: ${stockQty} remaining`;
+            stockBadge.style.backgroundColor = '#ffc107';
+            stockBadge.style.color = '#856404';
+            stockBadge.style.border = '1px solid #ffb300';
+        } else {
+            stockBadge.textContent = `✓ In Stock: ${stockQty} available`;
+            stockBadge.style.backgroundColor = '#28a745';
+            stockBadge.style.color = '#fff';
+            stockBadge.style.border = '1px solid #218838';
+        }
+    } else if (stockIndicator) {
+        stockIndicator.style.display = 'none';
+    }
+}
+
+// Calculate quantity based on duration and frequency
+function calculateQuantity(element) {
+    const row = element.closest('tr');
+    if (!row) return;
+    
+    const durationInput = row.querySelector('[data-field="duration"]');
+    const frequencySelect = row.querySelector('[data-field="frequency"]');
+    const quantityInput = row.querySelector('[data-field="quantity"]');
+    const medicationSelect = row.querySelector('[data-field="med_id"]');
+    const stockBadge = row.querySelector('.stock-badge');
+    
+    if (!durationInput || !frequencySelect || !quantityInput) return;
+    
+    // Get duration value and extract number of days
+    const durationText = durationInput.value.trim();
+    let durationDays = 0;
+    
+    if (durationText) {
+        // Extract number from duration (e.g., "7 days" -> 7, "5" -> 5)
+        const match = durationText.match(/(\d+)/);
+        if (match) {
+            durationDays = parseInt(match[1], 10);
+        }
+    }
+    
+    // Get frequency value and determine multiplier
+    const frequencyValue = frequencySelect.value.trim();
+    let frequencyMultiplier = 0;
+    
+    if (frequencyValue) {
+        if (frequencyValue === 'Once a day' || frequencyValue.toLowerCase().includes('once')) {
+            frequencyMultiplier = 1;
+        } else if (frequencyValue === '2x/day' || frequencyValue.toLowerCase().includes('2x') || frequencyValue.toLowerCase().includes('twice')) {
+            frequencyMultiplier = 2;
+        } else if (frequencyValue === '3x/day' || frequencyValue.toLowerCase().includes('3x') || frequencyValue.toLowerCase().includes('thrice')) {
+            frequencyMultiplier = 3;
+        } else if (frequencyValue === 'Every 6 hours') {
+            frequencyMultiplier = 4; // 24 hours / 6 hours = 4 times per day
+        } else if (frequencyValue === 'Every 8 hours') {
+            frequencyMultiplier = 3; // 24 hours / 8 hours = 3 times per day
+        }
+    }
+    
+    // Calculate quantity: duration (days) × frequency (times per day)
+    let calculatedQuantity = 0;
+    if (durationDays > 0 && frequencyMultiplier > 0) {
+        calculatedQuantity = durationDays * frequencyMultiplier;
+    }
+    
+    // Update quantity field (only if both duration and frequency are provided)
+    if (calculatedQuantity > 0) {
+        quantityInput.value = calculatedQuantity;
+        
+        // Check if quantity exceeds available stock
+        if (medicationSelect && medicationSelect.selectedOptions.length > 0) {
+            const selectedOption = medicationSelect.selectedOptions[0];
+            const availableStock = parseInt(selectedOption.dataset.stock) || 0;
+            
+            if (availableStock > 0 && calculatedQuantity > availableStock) {
+                // Show warning in stock badge
+                if (stockBadge) {
+                    stockBadge.textContent = `⚠️ Warning: Prescribing ${calculatedQuantity} but only ${availableStock} available!`;
+                    stockBadge.style.backgroundColor = '#ff9800';
+                    stockBadge.style.color = '#fff';
+                    stockBadge.style.border = '1px solid #f57c00';
+                }
+                // Highlight quantity field
+                quantityInput.style.borderColor = '#ff9800';
+                quantityInput.style.borderWidth = '2px';
+                quantityInput.style.backgroundColor = '#fff3cd';
+            } else {
+                // Reset quantity field styling
+                quantityInput.style.borderColor = '';
+                quantityInput.style.borderWidth = '';
+                quantityInput.style.backgroundColor = '';
+                // Restore stock badge to original status
+                if (medicationSelect && stockBadge) {
+                    onMedChange(medicationSelect);
+                }
+            }
+        }
+    } else {
+        // If calculation can't be done, set to 1 as default
+        quantityInput.value = 1;
+        quantityInput.style.borderColor = '';
+        quantityInput.style.backgroundColor = '';
+    }
 }
 
 // Collect medication items
@@ -594,6 +752,105 @@ addRxItem();
 }
 .btn-success:hover {
     background: #059669;
+}
+
+/* Stock indicator styles */
+.stock-indicator {
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.stock-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    display: inline-block;
+    font-size: 11px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+
+/* Medication dropdown stock status colors */
+select option.stock-out {
+    background-color: #ffe6e6;
+    color: #dc3545;
+    font-weight: bold;
+}
+
+select option.stock-low {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+select option.stock-ok {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+/* Highlight selected option based on stock status */
+select:focus option.stock-out:checked {
+    background-color: #dc3545;
+    color: white;
+}
+
+select:focus option.stock-low:checked {
+    background-color: #ffc107;
+    color: #000;
+}
+
+select:focus option.stock-ok:checked {
+    background-color: #28a745;
+    color: white;
+}
+
+/* Medication table improvements */
+.medication-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.medication-table td {
+    padding: 8px;
+    vertical-align: top;
+}
+
+.medication-table th {
+    padding: 10px 8px;
+    text-align: left;
+    font-weight: 600;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.medication-row {
+    border-bottom: 1px solid #e9ecef;
+}
+
+.medication-row:hover {
+    background-color: #f8f9fa;
+}
+
+.form-input-sm {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 13px;
+}
+
+/* Quantity field styling */
+input[data-field="quantity"] {
+    font-weight: 600;
+    background-color: #f8f9fa !important;
+}
+
+input[data-field="quantity"]:focus {
+    outline: 2px solid #007bff;
+    outline-offset: -2px;
+}
+
+.quantity-info {
+    cursor: help;
 }
 </style>
 

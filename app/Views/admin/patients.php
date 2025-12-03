@@ -600,7 +600,7 @@ function viewPatient(id) {
                         <h4 style="margin: 0 0 1rem 0; color: #1C3F70; border-bottom: 2px solid #1C3F70; padding-bottom: 0.5rem;">Insurance Information</h4>
                         ${patient.insurance_info ? `
                         <div style="margin-bottom: 1rem; padding: 1rem; background: #f0fdf4; border-radius: 8px; border-left: 3px solid #10b981;">
-                            <h5 style="margin: 0 0 0.75rem 0; color: #1C3F70; font-size: 0.9375rem;">Primary Insurance</h5>
+                            <h5 style="margin: 0 0 0.75rem 0; color: #1C3F70; font-size: 0.9375rem;">Primary Insurance Policy</h5>
                             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
                                 <div>
                                     <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Insurance Provider</span>
@@ -615,10 +615,11 @@ function viewPatient(id) {
                                     <strong style="color: #1e293b;">${patient.insurance_info.member_id || '—'}</strong>
                                 </div>
                                 <div>
-                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Status</span>
-                                    <span class="badge ${patient.insurance_info.status === 'approved' ? 'badge-success' : patient.insurance_info.status === 'rejected' ? 'badge-danger' : patient.insurance_info.status === 'paid' ? 'badge-info' : 'badge-warning'}">
-                                        ${(patient.insurance_info.status || 'pending').charAt(0).toUpperCase() + (patient.insurance_info.status || 'pending').slice(1)}
+                                    <span style="font-size: 0.875rem; color: #6B7280; display: block; margin-bottom: 0.25rem;">Policy Status</span>
+                                    <span class="badge ${patient.insurance_info.policy_status === 'active' ? 'badge-success' : patient.insurance_info.policy_status === 'inactive' ? 'badge-danger' : 'badge-warning'}" title="Overall policy status">
+                                        ${(patient.insurance_info.policy_status || 'active').charAt(0).toUpperCase() + (patient.insurance_info.policy_status || 'active').slice(1)}
                                     </span>
+                                    <small style="display: block; font-size: 0.7rem; color: #6B7280; margin-top: 0.25rem;">Policy is ${(patient.insurance_info.policy_status || 'active') === 'active' ? 'active and valid' : 'inactive'}</small>
                                 </div>
                             </div>
                         </div>
@@ -626,29 +627,52 @@ function viewPatient(id) {
                         ${patient.insurance_claims && patient.insurance_claims.length > 0 ? `
                         <div style="margin-top: 1rem;">
                             <h5 style="margin: 0 0 0.75rem 0; color: #1C3F70; font-size: 0.9375rem;">Insurance Claims History</h5>
+                            <p style="font-size: 0.8rem; color: #6B7280; margin-bottom: 0.75rem;">Past and current insurance claims for this patient</p>
                             <div style="max-height: 300px; overflow-y: auto;">
-                                ${patient.insurance_claims.map(claim => `
-                                    <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 0.75rem; border-left: 3px solid #1C3F70;">
+                                ${patient.insurance_claims
+                                    .filter(claim => parseFloat(claim.claim_amount || 0) > 0) // Filter out zero-amount claims
+                                    .map(claim => {
+                                        // Check if policy/member ID matches primary insurance (to avoid redundancy)
+                                        const isPrimaryPolicy = patient.insurance_info && 
+                                            claim.policy_number === patient.insurance_info.policy_number &&
+                                            claim.member_id === patient.insurance_info.member_id;
+                                        
+                                        return `
+                                    <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; margin-bottom: 0.75rem; border-left: 3px solid ${claim.status === 'paid' ? '#10b981' : claim.status === 'approved' ? '#3b82f6' : claim.status === 'rejected' ? '#ef4444' : '#f59e0b'};">
                                         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
                                             <div>
-                                                <strong style="color: #1e293b;">${claim.claim_number}</strong>
+                                                <strong style="color: #1e293b; font-size: 0.9375rem;">${claim.claim_number || 'N/A'}</strong>
+                                                ${!isPrimaryPolicy ? `
                                                 <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.25rem;">
-                                                    Provider: ${claim.insurance_provider}
+                                                    Provider: ${claim.insurance_provider || '—'}
                                                 </div>
+                                                ` : ''}
                                             </div>
-                                            <span class="badge ${claim.status === 'approved' ? 'badge-success' : claim.status === 'rejected' ? 'badge-danger' : claim.status === 'paid' ? 'badge-info' : 'badge-warning'}">
+                                            <span class="badge ${claim.status === 'approved' ? 'badge-success' : claim.status === 'rejected' ? 'badge-danger' : claim.status === 'paid' ? 'badge-info' : 'badge-warning'}" title="Claim status">
                                                 ${(claim.status || 'pending').charAt(0).toUpperCase() + (claim.status || 'pending').slice(1)}
                                             </span>
                                         </div>
                                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; font-size: 0.875rem;">
+                                            ${!isPrimaryPolicy ? `
                                             <div>
                                                 <span style="color: #6B7280;">Policy:</span>
-                                                <strong style="color: #1e293b; margin-left: 0.5rem;">${claim.policy_number}</strong>
+                                                <strong style="color: #1e293b; margin-left: 0.5rem;">${claim.policy_number || '—'}</strong>
                                             </div>
                                             <div>
                                                 <span style="color: #6B7280;">Member ID:</span>
-                                                <strong style="color: #1e293b; margin-left: 0.5rem;">${claim.member_id}</strong>
+                                                <strong style="color: #1e293b; margin-left: 0.5rem;">${claim.member_id || '—'}</strong>
                                             </div>
+                                            ` : `
+                                            <div>
+                                                <span style="color: #6B7280;">Policy:</span>
+                                                <strong style="color: #1e293b; margin-left: 0.5rem;" title="Same as Primary Insurance">${claim.policy_number || '—'}</strong>
+                                                <small style="color: #10b981; margin-left: 0.25rem; font-size: 0.7rem;">(Primary)</small>
+                                            </div>
+                                            <div>
+                                                <span style="color: #6B7280;">Member ID:</span>
+                                                <strong style="color: #1e293b; margin-left: 0.5rem;" title="Same as Primary Insurance">${claim.member_id || '—'}</strong>
+                                            </div>
+                                            `}
                                             <div>
                                                 <span style="color: #6B7280;">Claim Amount:</span>
                                                 <strong style="color: #1e293b; margin-left: 0.5rem;">₱${parseFloat(claim.claim_amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>
@@ -658,11 +682,19 @@ function viewPatient(id) {
                                                 <strong style="color: #10b981; margin-left: 0.5rem;">₱${parseFloat(claim.approved_amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>
                                             </div>
                                         </div>
-                                        <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.5rem;">
-                                            Submitted: ${claim.submitted_date} ${claim.approved_date && claim.approved_date !== '—' ? ` • Approved: ${claim.approved_date}` : ''}
+                                        <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e5e7eb;">
+                                            ${claim.submitted_date && claim.submitted_date !== '—' ? `<span>📅 Submitted: ${claim.submitted_date}</span>` : ''}
+                                            ${claim.approved_date && claim.approved_date !== '—' ? `<span style="margin-left: 1rem;">✅ Approved: ${claim.approved_date}</span>` : ''}
+                                            ${!claim.submitted_date || claim.submitted_date === '—' ? '<span style="color: #f59e0b;">⏳ Not yet submitted</span>' : ''}
                                         </div>
                                     </div>
-                                `).join('')}
+                                `;
+                                    }).join('')}
+                                ${patient.insurance_claims.filter(claim => parseFloat(claim.claim_amount || 0) > 0).length === 0 ? `
+                                    <div style="padding: 1.5rem; text-align: center; color: #6B7280; font-size: 0.875rem;">
+                                        No valid claims found (all claims have zero amounts)
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
                         ` : ''}

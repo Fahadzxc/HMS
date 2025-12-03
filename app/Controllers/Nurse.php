@@ -5,6 +5,8 @@ namespace App\Controllers;
 use CodeIgniter\Controller;
 use App\Models\PrescriptionModel;
 use App\Models\SettingModel;
+use App\Models\LabTestRequestModel;
+use App\Models\PatientModel;
 
 class Nurse extends Controller
 {
@@ -165,6 +167,48 @@ class Nurse extends Controller
             ->where('a.discharge_ready_at IS NOT NULL')
             ->orderBy('a.discharge_ready_at', 'ASC')
             ->get()->getResultArray();
+        
+        // Add billing status for each ready patient
+        if ($db->tableExists('bills')) {
+            foreach ($readyForDischarge as &$ready) {
+                $patientId = $ready['patient_id'];
+                
+                // Get all bills for this patient
+                $bills = $db->table('bills')
+                    ->where('patient_id', $patientId)
+                    ->whereIn('status', ['pending', 'partial', 'overdue'])
+                    ->get()
+                    ->getResultArray();
+                
+                $totalBalance = 0;
+                $totalBills = 0;
+                $unpaidBills = 0;
+                
+                foreach ($bills as $bill) {
+                    $balance = floatval($bill['balance'] ?? 0);
+                    $totalBalance += $balance;
+                    $totalBills++;
+                    if ($balance > 0) {
+                        $unpaidBills++;
+                    }
+                }
+                
+                $ready['billing_status'] = $totalBalance <= 0 ? 'fully_paid' : 'unpaid';
+                $ready['total_balance'] = $totalBalance;
+                $ready['unpaid_bills_count'] = $unpaidBills;
+                $ready['total_bills_count'] = $totalBills;
+            }
+            unset($ready);
+        } else {
+            // If bills table doesn't exist, mark all as fully paid
+            foreach ($readyForDischarge as &$ready) {
+                $ready['billing_status'] = 'fully_paid';
+                $ready['total_balance'] = 0;
+                $ready['unpaid_bills_count'] = 0;
+                $ready['total_bills_count'] = 0;
+            }
+            unset($ready);
+        }
 
         $data = [
             'title' => 'Patient Monitoring - HMS',
@@ -248,8 +292,39 @@ class Nurse extends Controller
             return $this->response->setJSON(['success' => false, 'message' => 'Patient must be marked as ready first']);
         }
         
-        // Check if billing is cleared (optional - can be enforced or not)
-        // For now, we'll allow discharge but show warning if not cleared
+        // Check if billing is fully paid - REQUIRED for discharge
+        $patientId = $admission['patient_id'];
+        $billingCleared = true;
+        $totalBalance = 0;
+        $unpaidBills = [];
+        
+        if ($db->tableExists('bills')) {
+            $bills = $db->table('bills')
+                ->where('patient_id', $patientId)
+                ->whereIn('status', ['pending', 'partial', 'overdue'])
+                ->get()
+                ->getResultArray();
+            
+            foreach ($bills as $bill) {
+                $balance = floatval($bill['balance'] ?? 0);
+                if ($balance > 0) {
+                    $billingCleared = false;
+                    $totalBalance += $balance;
+                    $unpaidBills[] = [
+                        'bill_number' => $bill['bill_number'] ?? 'N/A',
+                        'balance' => $balance
+                    ];
+                }
+            }
+        }
+        
+        if (!$billingCleared) {
+            $billNumbers = implode(', ', array_column($unpaidBills, 'bill_number'));
+            return $this->response->setJSON([
+                'success' => false, 
+                'message' => 'Cannot discharge patient. Billing is not fully paid. Outstanding balance: ₱' . number_format($totalBalance, 2) . '. Unpaid bills: ' . $billNumbers
+            ]);
+        }
         
         // Update admission status to Discharged
         $db->table('admissions')->where('id', $admissionId)->update([
@@ -1120,6 +1195,9 @@ class Nurse extends Controller
         $currentStatus = $prescription['status'] ?? 'pending';
         $wasCompleted = ($currentStatus === 'completed');
         
+        // Get current nurse name from session
+        $nurseName = session()->get('name') ?? 'Unknown Nurse';
+        
         // Get or set the start date (first time it was marked as given)
         $notes = $prescription['notes'] ?? '';
         $startDate = null;
@@ -1132,14 +1210,27 @@ class Nurse extends Controller
         // If no start date found and this is first time, set it
         if (!$startDate && !$wasCompleted) {
             $startDate = date('Y-m-d');
-            // Store start date in notes
-            $notes = trim($notes);
-            if (!empty($notes) && !str_contains($notes, 'START_DATE:')) {
-                $notes .= "\nSTART_DATE:" . $startDate;
-            } elseif (empty($notes)) {
-                $notes = "START_DATE:" . $startDate;
-            }
         }
+        
+        // Store nurse name and start date in notes
+        $notes = trim($notes);
+        $notesLines = [];
+        if (!empty($notes)) {
+            $notesLines = explode("\n", $notes);
+        }
+        
+        // Remove old GIVEN_BY_NURSE and START_DATE lines
+        $notesLines = array_filter($notesLines, function($line) {
+            return !preg_match('/^(GIVEN_BY_NURSE|START_DATE):/', trim($line));
+        });
+        
+        // Add new tracking info
+        if ($startDate) {
+            $notesLines[] = "START_DATE:" . $startDate;
+        }
+        $notesLines[] = "GIVEN_BY_NURSE:" . $nurseName;
+        
+        $notes = implode("\n", $notesLines);
         
         // Determine progress days (how many days/doses already given)
         $existingProgress = isset($prescription['progress_days']) ? (int) $prescription['progress_days'] : 0;
@@ -1175,11 +1266,9 @@ class Nurse extends Controller
                     updated_at = {$escapedUpdatedAt}, 
                     progress_days = {$escapedProgress}";
         
-        // If first time, also update notes with start date
-        if (!$wasCompleted && $startDate) {
-                $escapedNotes = $db->escape($notes);
-                $sql .= ", notes = {$escapedNotes}";
-        }
+        // Always update notes to include nurse name and start date
+        $escapedNotes = $db->escape($notes);
+        $sql .= ", notes = {$escapedNotes}";
         
             $sql .= " WHERE id = {$escapedId}";
             
@@ -1459,10 +1548,12 @@ class Nurse extends Controller
             log_message('info', "Skipping stock deduction - conditions not met (result: " . ($result ? 'true' : 'false') . ", status: {$currentStatus}, table exists: " . ($db->tableExists('pharmacy_inventory') ? 'true' : 'false') . ")");
         }
 
-        if ($result && !$wasCompleted) {
-            // Auto-create bill for prescription medications (first time only)
-            $this->autoCreatePrescriptionBill($prescriptionId, $prescription);
-        }
+        // DISABLED: Auto-create bill for prescription medications
+        // Medications should be included in main bill items, not as separate bills
+        // if ($result && !$wasCompleted) {
+        //     // Auto-create bill for prescription medications (first time only)
+        //     $this->autoCreatePrescriptionBill($prescriptionId, $prescription);
+        // }
 
         if ($result) {
             return $this->response->setJSON([
@@ -1991,5 +2082,129 @@ class Nurse extends Controller
         }
 
         return redirect()->to('/nurse/settings')->with('success', 'Settings saved successfully.');
+    }
+
+    public function labRequests()
+    {
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'nurse') {
+            return redirect()->to('/login');
+        }
+
+        $requestModel = new LabTestRequestModel();
+        $patientModel = new PatientModel();
+        $db = \Config\Database::connect();
+        
+        // Get status filter from query string
+        $statusFilter = $this->request->getGet('status') ?? 'pending';
+        
+        // Get all lab requests with patient and doctor info
+        $allRequests = $requestModel->getAllWithRelations([]);
+        
+        // Filter by status
+        $filteredRequests = [];
+        foreach ($allRequests as $req) {
+            $status = $req['status'] ?? 'pending';
+            
+            if ($statusFilter === 'pending' && $status === 'pending') {
+                $filteredRequests[] = $req;
+            } elseif ($statusFilter === 'sent_to_lab' && $status === 'sent_to_lab') {
+                $filteredRequests[] = $req;
+            } elseif ($statusFilter === 'completed' && $status === 'completed') {
+                $filteredRequests[] = $req;
+            } elseif ($statusFilter === 'all') {
+                $filteredRequests[] = $req;
+            }
+        }
+        
+        // Sort by requested_at DESC
+        usort($filteredRequests, function($a, $b) {
+            $dateA = strtotime($a['requested_at'] ?? $a['created_at'] ?? '1970-01-01');
+            $dateB = strtotime($b['requested_at'] ?? $b['created_at'] ?? '1970-01-01');
+            return $dateB - $dateA;
+        });
+        
+        // Count by status
+        $pendingCount = 0;
+        $sentCount = 0;
+        $completedCount = 0;
+        foreach ($allRequests as $req) {
+            $status = $req['status'] ?? 'pending';
+            if ($status === 'pending') $pendingCount++;
+            elseif ($status === 'sent_to_lab') $sentCount++;
+            elseif ($status === 'completed') $completedCount++;
+        }
+
+        $data = [
+            'title' => 'Lab Requests - HMS',
+            'user_role' => 'nurse',
+            'user_name' => session()->get('name'),
+            'requests' => $filteredRequests,
+            'status_filter' => $statusFilter,
+            'pending_count' => $pendingCount,
+            'sent_count' => $sentCount,
+            'completed_count' => $completedCount,
+        ];
+
+        return view('nurse/lab_requests', $data);
+    }
+
+    public function markLabRequestAsSent()
+    {
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'nurse') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        $this->response->setContentType('application/json');
+
+        $requestId = $this->request->getPost('request_id') ?? $this->request->getJSON(true)['request_id'] ?? null;
+        
+        if (!$requestId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Request ID is required']);
+        }
+
+        try {
+            $requestModel = new LabTestRequestModel();
+            $request = $requestModel->find($requestId);
+            
+            if (!$request) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Lab request not found']);
+            }
+            
+            $currentStatus = $request['status'] ?? 'pending';
+            if ($currentStatus !== 'pending') {
+                return $this->response->setJSON([
+                    'success' => false, 
+                    'message' => 'This request has already been processed. Current status: ' . $currentStatus
+                ]);
+            }
+            
+            // Update status to sent_to_lab
+            $updateData = [
+                'status' => 'sent_to_lab',
+                'sent_by_nurse_id' => session()->get('user_id'),
+                'sent_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ];
+            
+            if ($requestModel->update($requestId, $updateData)) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Lab request marked as sent to lab successfully'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to update request status',
+                    'errors' => $requestModel->errors()
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Error marking lab request as sent: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
     }
 }

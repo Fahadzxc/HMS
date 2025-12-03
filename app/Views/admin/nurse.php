@@ -106,54 +106,54 @@
                         </div>
                     <?php endif; ?>
                     
-                    <!-- Vital Signs Section -->
+                    <!-- Nurse Activities Section -->
                     <?php 
                     $nurseName = $nurse['name'] ?? '';
-                    $vitalSigns = $vitalSignsByNurse[$nurseName] ?? [];
+                    $activities = $nurseActivities[$nurseName] ?? [];
                     ?>
-                    <?php if (!empty($vitalSigns)): ?>
-                        <div class="vital-signs-section">
-                            <div class="vital-signs-header">
-                                <h4>Recent Vital Signs Recorded</h4>
-                                <span class="vital-count-badge"><?= count($vitalSigns) ?> records</span>
+                    <?php if (!empty($activities)): ?>
+                        <div class="nurse-activities-section">
+                            <div class="activities-header">
+                                <h4>All Activities</h4>
+                                <span class="activities-count-badge"><?= count($activities) ?> activities</span>
                             </div>
-                            <div class="vital-signs-table-wrapper">
-                                <table class="vital-signs-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Time</th>
-                                            <th>Patient</th>
-                                            <th>BP</th>
-                                            <th>HR</th>
-                                            <th>Temp</th>
-                                            <th>O2 Sat</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach (array_slice($vitalSigns, 0, 5) as $vital): ?>
-                                            <tr>
-                                                <td><strong><?= !empty($vital['created_at']) ? date('M j, Y', strtotime($vital['created_at'])) : '—' ?></strong></td>
-                                                <td><?= esc($vital['time'] ?? '—') ?></td>
-                                                <td><span class="patient-badge">P<?= str_pad((string)$vital['patient_id'], 3, '0', STR_PAD_LEFT) ?></span></td>
-                                                <td><?= esc($vital['blood_pressure'] ?? '—') ?></td>
-                                                <td><?= esc($vital['heart_rate'] ?? '—') ?></td>
-                                                <td><?= esc($vital['temperature'] ?? '—') ?></td>
-                                                <td><?= esc($vital['oxygen_saturation'] ?? '—') ?></td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                                <?php if (count($vitalSigns) > 5): ?>
-                                    <div class="vital-signs-footer">
-                                        <p class="text-muted">Showing 5 of <?= count($vitalSigns) ?> records</p>
+                            <div class="activities-list-wrapper" style="max-height: 400px; overflow-y: auto;">
+                                <div class="activities-timeline">
+                                    <?php foreach (array_slice($activities, 0, 15) as $activity): ?>
+                                        <?php
+                                        $timestamp = $activity['timestamp'] ?? $activity['data']['created_at'] ?? '';
+                                        $dateFormatted = !empty($timestamp) ? date('M j, Y', strtotime($timestamp)) : '—';
+                                        $timeFormatted = !empty($timestamp) ? date('g:i A', strtotime($timestamp)) : '—';
+                                        $patientId = $activity['patient_id'] ?? $activity['data']['patient_id'] ?? 0;
+                                        $patientName = $activity['data']['patient_name'] ?? 'Patient #' . str_pad((string)$patientId, 3, '0', STR_PAD_LEFT);
+                                        ?>
+                                        <div class="activity-item" style="padding: 0.75rem; border-left: 3px solid #3b82f6; margin-bottom: 0.75rem; background: #f8fafc; border-radius: 4px;">
+                                            <div style="display: flex; align-items: start; gap: 0.75rem;">
+                                                <div style="flex: 1;">
+                                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.25rem;">
+                                                        <strong style="color: #1e293b; font-size: 0.875rem;"><?= esc($activity['title']) ?></strong>
+                                                        <span style="font-size: 0.7rem; color: #64748b;"><?= $dateFormatted ?></span>
+                                                    </div>
+                                                    <p style="margin: 0.25rem 0; color: #475569; font-size: 0.8125rem;"><?= esc($activity['description']) ?></p>
+                                                    <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
+                                                        <span><?= esc($patientName) ?></span>
+                                                        <span><?= $timeFormatted ?></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                                <?php if (count($activities) > 15): ?>
+                                    <div class="activities-footer" style="padding: 0.75rem; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; margin-top: 0.5rem;">
+                                        <p style="margin: 0; font-size: 0.75rem; color: #64748b;">Showing 15 of <?= count($activities) ?> activities</p>
                                     </div>
                                 <?php endif; ?>
                             </div>
                         </div>
                     <?php else: ?>
-                        <div class="no-vital-signs">
-                            <p class="text-muted">No vital signs recorded yet</p>
+                        <div class="no-activities" style="padding: 1.5rem; border-top: 1px solid #f1f5f9; margin-top: 1rem; text-align: center;">
+                            <p style="margin: 0; color: #64748b;">No activities recorded yet</p>
                         </div>
                     <?php endif; ?>
                     

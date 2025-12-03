@@ -18,6 +18,8 @@ class LabTestRequestModel extends Model
         'status',
         'requested_at',
         'assigned_staff_id',
+        'sent_by_nurse_id', // Nurse who marked as sent to lab
+        'sent_at', // Timestamp when nurse marked as sent
         'notes',
         'override_reason',
         'created_at',
@@ -49,9 +51,35 @@ class LabTestRequestModel extends Model
                 $selectFields .= ', staff_user.name AS staff_name';
             }
             
+            // Add nurse name if sent_by_nurse_id column exists
+            // Check by querying information_schema
+            $hasSentByNurseId = false;
+            try {
+                $checkColumn = $db->query("
+                    SELECT COUNT(*) as col_count 
+                    FROM information_schema.COLUMNS 
+                    WHERE TABLE_SCHEMA = DATABASE() 
+                    AND TABLE_NAME = 'lab_test_requests' 
+                    AND COLUMN_NAME = 'sent_by_nurse_id'
+                ")->getRow();
+                $hasSentByNurseId = ($checkColumn && $checkColumn->col_count > 0);
+            } catch (\Exception $e) {
+                // If we can't check, assume column doesn't exist
+                $hasSentByNurseId = false;
+            }
+            
+            if ($hasSentByNurseId) {
+                $selectFields .= ', nurse_user.name AS sent_by_nurse_name';
+            }
+            
             $builder = $this->select($selectFields);
             $builder->join('patients', 'patients.id = lab_test_requests.patient_id', 'left');
             $builder->join('users AS doctors', 'doctors.id = lab_test_requests.doctor_id', 'left');
+            
+            // Only join nurse if column exists
+            if ($hasSentByNurseId) {
+                $builder->join('users AS nurse_user', 'nurse_user.id = lab_test_requests.sent_by_nurse_id', 'left');
+            }
             
             // Only join lab_staff if table exists
             if ($db->tableExists('lab_staff')) {
@@ -61,6 +89,10 @@ class LabTestRequestModel extends Model
 
             if (!empty($filters['status'])) {
                 $builder->where('lab_test_requests.status', $filters['status']);
+            }
+            
+            if (!empty($filters['id'])) {
+                $builder->where('lab_test_requests.id', $filters['id']);
             }
 
             if (!empty($filters['priority'])) {
@@ -73,6 +105,11 @@ class LabTestRequestModel extends Model
 
             if (!empty($filters['date_to'])) {
                 $builder->where('lab_test_requests.requested_at <=', $filters['date_to']);
+            }
+            
+            // Filter for outpatient only (admission_id IS NULL)
+            if (isset($filters['outpatient_only']) && $filters['outpatient_only'] === true) {
+                $builder->where('lab_test_requests.admission_id IS NULL', null, false);
             }
 
             return $builder->orderBy('lab_test_requests.requested_at', 'DESC')->findAll();

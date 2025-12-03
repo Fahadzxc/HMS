@@ -523,7 +523,25 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Auto-open modal if request_id is in URL
-    <?php if (!empty($open_request_id)): ?>
+    <?php if (!empty($open_request_id) && !empty($open_request_data)): ?>
+    setTimeout(function() {
+        const requestData = <?= json_encode($open_request_data) ?>;
+        openResultModal(
+            <?= $open_request_id ?>,
+            requestData.test_type || null,
+            requestData.patient_name || null,
+            requestData.requested_at ? new Date(requestData.requested_at).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            }) : null
+        );
+    }, 500);
+    <?php elseif (!empty($open_request_id)): ?>
+    // Fallback: try to get data from button if available
     setTimeout(function() {
         openResultModal(<?= $open_request_id ?>);
     }, 500);

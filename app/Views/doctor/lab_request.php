@@ -183,10 +183,21 @@
                             
                             $statusClass = match($status) {
                                 'pending' => 'bg-warning',
+                                'sent_to_lab' => 'bg-primary', // Sent to lab by nurse
                                 'in_progress' => 'bg-info',
                                 'completed' => 'bg-success',
                                 'cancelled' => 'bg-secondary',
                                 default => 'bg-secondary'
+                            };
+                            
+                            // Format status text for display
+                            $statusText = match($status) {
+                                'pending' => 'Pending (Nurse Review)',
+                                'sent_to_lab' => 'Sent to Lab',
+                                'in_progress' => 'In Progress',
+                                'completed' => 'Completed',
+                                'cancelled' => 'Cancelled',
+                                default => ucfirst(str_replace('_', ' ', $status))
                             };
                             ?>
                             <tr>
@@ -210,7 +221,14 @@
                                     <span class="badge <?= $priorityClass ?>"><?= ucfirst($priority) ?></span>
                                 </td>
                                 <td>
-                                    <span class="badge <?= $statusClass ?>"><?= ucfirst(str_replace('_', ' ', $status)) ?></span>
+                                    <span class="badge <?= $statusClass ?>" title="<?= esc($statusText) ?>">
+                                        <?= esc($statusText) ?>
+                                    </span>
+                                    <?php if ($status === 'sent_to_lab' && !empty($request['sent_at'])): ?>
+                                        <br><small style="color: #666; font-size: 10px;">
+                                            Sent: <?= date('M j, g:i A', strtotime($request['sent_at'])) ?>
+                                        </small>
+                                    <?php endif; ?>
                                 </td>
                                 <td><?= !empty($request['requested_at']) ? date('M j, Y g:i A', strtotime($request['requested_at'])) : '—' ?></td>
                                 <?php $latestResult = $request['latest_result'] ?? null; ?>

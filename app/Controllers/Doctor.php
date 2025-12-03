@@ -872,6 +872,53 @@ class Doctor extends Controller
         $this->ensureMedicationsTable();
         $medications = $medModel->listOptions();
 
+        // Get inventory/stock data for medications
+        $inventoryByMedId = [];
+        $inventoryByName = [];
+        
+        if ($db->tableExists('pharmacy_inventory')) {
+            $inventoryRaw = $db->table('pharmacy_inventory')
+                ->orderBy('name', 'ASC')
+                ->get()
+                ->getResultArray();
+            
+            foreach ($inventoryRaw as $item) {
+                if (!empty($item['medication_id'])) {
+                    $inventoryByMedId[$item['medication_id']] = $item;
+                }
+                $inventoryByName[strtolower(trim($item['name']))] = $item;
+            }
+        }
+
+        // Attach stock information to each medication
+        foreach ($medications as &$med) {
+            $medId = $med['id'];
+            $medName = strtolower(trim($med['name']));
+            
+            $invItem = null;
+            if (isset($inventoryByMedId[$medId])) {
+                $invItem = $inventoryByMedId[$medId];
+            } elseif (isset($inventoryByName[$medName])) {
+                $invItem = $inventoryByName[$medName];
+            }
+            
+            $stockQty = $invItem ? (int)($invItem['stock_quantity'] ?? 0) : 0;
+            $reorderLevel = $invItem ? (int)($invItem['reorder_level'] ?? 10) : 10;
+            
+            // Determine stock status
+            $stockStatus = 'ok';
+            if ($stockQty <= 0) {
+                $stockStatus = 'out_of_stock';
+            } elseif ($stockQty < $reorderLevel) {
+                $stockStatus = 'low_stock';
+            }
+            
+            $med['stock_quantity'] = $stockQty;
+            $med['reorder_level'] = $reorderLevel;
+            $med['stock_status'] = $stockStatus;
+        }
+        unset($med);
+
         $data = [
             'title' => 'Prescriptions - HMS',
             'user_role' => 'doctor',
@@ -1266,17 +1313,35 @@ class Doctor extends Controller
             $patient = $patientModel->find($patientId);
             
             if ($patient && strtolower($patient['patient_type'] ?? '') === 'inpatient') {
-                // For inpatients, get the latest appointment as admission reference
-                $appointmentModel = new AppointmentModel();
-                $latestAppointment = $appointmentModel->where('patient_id', $patientId)
-                    ->where('status !=', 'cancelled')
-                    ->orderBy('appointment_date', 'DESC')
-                    ->orderBy('created_at', 'DESC')
-                    ->first();
+                // For inpatients, get the active admission from admissions table
+                $db = \Config\Database::connect();
+                if ($db->tableExists('admissions')) {
+                    $activeAdmission = $db->table('admissions')
+                        ->where('patient_id', $patientId)
+                        ->where('status', 'Admitted') // Only active admissions
+                        ->orderBy('admission_date', 'DESC')
+                        ->orderBy('created_at', 'DESC')
+                        ->get()
+                        ->getRowArray();
+                    
+                    // Use admission id for inpatients
+                    if ($activeAdmission && !empty($activeAdmission['id'])) {
+                        $admissionId = $activeAdmission['id'];
+                    }
+                }
                 
-                // Use appointment_id as admission_id for inpatients
-                if ($latestAppointment && !empty($latestAppointment['id'])) {
-                    $admissionId = $latestAppointment['id'];
+                // Fallback: if no active admission found, try appointments (for backward compatibility)
+                if (empty($admissionId)) {
+                    $appointmentModel = new AppointmentModel();
+                    $latestAppointment = $appointmentModel->where('patient_id', $patientId)
+                        ->where('status !=', 'cancelled')
+                        ->orderBy('appointment_date', 'DESC')
+                        ->orderBy('created_at', 'DESC')
+                        ->first();
+                    
+                    if ($latestAppointment && !empty($latestAppointment['id'])) {
+                        $admissionId = $latestAppointment['id'];
+                    }
                 }
             }
             

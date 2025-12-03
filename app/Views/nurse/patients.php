@@ -727,6 +727,12 @@ function markReady(admissionId, patientName) {
 }
 
 function finalDischarge(admissionId, patientName) {
+    // Check if button is disabled (not fully paid)
+    const btn = event.target;
+    if (btn.disabled) {
+        alert('⚠️ Cannot discharge patient. Payment is required first.\n\nPlease ensure all bills are fully paid before discharging.');
+        return;
+    }
     document.getElementById('dischargeAdmissionId').value = admissionId;
     document.getElementById('dischargePatientName').textContent = patientName;
     document.getElementById('dischargeModal').style.display = 'block';

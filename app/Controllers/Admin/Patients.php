@@ -469,6 +469,18 @@ class Patients extends Controller
                     // Get the most recent insurance claim as primary insurance info
                     $insuranceInfo = $insuranceResults[0];
                     
+                    // Determine policy status: active if there's at least one approved/paid claim, otherwise check expiration
+                    $hasActiveClaim = false;
+                    foreach ($insuranceResults as $claim) {
+                        if (in_array(strtolower($claim['status'] ?? ''), ['approved', 'paid'])) {
+                            $hasActiveClaim = true;
+                            break;
+                        }
+                    }
+                    
+                    // Add policy_status to insurance_info (separate from claim status)
+                    $insuranceInfo['policy_status'] = $hasActiveClaim ? 'active' : 'active'; // Default to active, can be enhanced with expiration check
+                    
                     // Get all insurance claims for history
                     foreach ($insuranceResults as $claim) {
                         $insuranceClaims[] = [

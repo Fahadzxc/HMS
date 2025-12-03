@@ -20,19 +20,88 @@ class Lab extends Controller
 		
 		$metrics = $requestModel->getDashboardMetrics();
 		
-		// Get pending test requests (limit to 10 most recent)
-		$pendingRequests = $requestModel->getAllWithRelations(['status' => 'pending']);
-		$pendingRequests = array_slice($pendingRequests, 0, 10);
+		// Get pending test requests - both 'sent_to_lab' and 'pending' OUTPATIENT only (limit to 10 most recent)
+		// Inpatient requests with status 'pending' should NOT show until nurse marks as 'sent_to_lab'
+		$pendingRequests = [];
+		try {
+			$sentToLab = $requestModel->getAllWithRelations(['status' => 'sent_to_lab']);
+			
+			// Get pending requests - OUTPATIENT only (admission_id IS NULL)
+			$pendingOutpatient = $requestModel->getAllWithRelations([
+				'status' => 'pending',
+				'outpatient_only' => true
+			]);
+			
+			$pendingRequests = array_merge($sentToLab, $pendingOutpatient);
+			// Sort by requested_at DESC
+			usort($pendingRequests, function($a, $b) {
+				$dateA = strtotime($a['requested_at'] ?? $a['created_at'] ?? '1970-01-01');
+				$dateB = strtotime($b['requested_at'] ?? $b['created_at'] ?? '1970-01-01');
+				return $dateB - $dateA;
+			});
+			$pendingRequests = array_slice($pendingRequests, 0, 10);
+		} catch (\Exception $e) {
+			log_message('error', 'Error getting pending requests in dashboard: ' . $e->getMessage());
+			// Fallback to just sent_to_lab and pending outpatient
+			try {
+				$sentToLab = $requestModel->getAllWithRelations(['status' => 'sent_to_lab']);
+				$pendingOutpatient = $requestModel->getAllWithRelations([
+					'status' => 'pending',
+					'outpatient_only' => true
+				]);
+				$pendingRequests = array_merge($sentToLab, $pendingOutpatient);
+				$pendingRequests = array_slice($pendingRequests, 0, 10);
+			} catch (\Exception $e2) {
+				log_message('error', 'Error getting pending requests fallback: ' . $e2->getMessage());
+				$pendingRequests = [];
+			}
+		}
 		
 		// Get recent test results (limit to 10 most recent)
-		$recentResults = $resultModel->getAllWithRelations([]);
-		$recentResults = array_slice($recentResults, 0, 10);
+		$recentResults = [];
+		try {
+			$recentResults = $resultModel->getAllWithRelations([]);
+			$recentResults = array_slice($recentResults, 0, 10);
+		} catch (\Exception $e) {
+			log_message('error', 'Error getting recent results: ' . $e->getMessage());
+			$recentResults = [];
+		}
 		
-		// Count urgent tests (high or critical priority)
-		$urgentCount = $requestModel->where('priority', 'high')
-			->orWhere('priority', 'critical')
-			->where('status', 'pending')
-			->countAllResults();
+		// Count urgent tests (high or critical priority) - sent_to_lab and pending OUTPATIENT only
+		$urgentCount = 0;
+		try {
+			// Count sent_to_lab with high/critical priority
+			$sentToLabUrgent = $requestModel->where('status', 'sent_to_lab')
+				->groupStart()
+				->where('priority', 'high')
+				->orWhere('priority', 'critical')
+				->groupEnd()
+				->countAllResults();
+			
+			// Count pending OUTPATIENT only (admission_id IS NULL) with high/critical priority
+			$pendingOutpatientUrgent = $requestModel->where('status', 'pending')
+				->where('admission_id IS NULL', null, false)
+				->groupStart()
+				->where('priority', 'high')
+				->orWhere('priority', 'critical')
+				->groupEnd()
+				->countAllResults();
+			
+			$urgentCount = $sentToLabUrgent + $pendingOutpatientUrgent;
+		} catch (\Exception $e) {
+			log_message('error', 'Error counting urgent tests: ' . $e->getMessage());
+			// Fallback
+			try {
+				$urgentCount = $requestModel->where('status', 'sent_to_lab')
+					->groupStart()
+					->where('priority', 'high')
+					->orWhere('priority', 'critical')
+					->groupEnd()
+					->countAllResults();
+			} catch (\Exception $e2) {
+				$urgentCount = 0;
+			}
+		}
 
 		$data = [
 			'title' => 'Laboratory Dashboard - HMS',
@@ -56,50 +125,117 @@ class Lab extends Controller
 		}
 
 		try {
-		$requestModel = new LabTestRequestModel();
-		$db = \Config\Database::connect();
-		
-		// Get filters from query string
-		$filters = [
-			'status' => $this->request->getGet('status'),
-			'priority' => $this->request->getGet('priority'),
-		];
-
-		// Try to get requests with relations, fallback to simple query if joins fail
-		$requests = [];
-		try {
-			$requests = $requestModel->getAllWithRelations($filters);
-		} catch (\Exception $e) {
-			log_message('error', 'Error getting requests with relations: ' . $e->getMessage());
-			// Fallback to simple query
-			$patientModel = new \App\Models\PatientModel();
-			$builder = $requestModel;
-			if (!empty($filters['status'])) {
-				$builder = $builder->where('status', $filters['status']);
-			}
-			if (!empty($filters['priority'])) {
-				$builder = $builder->where('priority', $filters['priority']);
-			}
-			$requestsRaw = $builder->orderBy('requested_at', 'DESC')->findAll();
+			$requestModel = new LabTestRequestModel();
+			$db = \Config\Database::connect();
 			
-			// Manually add patient and doctor names
-			foreach ($requestsRaw as $req) {
-				$patient = $patientModel->find($req['patient_id']);
-				$doctor = $db->table('users')->where('id', $req['doctor_id'])->get()->getRowArray();
-				
-				$req['patient_name'] = $patient['full_name'] ?? 'N/A';
-				$req['doctor_name'] = $doctor['name'] ?? 'N/A';
-				$req['staff_name'] = null;
-				
-				$requests[] = $req;
-			}
-		}
+			// Get filters from query string
+			$filters = [
+				'status' => $this->request->getGet('status'),
+				'priority' => $this->request->getGet('priority'),
+			];
 
+			// Lab can see:
+			// 1. 'sent_to_lab' (from nurse - can be inpatient or outpatient)
+			// 2. 'pending' OUTPATIENT only (admission_id IS NULL)
+			// Inpatient requests with status 'pending' should NOT show until nurse marks as 'sent_to_lab'
+			// If no status filter, show both
+			if (empty($filters['status'])) {
+				// Get requests with status 'sent_to_lab' OR 'pending' (outpatient only)
+				$requests = [];
+				try {
+					$sentToLab = $requestModel->getAllWithRelations(['status' => 'sent_to_lab']);
+					
+			// Get pending requests - OUTPATIENT only (admission_id IS NULL)
+			$pendingOutpatient = $requestModel->getAllWithRelations([
+				'status' => 'pending',
+				'outpatient_only' => true
+			]);
+					
+					$requests = array_merge($sentToLab, $pendingOutpatient);
+					// Sort by requested_at DESC
+					usort($requests, function($a, $b) {
+						$dateA = strtotime($a['requested_at'] ?? $a['created_at'] ?? '1970-01-01');
+						$dateB = strtotime($b['requested_at'] ?? $b['created_at'] ?? '1970-01-01');
+						return $dateB - $dateA;
+					});
+				} catch (\Exception $e) {
+					log_message('error', 'Error getting lab requests: ' . $e->getMessage());
+					$requests = [];
+				}
+			} else {
+				// Try to get requests with relations, fallback to simple query if joins fail
+				$requests = [];
+				try {
+					$allRequests = $requestModel->getAllWithRelations($filters);
+					
+					// Filter out inpatient requests with status 'pending' (they should go through nurse first)
+					// Only show if status is 'sent_to_lab' or if it's outpatient (admission_id IS NULL)
+					$requests = array_filter($allRequests, function($req) {
+						$status = $req['status'] ?? 'pending';
+						$hasAdmission = !empty($req['admission_id']);
+						
+						// If status is 'pending' and has admission_id (inpatient), hide it (nurse hasn't sent it yet)
+						if ($status === 'pending' && $hasAdmission) {
+							return false;
+						}
+						
+						// Show all other requests
+						return true;
+					});
+					
+					// Re-index array after filtering
+					$requests = array_values($requests);
+				} catch (\Exception $e) {
+					log_message('error', 'Error getting requests with relations: ' . $e->getMessage());
+					// Fallback to simple query
+					$patientModel = new \App\Models\PatientModel();
+					$builder = $requestModel;
+					if (!empty($filters['status'])) {
+						$builder = $builder->where('status', $filters['status']);
+					}
+					if (!empty($filters['priority'])) {
+						$builder = $builder->where('priority', $filters['priority']);
+					}
+					$requestsRaw = $builder->orderBy('requested_at', 'DESC')->findAll();
+					
+					// Manually add patient and doctor names
+					foreach ($requestsRaw as $req) {
+						$patient = $patientModel->find($req['patient_id']);
+						$doctor = $db->table('users')->where('id', $req['doctor_id'])->get()->getRowArray();
+						
+						$req['patient_name'] = $patient['full_name'] ?? 'N/A';
+						$req['doctor_name'] = $doctor['name'] ?? 'N/A';
+						$req['staff_name'] = null;
+						
+						$requests[] = $req;
+					}
+				}
+			}
+
+		// Count requests by status for filter tabs
+		$sentToLabCount = 0;
+		$completedCount = 0;
+		$pendingCount = 0;
+		$inProgressCount = 0;
+		foreach ($requests as $req) {
+			$reqStatus = $req['status'] ?? 'pending';
+			if ($reqStatus === 'sent_to_lab') $sentToLabCount++;
+			elseif ($reqStatus === 'completed') $completedCount++;
+			elseif ($reqStatus === 'pending') $pendingCount++;
+			elseif ($reqStatus === 'in_progress') $inProgressCount++;
+		}
+		
 		$data = [
 			'title' => 'Test Requests - HMS',
 			'user_role' => 'lab',
 			'user_name' => session()->get('name'),
 			'requests' => $requests,
+			'status_filter' => $filters['status'] ?? '',
+			'totalRequests' => count($requests),
+			'pendingCount' => $pendingCount,
+			'inProgressCount' => $inProgressCount,
+			'sentToLabCount' => $sentToLabCount,
+			'completedCount' => $completedCount,
 		];
 
 			return view('lab/requests', $data);
@@ -234,6 +370,26 @@ class Lab extends Controller
 		// Get request_id from URL if coming from "Start Test"
 		$openRequestId = $this->request->getGet('request_id');
 		$action = $this->request->getGet('action');
+		
+		// Get full request details if opening from URL
+		$openRequestData = null;
+		if ($action === 'start' && $openRequestId) {
+			$allRequests = array_merge($pendingRequests, $inProgressRequests);
+			foreach ($allRequests as $req) {
+				if ((int)($req['id'] ?? 0) === (int)$openRequestId) {
+					$openRequestData = $req;
+					break;
+				}
+			}
+			
+			// If not found in pending/in_progress, try to get it directly
+			if (!$openRequestData) {
+				$directRequest = $requestModel->getAllWithRelations(['id' => $openRequestId]);
+				if (!empty($directRequest)) {
+					$openRequestData = $directRequest[0];
+				}
+			}
+		}
 
 		$data = [
 			'title' => 'Test Results - HMS',
@@ -242,6 +398,7 @@ class Lab extends Controller
 			'results' => $results,
 			'pending_requests' => $pendingRequests,
 			'open_request_id' => ($action === 'start' && $openRequestId) ? $openRequestId : null,
+			'open_request_data' => $openRequestData,
 		];
 
 		return view('lab/results', $data);
