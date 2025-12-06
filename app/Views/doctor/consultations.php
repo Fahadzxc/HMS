@@ -62,7 +62,6 @@
                         <th>Type</th>
                         <th>Status</th>
                         <th>Notes</th>
-                        <th>Prescription</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -112,15 +111,6 @@
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <?php if (!empty($consultation['prescription_id'])): ?>
-                                        <span class="badge badge-success" style="padding: 0.35rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: #dcfce7; color: #15803d;">
-                                            <?= ucfirst(esc($consultation['prescription_status'] ?? 'prescribed')) ?>
-                                        </span>
-                                    <?php else: ?>
-                                        <span style="color: #94a3b8;">No prescription</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
                                     <a href="<?= base_url('doctor/consultations/view/' . $consultation['id']) ?>" style="color: #3b82f6; text-decoration: none; font-size: 0.9rem; font-weight: 500; margin-right: 1rem;">View</a>
                                     <?php if (!empty($consultation['prescription_id'])): ?>
                                         <a href="<?= base_url('doctor/prescriptions/view/' . $consultation['prescription_id']) ?>" style="color: #10b981; text-decoration: none; font-size: 0.9rem; font-weight: 500;">Prescription</a>
@@ -130,7 +120,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="7" style="padding: 2rem; text-align: center; color: #64748b;">
+                            <td colspan="6" style="padding: 2rem; text-align: center; color: #64748b;">
                                 No consultations found
                             </td>
                         </tr>

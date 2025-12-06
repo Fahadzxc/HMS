@@ -25,12 +25,14 @@ class Doctor extends Controller
 		$patientModel = new \App\Models\PatientModel();
 		$db = \Config\Database::connect();
 
-		// Get today's appointments
+		// Get today's appointments (exclude lab test appointments)
 		$today = date('Y-m-d');
 		$todayAppointments = $appointmentModel
 			->where('doctor_id', $doctorId)
 			->where('appointment_date', $today)
 			->where('status !=', 'cancelled')
+			->where('appointment_type !=', 'laboratory_test') // Exclude lab tests
+			->where('doctor_id IS NOT NULL', null, false) // Ensure doctor_id is not null
 			->orderBy('appointment_time', 'ASC')
 			->findAll();
 
@@ -71,13 +73,15 @@ class Doctor extends Controller
 		// Count today's appointments
 		$todayAppointmentsCount = count($todayAppointments);
 
-		// Get recent appointments (past week, excluding today)
+		// Get recent appointments (past week, excluding today) - exclude lab tests
 		$weekAgo = date('Y-m-d', strtotime('-7 days'));
 		$recentAppointmentsRaw = $appointmentModel
 			->where('doctor_id', $doctorId)
 			->where('appointment_date <', $today)
 			->where('appointment_date >=', $weekAgo)
 			->where('status !=', 'cancelled')
+			->where('appointment_type !=', 'laboratory_test') // Exclude lab tests
+			->where('doctor_id IS NOT NULL', null, false) // Ensure doctor_id is not null
 			->orderBy('appointment_date', 'DESC')
 			->orderBy('appointment_time', 'DESC')
 			->limit(10)
@@ -306,10 +310,120 @@ class Doctor extends Controller
 
 		$appointmentModel = new \App\Models\AppointmentModel();
 		$doctorId = session()->get('user_id');
+		$db = \Config\Database::connect();
 		
-		// Get doctor's appointments
-		$todaysAppointments = $appointmentModel->getAppointmentsByDoctor($doctorId, date('Y-m-d'));
-		$upcomingAppointments = $appointmentModel->getUpcomingAppointmentsByDoctor($doctorId);
+		// Get doctor's appointments (exclude lab test appointments)
+		$todaysAppointments = $appointmentModel
+			->where('doctor_id', $doctorId)
+			->where('appointment_date', date('Y-m-d'))
+			->where('appointment_type !=', 'laboratory_test')
+			->where('doctor_id IS NOT NULL', null, false)
+			->where('status !=', 'cancelled')
+			->orderBy('appointment_time', 'ASC')
+			->findAll();
+		
+		// Get upcoming appointments (exclude lab tests)
+		$upcomingAppointments = $appointmentModel
+			->where('doctor_id', $doctorId)
+			->where('appointment_date >', date('Y-m-d'))
+			->where('appointment_type !=', 'laboratory_test')
+			->where('doctor_id IS NOT NULL', null, false)
+			->where('status !=', 'cancelled')
+			->orderBy('appointment_date', 'ASC')
+			->orderBy('appointment_time', 'ASC')
+			->limit(50)
+			->findAll();
+		
+		// Check payment status and auto-update appointment status if bill is paid
+		foreach ($todaysAppointments as &$appointment) {
+			if ($appointment['status'] !== 'completed' && !empty($appointment['id'])) {
+				$appointmentDate = $appointment['appointment_date'] ?? date('Y-m-d');
+				$patientId = $appointment['patient_id'] ?? null;
+				
+				// Check if there's a paid bill linked to this appointment
+				$paidBill = $db->table('bills')
+					->where('appointment_id', $appointment['id'])
+					->where('status', 'paid')
+					->get()
+					->getRowArray();
+				
+				// If no direct link, check by patient_id and date
+				if (!$paidBill && $patientId && $appointmentDate) {
+					$startDate = date('Y-m-d', strtotime($appointmentDate . ' -7 days'));
+					$endDate = date('Y-m-d', strtotime($appointmentDate . ' +1 day'));
+					
+					$paidBill = $db->table('bills')
+						->where('patient_id', $patientId)
+						->where('status', 'paid')
+						->where('created_at >=', $startDate . ' 00:00:00')
+						->where('created_at <=', $endDate . ' 23:59:59')
+						->orderBy('created_at', 'DESC')
+						->get()
+						->getRowArray();
+					
+					// If found, link the bill to this appointment
+					if ($paidBill && empty($paidBill['appointment_id'])) {
+						$db->table('bills')
+							->where('id', $paidBill['id'])
+							->update(['appointment_id' => $appointment['id']]);
+					}
+				}
+				
+				if ($paidBill) {
+					// Auto-update appointment status to completed
+					$appointmentModel->update($appointment['id'], [
+						'status' => 'completed',
+						'updated_at' => date('Y-m-d H:i:s')
+					]);
+					$appointment['status'] = 'completed';
+				}
+			}
+		}
+		
+		foreach ($upcomingAppointments as &$appointment) {
+			if ($appointment['status'] !== 'completed' && !empty($appointment['id'])) {
+				$appointmentDate = $appointment['appointment_date'] ?? null;
+				$patientId = $appointment['patient_id'] ?? null;
+				
+				// Check if there's a paid bill linked to this appointment
+				$paidBill = $db->table('bills')
+					->where('appointment_id', $appointment['id'])
+					->where('status', 'paid')
+					->get()
+					->getRowArray();
+				
+				// If no direct link, check by patient_id and date
+				if (!$paidBill && $patientId && $appointmentDate) {
+					$startDate = date('Y-m-d', strtotime($appointmentDate . ' -7 days'));
+					$endDate = date('Y-m-d', strtotime($appointmentDate . ' +1 day'));
+					
+					$paidBill = $db->table('bills')
+						->where('patient_id', $patientId)
+						->where('status', 'paid')
+						->where('created_at >=', $startDate . ' 00:00:00')
+						->where('created_at <=', $endDate . ' 23:59:59')
+						->orderBy('created_at', 'DESC')
+						->get()
+						->getRowArray();
+					
+					// If found, link the bill to this appointment
+					if ($paidBill && empty($paidBill['appointment_id'])) {
+						$db->table('bills')
+							->where('id', $paidBill['id'])
+							->update(['appointment_id' => $appointment['id']]);
+					}
+				}
+				
+				if ($paidBill) {
+					// Auto-update appointment status to completed
+					$appointmentModel->update($appointment['id'], [
+						'status' => 'completed',
+						'updated_at' => date('Y-m-d H:i:s')
+					]);
+					$appointment['status'] = 'completed';
+				}
+			}
+		}
 		
 		$data = [
 			'title' => 'My Appointments - HMS',
@@ -341,10 +455,13 @@ class Doctor extends Controller
 
 		// Build query for consultations (show all except cancelled and no-show)
 		// Include completed, confirmed, and scheduled appointments
+		// Exclude lab test appointments
 		$builder = $appointmentModel
 			->where('doctor_id', $doctorId)
 			->where('status !=', 'cancelled')
 			->where('status !=', 'no-show')
+			->where('appointment_type !=', 'laboratory_test') // Exclude lab tests
+			->where('doctor_id IS NOT NULL', null, false) // Ensure doctor_id is not null
 			->orderBy('appointment_date', 'DESC')
 			->orderBy('appointment_time', 'DESC');
 
@@ -1002,6 +1119,20 @@ class Doctor extends Controller
         }
         
         $prescriptionId = $rxModel->getInsertID();
+        
+        // Get the saved prescription for follow-up creation
+        $savedPrescription = $rxModel->find($prescriptionId);
+        
+        // For outpatients: Deduct stock immediately since prescription is printed/given right away
+        // For inpatients: Stock will be deducted when nurse marks as given
+        if ($isOutpatient && $savedPrescription) {
+            $this->deductPrescriptionStock($savedPrescription, $items);
+        }
+        
+        // Check if any medication requires follow-up and create appointment immediately
+        if ($savedPrescription) {
+            $this->createFollowUpAppointment($savedPrescription);
+        }
 
         return $this->response->setJSON([
             'success' => true, 
@@ -1009,6 +1140,369 @@ class Doctor extends Controller
             'prescription_id' => $prescriptionId,
             'message' => $isOutpatient ? 'Prescription saved! Ready to print.' : 'Prescription saved and sent to nurse station.'
         ]);
+    }
+    
+    /**
+     * Deduct medication stock from pharmacy inventory for outpatient prescriptions
+     */
+    private function deductPrescriptionStock($prescription, $items)
+    {
+        try {
+            $db = \Config\Database::connect();
+            
+            if (!$db->tableExists('pharmacy_inventory')) {
+                log_message('info', "pharmacy_inventory table does not exist, skipping stock deduction");
+                return;
+            }
+            
+            // Check if stock was already deducted for this prescription
+            $notes = $prescription['notes'] ?? '';
+            $stockAlreadyDeducted = strpos($notes, 'STOCK_DEDUCTED:') !== false;
+            
+            if ($stockAlreadyDeducted) {
+                log_message('info', "Stock already deducted for prescription #{$prescription['id']}");
+                return;
+            }
+            
+            log_message('info', "Starting stock deduction for outpatient prescription #{$prescription['id']}");
+            $medicationModel = new \App\Models\MedicationModel();
+            $deductionNotes = [];
+            
+            foreach ($items as $item) {
+                $medicineName = $item['name'] ?? '';
+                
+                if (empty($medicineName)) {
+                    continue;
+                }
+                
+                // Get quantity from item
+                $quantity = 0;
+                if (isset($item['quantity']) && $item['quantity'] > 0) {
+                    $quantity = (int)$item['quantity'];
+                } else {
+                    // Try to calculate quantity from duration and frequency
+                    $durationStr = $item['duration'] ?? '';
+                    $frequency = $item['frequency'] ?? '';
+                    
+                    if (!empty($durationStr)) {
+                        preg_match('/(\d+)/', $durationStr, $matches);
+                        if (!empty($matches[1])) {
+                            $durationDays = (int)$matches[1];
+                            
+                            // Estimate quantity based on frequency
+                            if (strpos(strtolower($frequency), '2x') !== false || 
+                                strpos(strtolower($frequency), 'twice') !== false ||
+                                strpos(strtolower($frequency), '2') !== false) {
+                                $quantity = $durationDays * 2;
+                            } elseif (strpos(strtolower($frequency), '3x') !== false || 
+                                     strpos(strtolower($frequency), 'thrice') !== false ||
+                                     strpos(strtolower($frequency), '3') !== false) {
+                                $quantity = $durationDays * 3;
+                            } elseif (strpos(strtolower($frequency), 'every 6 hours') !== false) {
+                                $quantity = $durationDays * 4; // 4 times per day
+                            } elseif (strpos(strtolower($frequency), 'every 8 hours') !== false) {
+                                $quantity = $durationDays * 3; // 3 times per day
+                            } else {
+                                $quantity = $durationDays; // Once a day (default)
+                            }
+                        }
+                    }
+                    
+                    // If still no quantity, default to 1
+                    if ($quantity <= 0) {
+                        $quantity = 1;
+                    }
+                }
+                
+                log_message('info', "Processing stock deduction for: {$medicineName}, Quantity: {$quantity}");
+                
+                // Extract base medication name
+                $baseMedicineName = preg_replace('/\s+\d+.*?(mg|ml|g|tablet|capsule).*$/i', '', $medicineName);
+                $baseMedicineName = trim($baseMedicineName);
+                
+                // Try to find medication by exact name first
+                $medication = $medicationModel->where('name', $medicineName)->first();
+                
+                // If not found, try base name
+                if (!$medication && !empty($baseMedicineName)) {
+                    $medication = $medicationModel->where('name', $baseMedicineName)->first();
+                }
+                
+                // If still not found, try LIKE match
+                if (!$medication && !empty($baseMedicineName)) {
+                    $medication = $medicationModel->like('name', $baseMedicineName, 'both')->first();
+                }
+                
+                $inventoryRecord = null;
+                
+                // Try to find inventory record by medication_id first
+                if ($medication && !empty($medication['id'])) {
+                    $inventoryRecord = $db->table('pharmacy_inventory')
+                        ->where('medication_id', $medication['id'])
+                        ->get()
+                        ->getRowArray();
+                }
+                
+                // If not found by medication_id, try by exact name match
+                if (!$inventoryRecord) {
+                    $inventoryRecord = $db->table('pharmacy_inventory')
+                        ->where('name', $medicineName)
+                        ->get()
+                        ->getRowArray();
+                }
+                
+                // If still not found, try base name match
+                if (!$inventoryRecord && !empty($baseMedicineName)) {
+                    $inventoryRecord = $db->table('pharmacy_inventory')
+                        ->where('name', $baseMedicineName)
+                        ->get()
+                        ->getRowArray();
+                }
+                
+                // If still not found, try LIKE match
+                if (!$inventoryRecord && !empty($baseMedicineName)) {
+                    $inventoryRecord = $db->table('pharmacy_inventory')
+                        ->like('name', $baseMedicineName, 'both')
+                        ->get()
+                        ->getRowArray();
+                }
+                
+                // Last resort: Get all inventory and find by case-insensitive partial match
+                if (!$inventoryRecord && !empty($baseMedicineName)) {
+                    $allInventory = $db->table('pharmacy_inventory')
+                        ->select('id, name, medication_id, stock_quantity')
+                        ->get()
+                        ->getResultArray();
+                    
+                    foreach ($allInventory as $inv) {
+                        $invName = strtolower(trim($inv['name'] ?? ''));
+                        $searchName = strtolower($baseMedicineName);
+                        if (strpos($invName, $searchName) !== false || strpos($searchName, $invName) !== false) {
+                            $inventoryRecord = $inv;
+                            break;
+                        }
+                    }
+                }
+                
+                if ($inventoryRecord) {
+                    $currentStock = (int)($inventoryRecord['stock_quantity'] ?? 0);
+                    $newStock = max(0, $currentStock - $quantity); // Don't go below 0
+                    
+                    log_message('info', "Stock update: {$medicineName} - Current: {$currentStock}, Deduct: {$quantity}, New: {$newStock}");
+                    
+                    // Update stock
+                    $updateResult = $db->table('pharmacy_inventory')
+                        ->where('id', $inventoryRecord['id'])
+                        ->update([
+                            'stock_quantity' => $newStock,
+                            'updated_at' => date('Y-m-d H:i:s'),
+                        ]);
+                    
+                    if ($updateResult) {
+                        $deductionNotes[] = "STOCK_DEDUCTED:" . date('Y-m-d H:i:s') . ':' . $medicineName . ':' . $quantity;
+                        
+                        // Log stock movement
+                        if ($db->tableExists('pharmacy_stock_movements')) {
+                            $db->table('pharmacy_stock_movements')->insert([
+                                'medication_id' => $medication['id'] ?? null,
+                                'medicine_name' => $medicineName,
+                                'movement_type' => 'dispense',
+                                'quantity_change' => -$quantity,
+                                'previous_stock' => $currentStock,
+                                'new_stock' => $newStock,
+                                'action_by' => session()->get('user_id'),
+                                'notes' => 'Given to patient via prescription RX#' . str_pad((string)$prescription['id'], 3, '0', STR_PAD_LEFT) . ' by doctor (outpatient)',
+                                'created_at' => date('Y-m-d H:i:s'),
+                            ]);
+                        }
+                    }
+                } else {
+                    log_message('warning', "No inventory record found for medication: {$medicineName}");
+                }
+            }
+            
+            // Update prescription notes with deduction flags
+            if (!empty($deductionNotes)) {
+                $currentNotes = $prescription['notes'] ?? '';
+                $newNotes = trim($currentNotes);
+                if (!empty($newNotes)) {
+                    $newNotes .= "\n" . implode("\n", $deductionNotes);
+                } else {
+                    $newNotes = implode("\n", $deductionNotes);
+                }
+                
+                $db->table('prescriptions')
+                    ->where('id', $prescription['id'])
+                    ->update(['notes' => $newNotes]);
+                
+                log_message('info', "Completed stock deduction for outpatient prescription #{$prescription['id']}");
+            }
+            
+        } catch (\Exception $e) {
+            log_message('error', "Error deducting stock for prescription #{$prescription['id']}: " . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Create follow-up appointment if prescription has medications requiring follow-up
+     */
+    private function createFollowUpAppointment($prescription)
+    {
+        try {
+            $db = \Config\Database::connect();
+            $items = json_decode($prescription['items_json'] ?? '[]', true) ?: [];
+            
+            // Check if any medication requires follow-up
+            $requiresFollowup = false;
+            foreach ($items as $item) {
+                // Check both boolean true and string "true" values
+                if (!empty($item['requires_followup']) && 
+                    ($item['requires_followup'] === true || $item['requires_followup'] === 'true' || $item['requires_followup'] === 1)) {
+                    $requiresFollowup = true;
+                    break;
+                }
+            }
+            
+            if (!$requiresFollowup) {
+                return; // No follow-up needed
+            }
+            
+            // Check if follow-up appointment already exists for this prescription
+            $existingFollowup = $db->table('appointments')
+                ->where('patient_id', $prescription['patient_id'])
+                ->where('doctor_id', $prescription['doctor_id'])
+                ->where('appointment_type', 'follow-up')
+                ->where('status !=', 'cancelled')
+                ->where('appointment_date >=', date('Y-m-d'))
+                ->get()
+                ->getRowArray();
+            
+            if ($existingFollowup) {
+                log_message('info', "Follow-up appointment already exists for prescription #{$prescription['id']}");
+                return; // Follow-up already scheduled
+            }
+            
+            // Get patient info
+            $patientModel = new PatientModel();
+            $patient = $patientModel->find($prescription['patient_id']);
+            
+            if (!$patient) {
+                log_message('error', "Patient not found for prescription #{$prescription['id']}");
+                return;
+            }
+            
+            // Only create follow-up for outpatients
+            if (strtolower($patient['patient_type'] ?? '') !== 'outpatient') {
+                log_message('info', "Skipping follow-up appointment - patient is not outpatient");
+                return;
+            }
+            
+            // Get follow-up date and time from prescription items
+            $followupDate = null;
+            $followupTime = null;
+            
+            // Find the first medication item that requires follow-up and has date/time specified
+            foreach ($items as $item) {
+                if (!empty($item['requires_followup']) && 
+                    ($item['requires_followup'] === true || $item['requires_followup'] === 'true' || $item['requires_followup'] === 1)) {
+                    
+                    // Check if follow-up date and time are provided
+                    if (!empty($item['followup_date'])) {
+                        $followupDate = $item['followup_date'];
+                    }
+                    if (!empty($item['followup_time'])) {
+                        $followupTime = $item['followup_time'];
+                    }
+                    
+                    // If we found both date and time, use them
+                    if ($followupDate && $followupTime) {
+                        break;
+                    }
+                }
+            }
+            
+            // If date/time not provided, calculate follow-up date (7 days from today, or based on duration)
+            if (!$followupDate) {
+                $followupDate = date('Y-m-d', strtotime('+7 days'));
+                
+                // Try to get duration from first medication item that requires follow-up
+                foreach ($items as $item) {
+                    if (!empty($item['requires_followup']) && 
+                        ($item['requires_followup'] === true || $item['requires_followup'] === 'true' || $item['requires_followup'] === 1)) {
+                        if (!empty($item['duration'])) {
+                            $durationText = $item['duration'];
+                            if (preg_match('/(\d+)/', $durationText, $matches)) {
+                                $durationDays = (int) $matches[1];
+                                // Follow-up should be after medication duration ends
+                                $followupDate = date('Y-m-d', strtotime("+{$durationDays} days"));
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Get doctor's schedule to find available time
+            $doctorId = $prescription['doctor_id'];
+            $appointmentModel = new AppointmentModel();
+            
+            // If time not provided, try to find available time slot for follow-up date
+            if (!$followupTime) {
+                $availableTimes = ['09:00:00', '10:00:00', '11:00:00', '14:00:00', '15:00:00', '16:00:00'];
+                $appointmentTime = null;
+                
+                foreach ($availableTimes as $time) {
+                    if ($appointmentModel->isDoctorAvailable($doctorId, $followupDate, $time)) {
+                        $appointmentTime = $time;
+                        break;
+                    }
+                }
+                
+                // If no available time found, use default
+                if (!$appointmentTime) {
+                    $appointmentTime = '09:00:00';
+                }
+            } else {
+                // Use the provided time, but ensure it's in HH:MM:SS format
+                $appointmentTime = $followupTime;
+                // If time is in HH:MM format, add seconds
+                if (preg_match('/^(\d{2}):(\d{2})$/', $appointmentTime)) {
+                    $appointmentTime .= ':00';
+                }
+            }
+            
+            // Get room for follow-up (use consultation room)
+            $roomModel = new \App\Models\RoomModel();
+            $rooms = $roomModel->getRoomsByAppointmentType('follow-up');
+            $roomId = null;
+            if (!empty($rooms)) {
+                $roomId = $rooms[0]['id'] ?? null;
+            }
+            
+            // Create follow-up appointment
+            $appointmentData = [
+                'patient_id' => $prescription['patient_id'],
+                'doctor_id' => $doctorId,
+                'room_id' => $roomId,
+                'appointment_date' => $followupDate,
+                'appointment_time' => $appointmentTime,
+                'appointment_type' => 'follow-up',
+                'status' => 'scheduled',
+                'notes' => 'Auto-created follow-up from prescription RX#' . str_pad((string)$prescription['id'], 3, '0', STR_PAD_LEFT),
+                'created_by' => session()->get('user_id') ?? 1
+            ];
+            
+            $appointmentId = $appointmentModel->insert($appointmentData);
+            
+            if ($appointmentId) {
+                log_message('info', "Created follow-up appointment #{$appointmentId} for prescription #{$prescription['id']}");
+            } else {
+                log_message('error', "Failed to create follow-up appointment for prescription #{$prescription['id']}: " . json_encode($appointmentModel->errors()));
+            }
+            
+        } catch (\Exception $e) {
+            log_message('error', "Error creating follow-up appointment: " . $e->getMessage());
+        }
     }
 
     /**
@@ -1354,7 +1848,11 @@ class Doctor extends Controller
                 'status' => 'pending',
                 'requested_at' => date('Y-m-d H:i:s'),
                 'notes' => $notes,
+                'billing_status' => 'unbilled', // Ensure lab test is billable
             ];
+            
+            // Ensure billing_status column exists before inserting
+            $this->ensureLabBillingColumn();
             
             $requestModel->insert($data);
             
@@ -1515,6 +2013,35 @@ class Doctor extends Controller
 		}
 
 		return redirect()->to('/doctor/settings')->with('success', 'Settings saved successfully.');
+	}
+	
+	/**
+	 * Ensure billing_status column exists in lab_test_requests table
+	 */
+	private function ensureLabBillingColumn(): void
+	{
+		$db = \Config\Database::connect();
+		$forge = \Config\Database::forge();
+		
+		if ($db->tableExists('lab_test_requests')) {
+			try {
+				$fields = $db->getFieldData('lab_test_requests');
+				$has = false;
+				foreach ($fields as $f) {
+					if (strtolower($f->name) === 'billing_status') {
+						$has = true;
+						break;
+					}
+				}
+				if (!$has) {
+					$forge->addColumn('lab_test_requests', [
+						'billing_status' => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true]
+					]);
+				}
+			} catch (\Exception $e) {
+				log_message('debug', 'ensureLabBillingColumn skip: ' . $e->getMessage());
+			}
+		}
 	}
 }
 

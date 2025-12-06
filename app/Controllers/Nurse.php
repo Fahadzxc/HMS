@@ -334,6 +334,12 @@ class Nurse extends Controller
             'updated_at' => date('Y-m-d H:i:s')
         ]);
         
+        // Update room occupancy - decrement if room was assigned
+        if (!empty($admission['room_id'])) {
+            $roomModel = new \App\Models\RoomModel();
+            $roomModel->updateOccupancy($admission['room_id'], false); // false = decrement
+        }
+        
         // Update patient status to discharged (keep patient_type as inpatient for history)
         $patientModel = new \App\Models\PatientModel();
         $patientModel->update($admission['patient_id'], [
@@ -343,7 +349,7 @@ class Nurse extends Controller
             'updated_at' => date('Y-m-d H:i:s')
         ]);
         
-        return $this->response->setJSON(['success' => true, 'message' => 'Patient discharged successfully']);
+        return $this->response->setJSON(['success' => true, 'message' => 'Patient discharged successfully. Room is now available.']);
     }
 
 
@@ -1555,6 +1561,9 @@ class Nurse extends Controller
         //     $this->autoCreatePrescriptionBill($prescriptionId, $prescription);
         // }
 
+        // Note: Follow-up appointments are now created when doctor saves prescription, not when nurse marks as given
+        // This ensures follow-ups are scheduled immediately when doctor indicates they're needed
+
         if ($result) {
             return $this->response->setJSON([
                 'success' => true,
@@ -1565,6 +1574,116 @@ class Nurse extends Controller
                 'success' => false,
                 'message' => 'Failed to update prescription status. Please check database connection.'
             ]);
+        }
+    }
+    
+    /**
+     * Create follow-up appointment if prescription has medications requiring follow-up
+     */
+    private function createFollowUpAppointment($prescription)
+    {
+        try {
+            $db = \Config\Database::connect();
+            $items = json_decode($prescription['items_json'] ?? '[]', true) ?: [];
+            
+            // Check if any medication requires follow-up
+            $requiresFollowup = false;
+            foreach ($items as $item) {
+                if (!empty($item['requires_followup']) && $item['requires_followup'] === true) {
+                    $requiresFollowup = true;
+                    break;
+                }
+            }
+            
+            if (!$requiresFollowup) {
+                return; // No follow-up needed
+            }
+            
+            // Check if follow-up appointment already exists for this prescription
+            $existingFollowup = $db->table('appointments')
+                ->where('patient_id', $prescription['patient_id'])
+                ->where('doctor_id', $prescription['doctor_id'])
+                ->where('appointment_type', 'follow-up')
+                ->where('status !=', 'cancelled')
+                ->where('appointment_date >=', date('Y-m-d'))
+                ->get()
+                ->getRowArray();
+            
+            if ($existingFollowup) {
+                log_message('info', "Follow-up appointment already exists for prescription #{$prescription['id']}");
+                return; // Follow-up already scheduled
+            }
+            
+            // Get patient info
+            $patientModel = new \App\Models\PatientModel();
+            $patient = $patientModel->find($prescription['patient_id']);
+            
+            if (!$patient) {
+                log_message('error', "Patient not found for prescription #{$prescription['id']}");
+                return;
+            }
+            
+            // Only create follow-up for outpatients
+            if (strtolower($patient['patient_type'] ?? '') !== 'outpatient') {
+                log_message('info', "Skipping follow-up appointment - patient is not outpatient");
+                return;
+            }
+            
+            // Calculate follow-up date (7 days from today, or based on duration)
+            $followupDate = date('Y-m-d', strtotime('+7 days'));
+            
+            // Try to get duration from first medication item
+            if (!empty($items[0]['duration'])) {
+                $durationText = $items[0]['duration'];
+                if (preg_match('/(\d+)/', $durationText, $matches)) {
+                    $durationDays = (int) $matches[1];
+                    // Follow-up should be after medication duration ends
+                    $followupDate = date('Y-m-d', strtotime("+{$durationDays} days"));
+                }
+            }
+            
+            // Get doctor's schedule to find available time
+            $doctorId = $prescription['doctor_id'];
+            
+            // Try to find available time slot for follow-up date
+            $availableTimes = ['09:00:00', '10:00:00', '11:00:00', '14:00:00', '15:00:00', '16:00:00'];
+            $appointmentTime = null;
+            
+            $appointmentModel = new \App\Models\AppointmentModel();
+            foreach ($availableTimes as $time) {
+                if ($appointmentModel->isDoctorAvailable($doctorId, $followupDate, $time)) {
+                    $appointmentTime = $time;
+                    break;
+                }
+            }
+            
+            // If no available time found, use default
+            if (!$appointmentTime) {
+                $appointmentTime = '09:00:00';
+            }
+            
+            // Create follow-up appointment
+            $appointmentData = [
+                'patient_id' => $prescription['patient_id'],
+                'doctor_id' => $doctorId,
+                'appointment_date' => $followupDate,
+                'appointment_time' => $appointmentTime,
+                'appointment_type' => 'follow-up',
+                'status' => 'scheduled',
+                'notes' => 'Auto-created follow-up from prescription RX#' . str_pad((string)$prescription['id'], 3, '0', STR_PAD_LEFT),
+                'created_by' => session()->get('user_id') ?? 1
+            ];
+            
+            $appointmentId = $appointmentModel->insert($appointmentData);
+            
+            if ($appointmentId) {
+                log_message('info', "Created follow-up appointment #{$appointmentId} for prescription #{$prescription['id']}");
+            } else {
+                log_message('error', "Failed to create follow-up appointment for prescription #{$prescription['id']}");
+            }
+            
+        } catch (\Exception $e) {
+            log_message('error', "Error creating follow-up appointment: " . $e->getMessage());
         }
     }
     

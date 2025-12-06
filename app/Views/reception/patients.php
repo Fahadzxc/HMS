@@ -692,6 +692,15 @@
                 if (value.length >= 2) value = value.substring(0, 2) + '/' + value.substring(2);
                 if (value.length >= 5) value = value.substring(0, 5) + '/' + value.substring(5);
                 e.target.value = value;
+                
+                // Reload rooms when date of birth changes (if patient type is inpatient)
+                const patientTypeEl = document.getElementById('patientType');
+                if (patientTypeEl && patientTypeEl.value === 'inpatient' && value.length === 10) {
+                    // Date is complete (mm/dd/yyyy), reload rooms with age filter
+                    setTimeout(() => {
+                        loadRooms(true); // Force reload
+                    }, 300);
+                }
             });
         }
 
@@ -737,7 +746,7 @@
                         ad.value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
                     }
                     loadDoctors();
-                    loadRooms();
+                    loadRooms(true); // Force reload to apply age filter if DOB is already entered
 					// Re-filter shortly after lists load
 					setTimeout(() => { try { filterDoctorsByAdmission(); } catch(_e) {} }, 400);
 				} else {
@@ -773,25 +782,91 @@
 			}
 		}
 
-		async function loadRooms() {
+		// Calculate patient age in days from date of birth
+		function calculateAgeInDays(dateOfBirth) {
+			if (!dateOfBirth) return null;
+			
+			// Parse date of birth (format: mm/dd/yyyy)
+			let dob;
+			if (dateOfBirth.includes('/')) {
+				const parts = dateOfBirth.split('/');
+				if (parts.length === 3) {
+					// mm/dd/yyyy format
+					dob = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+				} else {
+					return null;
+				}
+			} else {
+				// Try to parse as ISO date or other formats
+				dob = new Date(dateOfBirth);
+			}
+			
+			if (isNaN(dob.getTime())) return null;
+			
+			const today = new Date();
+			const diffTime = today - dob;
+			const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+			
+			return diffDays >= 0 ? diffDays : null;
+		}
+
+		async function loadRooms(forceReload = false) {
 			const sel = document.getElementById('roomSelect');
 			const bedSel = document.getElementById('bedSelect');
-			if (!sel || sel.options.length > 1) return;
+			if (!sel) return;
+			
+			// Only skip if already loaded and not forcing reload
+			if (!forceReload && sel.options.length > 1) return;
+			
+			// Clear existing options except the first one
+			while (sel.options.length > 1) {
+				sel.remove(1);
+			}
+			
+			// Get date of birth and calculate age in days
+			const dobInput = document.getElementById('date_of_birth');
+			const dateOfBirth = dobInput ? dobInput.value : null;
+			const ageInDays = calculateAgeInDays(dateOfBirth);
+			
+			// Build URL with age parameter if available
+			let url = '<?= base_url('reception/rooms') ?>?type=inpatient';
+			if (ageInDays !== null) {
+				url += '&patient_age_days=' + ageInDays;
+			}
+			
 			try {
-				const resp = await fetch('<?= base_url('reception/rooms') ?>?type=inpatient', { headers: { 'X-Requested-With':'XMLHttpRequest' }});
+				const resp = await fetch(url, { headers: { 'X-Requested-With':'XMLHttpRequest' }});
 				const data = await resp.json();
 				const rooms = Array.isArray(data?.rooms) ? data.rooms : [];
 				if (rooms.length === 0) throw new Error('empty');
 				rooms.forEach(r => {
 					const opt = document.createElement('option');
-					opt.value = r.id ?? r.room_id ?? '';
-					opt.dataset.capacity = r.capacity ?? '';
-					opt.dataset.occupancy = r.current_occupancy ?? '';
-					const label = `${r.room_number ?? r.name ?? 'Room'}${r.specialization ? ' - ' + r.specialization : ''}${r.floor ? ' (Floor ' + r.floor + ')' : ''}`;
+					const roomId = r.id ?? r.room_id ?? '';
+					const capacity = parseInt(r.capacity ?? 0, 10);
+					const actualOccupancy = parseInt(r.actual_occupancy ?? r.current_occupancy ?? 0, 10);
+					const isAvailable = r.is_available !== false && actualOccupancy < capacity;
+					
+					opt.value = roomId;
+					opt.dataset.capacity = capacity;
+					opt.dataset.occupancy = actualOccupancy;
+					opt.dataset.available = isAvailable ? '1' : '0';
+					
+					// Create label with availability status
+					let label = `${r.room_number ?? r.name ?? 'Room'}${r.specialization ? ' - ' + r.specialization : ''}${r.floor ? ' (Floor ' + r.floor + ')' : ''}`;
+					
+					if (!isAvailable) {
+						label += ' - NOT AVAILABLE';
+						opt.disabled = true;
+						opt.style.color = '#ef4444'; // Red color
+						opt.style.backgroundColor = '#fee2e2'; // Light red background
+					}
+					
 					opt.textContent = label;
 					sel.appendChild(opt);
 				});
 				if (bedSel) {
+					// Remove existing event listener if any, then add new one
+					sel.removeEventListener('change', populateBeds);
 					sel.addEventListener('change', populateBeds);
 				}
 			} catch (e) {

@@ -49,6 +49,38 @@ class RoomModel extends Model
     }
 
     /**
+     * Get rooms filtered by patient age
+     * For Neonate (0-28 days) → NICU / Nursery
+     * For Pediatric (1 month to 12 years) → Pedia
+     * For 13 years and older → Exclude NICU and Pedia rooms
+     */
+    public function getRoomsByPatientAge($ageInDays, $roomType = 'inpatient')
+    {
+        $builder = $this->builder();
+        $builder->where('room_type', $roomType);
+        $builder->where('is_available', true);
+        $builder->where('current_occupancy <', 'capacity', false);
+
+        // Neonate: 0-28 days → NICU / Nursery
+        if ($ageInDays >= 0 && $ageInDays <= 28) {
+            $builder->where('specialization', 'NICU / Nursery');
+        }
+        // Pediatric: 1 month (29 days) to 12 years (4380 days) → Pedia
+        else if ($ageInDays >= 29 && $ageInDays <= 4380) {
+            $builder->where('specialization', 'Pedia');
+        }
+        // For 13 years and older (4381+ days) → Exclude NICU and Pedia rooms
+        else if ($ageInDays >= 4381) {
+            $builder->whereNotIn('specialization', ['NICU / Nursery', 'Pedia']);
+        }
+        // For other ages (negative or invalid), return all inpatient rooms
+
+        return $builder->orderBy('room_number', 'ASC')
+                      ->get()
+                      ->getResultArray();
+    }
+
+    /**
      * Get rooms filtered by appointment type
      * Maps appointment types to room specializations
      */

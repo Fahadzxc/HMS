@@ -8,6 +8,30 @@ class RoomSeeder extends Seeder
 {
     public function run()
     {
+        echo "\n=== RoomSeeder Started ===\n";
+        
+        // Check if table exists first
+        echo "Checking if 'rooms' table exists...\n";
+        if (!$this->db->tableExists('rooms')) {
+            echo "ERROR: 'rooms' table does not exist!\n";
+            echo "Please run migrations first: php spark migrate\n";
+            echo "=== RoomSeeder Failed ===\n\n";
+            return;
+        }
+        echo "✓ Table exists\n";
+
+        // Check if rooms already exist to prevent duplicates
+        echo "Checking for existing rooms...\n";
+        $existingRooms = $this->db->table('rooms')->countAllResults();
+        if ($existingRooms > 0) {
+            echo "Rooms already exist in database ($existingRooms rooms found). Skipping seeder to prevent duplicates.\n";
+            echo "=== RoomSeeder Skipped ===\n\n";
+            return;
+        }
+        echo "✓ No existing rooms found\n";
+
+        echo "Preparing to insert rooms...\n";
+
         $data = [
             // Simple Inpatient Rooms
             ['room_number' => 'Private-101', 'room_type' => 'inpatient', 'floor' => '1', 'capacity' => 1, 'current_occupancy' => 0, 'doctor_id' => null, 'specialization' => 'Private Room', 'room_price' => 1500.00, 'is_available' => true],
@@ -16,6 +40,20 @@ class RoomSeeder extends Seeder
             ['room_number' => 'Semi-202', 'room_type' => 'inpatient', 'floor' => '2', 'capacity' => 2, 'current_occupancy' => 0, 'doctor_id' => null, 'specialization' => 'Semi-Private', 'room_price' => 800.00, 'is_available' => true],
             ['room_number' => 'Ward-301', 'room_type' => 'inpatient', 'floor' => '3', 'capacity' => 4, 'current_occupancy' => 0, 'doctor_id' => null, 'specialization' => 'Ward', 'room_price' => 200.00, 'is_available' => true],
             ['room_number' => 'ICU-401', 'room_type' => 'inpatient', 'floor' => '4', 'capacity' => 1, 'current_occupancy' => 0, 'doctor_id' => null, 'specialization' => 'ICU', 'room_price' => 3000.00, 'is_available' => true],
+            
+            // NICU / Nursery Rooms (5 rooms) - For Neonate (0-28 days)
+            ['room_number' => 'NICU-501', 'room_type' => 'inpatient', 'floor' => '5', 'capacity' => 1, 'current_occupancy' => 0, 'doctor_id' => null, 'specialization' => 'NICU / Nursery', 'room_price' => 2500.00, 'is_available' => true],
+            ['room_number' => 'NICU-502', 'room_type' => 'inpatient', 'floor' => '5', 'capacity' => 1, 'current_occupancy' => 0, 'doctor_id' => null, 'specialization' => 'NICU / Nursery', 'room_price' => 2500.00, 'is_available' => true],
+            ['room_number' => 'NICU-503', 'room_type' => 'inpatient', 'floor' => '5', 'capacity' => 1, 'current_occupancy' => 0, 'doctor_id' => null, 'specialization' => 'NICU / Nursery', 'room_price' => 2500.00, 'is_available' => true],
+            ['room_number' => 'NICU-504', 'room_type' => 'inpatient', 'floor' => '5', 'capacity' => 1, 'current_occupancy' => 0, 'doctor_id' => null, 'specialization' => 'NICU / Nursery', 'room_price' => 2500.00, 'is_available' => true],
+            ['room_number' => 'NICU-505', 'room_type' => 'inpatient', 'floor' => '5', 'capacity' => 1, 'current_occupancy' => 0, 'doctor_id' => null, 'specialization' => 'NICU / Nursery', 'room_price' => 2500.00, 'is_available' => true],
+            
+            // Pedia Rooms (5 rooms) - For Pediatric (1 month to 12 years)
+            ['room_number' => 'PEDIA-601', 'room_type' => 'inpatient', 'floor' => '6', 'capacity' => 2, 'current_occupancy' => 0, 'doctor_id' => null, 'specialization' => 'Pedia', 'room_price' => 1200.00, 'is_available' => true],
+            ['room_number' => 'PEDIA-602', 'room_type' => 'inpatient', 'floor' => '6', 'capacity' => 2, 'current_occupancy' => 0, 'doctor_id' => null, 'specialization' => 'Pedia', 'room_price' => 1200.00, 'is_available' => true],
+            ['room_number' => 'PEDIA-603', 'room_type' => 'inpatient', 'floor' => '6', 'capacity' => 2, 'current_occupancy' => 0, 'doctor_id' => null, 'specialization' => 'Pedia', 'room_price' => 1200.00, 'is_available' => true],
+            ['room_number' => 'PEDIA-604', 'room_type' => 'inpatient', 'floor' => '6', 'capacity' => 2, 'current_occupancy' => 0, 'doctor_id' => null, 'specialization' => 'Pedia', 'room_price' => 1200.00, 'is_available' => true],
+            ['room_number' => 'PEDIA-605', 'room_type' => 'inpatient', 'floor' => '6', 'capacity' => 2, 'current_occupancy' => 0, 'doctor_id' => null, 'specialization' => 'Pedia', 'room_price' => 1200.00, 'is_available' => true],
             
             // Consultation Rooms (5 rooms)
             ['room_number' => 'CON-001', 'room_type' => 'outpatient', 'floor' => '1', 'capacity' => 1, 'current_occupancy' => 0, 'doctor_id' => null, 'specialization' => 'General Medicine', 'room_price' => 0.00, 'is_available' => true],
@@ -53,6 +91,17 @@ class RoomSeeder extends Seeder
             ['room_number' => 'IMG-005', 'room_type' => 'outpatient', 'floor' => '1', 'capacity' => 1, 'current_occupancy' => 0, 'doctor_id' => null, 'specialization' => 'Ultrasound', 'room_price' => 0.00, 'is_available' => true],
         ];
 
-        $this->db->table('rooms')->insertBatch($data);
+        try {
+            echo "Inserting " . count($data) . " rooms...\n";
+            $this->db->table('rooms')->insertBatch($data);
+            $insertedCount = count($data);
+            echo "✓ Successfully inserted $insertedCount rooms into database!\n";
+            echo "=== RoomSeeder Completed Successfully ===\n\n";
+        } catch (\Exception $e) {
+            echo "✗ ERROR inserting rooms: " . $e->getMessage() . "\n";
+            echo "Stack trace: " . $e->getTraceAsString() . "\n";
+            echo "=== RoomSeeder Failed ===\n\n";
+            throw $e;
+        }
     }
 }

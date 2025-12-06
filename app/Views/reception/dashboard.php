@@ -72,48 +72,33 @@ $upcomingAppointments = $upcomingAppointments ?? [];
     </div>
 </section>
 
-<div class="page-grid">
-    <section class="panel">
-        <header class="panel-header">
-            <h2>Today's Tasks</h2>
-            <p>Your assigned tasks for today</p>
-        </header>
-        <div class="stack">
-            <?php foreach ($tasks as $task): ?>
-                <div class="card">
-                    <div class="row between">
-                        <h3><?= esc($task['title']) ?></h3>
-                        <?php if (!empty($task['status'])): ?>
-                            <span class="badge <?= $task['status'] === 'urgent' ? 'high' : ($task['status'] === 'pending' ? 'medium' : 'success') ?>">
-                                <?= strtoupper($task['status']) ?>
-                            </span>
-                        <?php endif; ?>
-                    </div>
-                    <p><?= esc($task['description']) ?></p>
-                    <?php if (!empty($task['link'])): ?>
-                        <a href="<?= esc($task['link']) ?>" class="link">View</a>
+<section class="panel panel-spaced">
+    <header class="panel-header">
+        <h2>Today's Tasks</h2>
+        <p>Your assigned tasks for today</p>
+    </header>
+    <div class="stack">
+        <?php foreach ($tasks as $task): ?>
+            <div class="card">
+                <div class="row between">
+                    <h3><?= esc($task['title']) ?></h3>
+                    <?php if (!empty($task['status'])): ?>
+                        <span class="badge <?= $task['status'] === 'urgent' ? 'high' : ($task['status'] === 'pending' ? 'medium' : 'success') ?>">
+                            <?= strtoupper($task['status']) ?>
+                        </span>
                     <?php endif; ?>
                 </div>
-            <?php endforeach; ?>
-            <?php if (empty($tasks)): ?>
-                <div class="card"><p>No tasks at the moment.</p></div>
-            <?php endif; ?>
-        </div>
-    </section>
-
-    <section class="panel">
-        <header class="panel-header">
-            <h2>Quick Actions</h2>
-        </header>
-        <div class="actions-grid">
-            <?php foreach ($quickActions as $action): ?>
-                <a class="action-tile" href="<?= esc($action['url']) ?>">
-                    <span><?= esc($action['label']) ?></span>
-                </a>
-            <?php endforeach; ?>
-        </div>
-    </section>
-</div>
+                <p><?= esc($task['description']) ?></p>
+                <?php if (!empty($task['link'])): ?>
+                    <a href="<?= esc($task['link']) ?>" class="link">View</a>
+                <?php endif; ?>
+            </div>
+        <?php endforeach; ?>
+        <?php if (empty($tasks)): ?>
+            <div class="card"><p>No tasks at the moment.</p></div>
+        <?php endif; ?>
+    </div>
+</section>
 
 <section class="panel panel-spaced">
     <header class="panel-header">

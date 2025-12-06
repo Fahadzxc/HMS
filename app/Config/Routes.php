@@ -50,6 +50,7 @@ $routes->get('reception/patients/show/(:num)', 'Reception::show/$1');
 // Legacy route fallback
 $routes->post('reception/createPatient', 'Reception::store');
 $routes->get('reception/appointments', 'Reception::appointments');
+$routes->get('reception/followups', 'Reception::followups');
 $routes->get('reception/checkin', 'Reception::checkin');
 $routes->get('reception/billing', 'Reception::billing');
 $routes->get('reception/reports', 'Reception::reports');
@@ -187,6 +188,15 @@ $routes->get('admin/admissions', 'Admin\\Admissions::index');
 $routes->post('admin/admissions/update', 'Admin\\Admissions::update');
 $routes->post('admin/admissions/discharge/(:num)', 'Admin\\Admissions::discharge/$1');
 $routes->post('admin/admissions/delete/(:num)', 'Admin\\Admissions::delete/$1');
+
+// Admin Walk In (Lab tests without doctor consultation)
+$routes->get('admin/walkin', 'Admin\\WalkIn::index');
+$routes->post('admin/walkin/create', 'Admin\\WalkIn::create');
+
+// Admin Rooms
+$routes->get('admin/rooms', 'Admin\\Rooms::index');
+$routes->get('admin/rooms/details/(:num)', 'Admin\\Rooms::details/$1');
+$routes->post('admin/rooms/toggleAvailability/(:num)', 'Admin\\Rooms::toggleAvailability/$1');
 
 $routes->get('admin/billing', 'Admin\\Billing::index');
 $routes->post('admin/billing/createBillsForCompleted', 'Admin\\Billing::createBillsForCompletedPrescriptions');

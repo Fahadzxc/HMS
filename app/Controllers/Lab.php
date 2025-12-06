@@ -213,17 +213,23 @@ class Lab extends Controller
 			}
 
 		// Count requests by status for filter tabs
-		$sentToLabCount = 0;
-		$completedCount = 0;
+		// Get counts directly from database for accuracy
+		$sentToLabCount = $requestModel->where('status', 'sent_to_lab')->countAllResults();
+		$completedCount = $requestModel->where('status', 'completed')->countAllResults();
+		$pendingOutpatientCount = $requestModel->where('status', 'pending')
+			->where('admission_id IS NULL', null, false)
+			->countAllResults();
+		$inProgressCount = $requestModel->where('status', 'in_progress')->countAllResults();
+		
+		// Also count from the filtered $requests array for display
 		$pendingCount = 0;
-		$inProgressCount = 0;
 		foreach ($requests as $req) {
 			$reqStatus = $req['status'] ?? 'pending';
-			if ($reqStatus === 'sent_to_lab') $sentToLabCount++;
-			elseif ($reqStatus === 'completed') $completedCount++;
-			elseif ($reqStatus === 'pending') $pendingCount++;
-			elseif ($reqStatus === 'in_progress') $inProgressCount++;
+			if ($reqStatus === 'pending') $pendingCount++;
 		}
+		
+		// Use database counts for tabs, but ensure pending count matches filtered results
+		$pendingCount = $pendingOutpatientCount; // Use database count for accuracy
 		
 		$data = [
 			'title' => 'Test Requests - HMS',
@@ -290,7 +296,11 @@ class Lab extends Controller
 				'status' => 'pending',
 				'requested_at' => date('Y-m-d H:i:s'),
 				'notes' => $notes,
+				'billing_status' => 'unbilled', // Ensure lab test is billable
 			];
+			
+			// Ensure billing_status column exists before inserting
+			$this->ensureLabBillingColumn();
 			
 			$requestModel->insert($data);
 			
@@ -614,5 +624,34 @@ class Lab extends Controller
 		}
 
 		return redirect()->to('/lab/settings')->with('success', 'Settings saved successfully.');
+	}
+	
+	/**
+	 * Ensure billing_status column exists in lab_test_requests table
+	 */
+	private function ensureLabBillingColumn(): void
+	{
+		$db = \Config\Database::connect();
+		$forge = \Config\Database::forge();
+		
+		if ($db->tableExists('lab_test_requests')) {
+			try {
+				$fields = $db->getFieldData('lab_test_requests');
+				$has = false;
+				foreach ($fields as $f) {
+					if (strtolower($f->name) === 'billing_status') {
+						$has = true;
+						break;
+					}
+				}
+				if (!$has) {
+					$forge->addColumn('lab_test_requests', [
+						'billing_status' => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true]
+					]);
+				}
+			} catch (\Exception $e) {
+				log_message('debug', 'ensureLabBillingColumn skip: ' . $e->getMessage());
+			}
+		}
 	}
 }

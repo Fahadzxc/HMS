@@ -143,8 +143,16 @@ class Admissions extends Controller
         // Update admission status to Discharged
         $db->table('admissions')->where('id', $admissionId)->update([
             'status' => 'Discharged',
+            'discharged_at' => date('Y-m-d H:i:s'),
+            'discharged_by' => session()->get('user_id'),
             'updated_at' => date('Y-m-d H:i:s')
         ]);
+        
+        // Update room occupancy - decrement if room was assigned
+        if (!empty($admission['room_id'])) {
+            $roomModel = new \App\Models\RoomModel();
+            $roomModel->updateOccupancy($admission['room_id'], false); // false = decrement
+        }
         
         // Update patient type to outpatient
         $patientModel->update($admission['patient_id'], [
@@ -153,7 +161,7 @@ class Admissions extends Controller
             'updated_at' => date('Y-m-d H:i:s')
         ]);
         
-        return $this->response->setJSON(['success' => true, 'message' => 'Patient discharged successfully']);
+        return $this->response->setJSON(['success' => true, 'message' => 'Patient discharged successfully. Room is now available.']);
     }
     
     public function delete($admissionId = null)

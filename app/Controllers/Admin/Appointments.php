@@ -34,6 +34,53 @@ class Appointments extends Controller
         $builder->orderBy('a.appointment_time', 'ASC');
         $appointments = $builder->get()->getResultArray();
         
+        // Check payment status and auto-update appointment status if bill is paid
+        $appointmentModel = new AppointmentModel();
+        foreach ($appointments as &$appointment) {
+            if ($appointment['status'] !== 'completed' && !empty($appointment['id'])) {
+                $appointmentDate = $appointment['appointment_date'] ?? null;
+                $patientId = $appointment['patient_id'] ?? null;
+                
+                // Check if there's a paid bill linked to this appointment
+                $paidBill = $db->table('bills')
+                    ->where('appointment_id', $appointment['id'])
+                    ->where('status', 'paid')
+                    ->get()
+                    ->getRowArray();
+                
+                // If no direct link, check by patient_id and date
+                if (!$paidBill && $patientId && $appointmentDate) {
+                    $startDate = date('Y-m-d', strtotime($appointmentDate . ' -7 days'));
+                    $endDate = date('Y-m-d', strtotime($appointmentDate . ' +1 day'));
+                    
+                    $paidBill = $db->table('bills')
+                        ->where('patient_id', $patientId)
+                        ->where('status', 'paid')
+                        ->where('created_at >=', $startDate . ' 00:00:00')
+                        ->where('created_at <=', $endDate . ' 23:59:59')
+                        ->orderBy('created_at', 'DESC')
+                        ->get()
+                        ->getRowArray();
+                    
+                    // If found, link the bill to this appointment
+                    if ($paidBill && empty($paidBill['appointment_id'])) {
+                        $db->table('bills')
+                            ->where('id', $paidBill['id'])
+                            ->update(['appointment_id' => $appointment['id']]);
+                    }
+                }
+                
+                if ($paidBill) {
+                    // Auto-update appointment status to completed
+                    $appointmentModel->update($appointment['id'], [
+                        'status' => 'completed',
+                        'updated_at' => date('Y-m-d H:i:s')
+                    ]);
+                    $appointment['status'] = 'completed';
+                }
+            }
+        }
+        
         // Get outpatient patients only for edit modal
         $patientModel = new PatientModel();
         $patients = $patientModel->where('patient_type', 'outpatient')->findAll();
@@ -123,14 +170,38 @@ class Appointments extends Controller
             return $this->response->setJSON(['success' => false, 'message' => 'Appointment not found']);
         }
         
+        $newStatus = $json['status'] ?? $appointment['status'];
+        $newRoomId = !empty($json['room_id']) ? $json['room_id'] : null;
+        $oldRoomId = $appointment['room_id'] ?? null;
+        $oldStatus = $appointment['status'] ?? 'scheduled';
+        
+        // Handle room release/assignment
+        $roomModel = new \App\Models\RoomModel();
+        
+        // If appointment is being cancelled or room is being removed, release the old room
+        if (!empty($oldRoomId) && ($newStatus === 'cancelled' || empty($newRoomId))) {
+            $roomModel->updateOccupancy($oldRoomId, false); // Release the room
+        }
+        
+        // If room is being changed, release old room and assign new room
+        if (!empty($oldRoomId) && !empty($newRoomId) && $oldRoomId != $newRoomId) {
+            $roomModel->updateOccupancy($oldRoomId, false); // Release old room
+            $roomModel->updateOccupancy($newRoomId, true); // Assign new room
+        }
+        
+        // If new room is being assigned and there was no old room
+        if (empty($oldRoomId) && !empty($newRoomId) && $newStatus !== 'cancelled') {
+            $roomModel->updateOccupancy($newRoomId, true); // Assign new room
+        }
+        
         $updateData = [
             'appointment_date' => $json['appointment_date'] ?? $appointment['appointment_date'],
             'appointment_time' => $json['appointment_time'] ?? $appointment['appointment_time'],
             'patient_id' => $json['patient_id'] ?? $appointment['patient_id'],
             'doctor_id' => $json['doctor_id'] ?? $appointment['doctor_id'],
             'appointment_type' => $json['appointment_type'] ?? $appointment['appointment_type'],
-            'status' => $json['status'] ?? $appointment['status'],
-            'room_id' => !empty($json['room_id']) ? $json['room_id'] : null,
+            'status' => $newStatus,
+            'room_id' => $newRoomId,
             'notes' => $json['notes'] ?? $appointment['notes'],
             'updated_at' => date('Y-m-d H:i:s')
         ];
@@ -166,6 +237,13 @@ class Appointments extends Controller
                 'success' => false, 
                 'message' => 'This is an inpatient record. Please manage it in the Admissions section instead.'
             ]);
+        }
+        
+        // Release the room if appointment has a room assigned
+        $roomId = $appointment['room_id'] ?? null;
+        if (!empty($roomId)) {
+            $roomModel = new \App\Models\RoomModel();
+            $roomModel->updateOccupancy($roomId, false); // false = decrement, release the room
         }
         
         if ($this->appointmentModel->delete($id)) {

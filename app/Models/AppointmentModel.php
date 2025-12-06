@@ -33,10 +33,10 @@ class AppointmentModel extends Model
 
     protected $validationRules = [
         'patient_id' => 'required|integer',
-        'doctor_id' => 'required|integer',
+        'doctor_id' => 'permit_empty|integer', // Optional - not required for lab test appointments
         'appointment_date' => 'required|valid_date',
         'appointment_time' => 'required',
-        'appointment_type' => 'required|in_list[consultation,follow-up,procedure,laboratory_test]',
+        'appointment_type' => 'required|in_list[consultation,follow-up,laboratory_test]',
         'status' => 'required|in_list[scheduled,confirmed,completed,cancelled,no-show]'
     ];
 
@@ -46,7 +46,6 @@ class AppointmentModel extends Model
             'integer' => 'Invalid patient selected'
         ],
         'doctor_id' => [
-            'required' => 'Doctor is required',
             'integer' => 'Invalid doctor selected'
         ],
         'appointment_date' => [
@@ -100,7 +99,7 @@ class AppointmentModel extends Model
         return $builder->get()->getResultArray();
     }
 
-    // Get appointments for a specific doctor
+    // Get appointments for a specific doctor (exclude lab test appointments)
     public function getAppointmentsByDoctor($doctorId, $date = null)
     {
         $builder = $this->db->table($this->table);
@@ -109,6 +108,8 @@ class AppointmentModel extends Model
         $builder->join('users', 'users.id = appointments.doctor_id', 'left');
         $builder->where('appointments.doctor_id', $doctorId);
         $builder->where('appointments.status !=', 'cancelled');
+        $builder->where('appointments.appointment_type !=', 'laboratory_test'); // Exclude lab tests
+        $builder->where('appointments.doctor_id IS NOT NULL', null, false); // Ensure doctor_id is not null
         
         if ($date) {
             $builder->where('appointment_date', $date);
@@ -119,7 +120,7 @@ class AppointmentModel extends Model
                       ->get()->getResultArray();
     }
 
-    // Get upcoming appointments for a specific doctor
+    // Get upcoming appointments for a specific doctor (exclude lab test appointments)
     public function getUpcomingAppointmentsByDoctor($doctorId, $limit = 50)
     {
         $builder = $this->db->table($this->table);
@@ -129,6 +130,8 @@ class AppointmentModel extends Model
         $builder->where('appointments.doctor_id', $doctorId);
         $builder->where('appointment_date >=', date('Y-m-d'));
         $builder->where('appointments.status !=', 'cancelled');
+        $builder->where('appointments.appointment_type !=', 'laboratory_test'); // Exclude lab tests
+        $builder->where('appointments.doctor_id IS NOT NULL', null, false); // Ensure doctor_id is not null
         $builder->orderBy('appointment_date', 'ASC');
         $builder->orderBy('appointment_time', 'ASC');
         $builder->limit($limit);

@@ -22,6 +22,7 @@ class LabTestRequestModel extends Model
         'sent_at', // Timestamp when nurse marked as sent
         'notes',
         'override_reason',
+        'billing_status', // Track billing status: unbilled, billed
         'created_at',
         'updated_at',
     ];
@@ -74,6 +75,7 @@ class LabTestRequestModel extends Model
             
             $builder = $this->select($selectFields);
             $builder->join('patients', 'patients.id = lab_test_requests.patient_id', 'left');
+            // Use LEFT JOIN for doctors - allows NULL doctor_id (for walk-in requests)
             $builder->join('users AS doctors', 'doctors.id = lab_test_requests.doctor_id', 'left');
             
             // Only join nurse if column exists

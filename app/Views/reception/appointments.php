@@ -2,6 +2,109 @@
 
 <?= $this->section('content') ?>
 
+<style>
+.appointment-type-btn {
+    transition: all 0.3s ease !important;
+}
+
+.appointment-type-btn:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+.appointment-type-btn:active {
+    transform: translateY(-2px) !important;
+}
+
+.appointment-type-selection {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.lab-test-option {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lab-test-option:hover {
+    background: #f1f5f9;
+    border-color: #10b981;
+}
+
+.lab-test-option input[type="checkbox"] {
+    margin-right: 0.75rem;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #10b981;
+}
+
+.lab-test-option input[type="checkbox"]:checked + span {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.lab-test-group {
+    margin-bottom: 1.5rem;
+}
+
+.lab-test-group.hidden {
+    display: none;
+}
+
+#selected_tests_chips .test-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background: #d1fae5;
+    color: #065f46;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+#selected_tests_chips .test-chip .remove-chip {
+    margin-left: 0.5rem;
+    cursor: pointer;
+    color: #047857;
+    font-weight: bold;
+}
+
+#selected_tests_chips .test-chip .remove-chip:hover {
+    color: #064e3b;
+}
+
+/* Lab Test Modal - Higher z-index to appear above appointment modal */
+#labTestModal {
+    z-index: 2000 !important;
+}
+
+#labTestModal .modal-backdrop {
+    z-index: 2001 !important;
+}
+
+#labTestModal .modal-dialog {
+    z-index: 2002 !important;
+    position: relative;
+}
+</style>
+
 <section class="panel">
     <header class="panel-header">
         <h2>Appointments Management</h2>
@@ -219,6 +322,175 @@
     </div>
 </section>
 
+<!-- Lab Test Selection Modal -->
+<div id="labTestModal" class="modal" aria-hidden="true" style="display:none;">
+    <div class="modal-backdrop" onclick="closeLabTestModal()"></div>
+    <div class="modal-dialog" role="dialog" aria-modal="true" style="max-width: 600px;">
+        <header class="panel-header modal-header">
+            <h2>Select Lab Test(s)</h2>
+            <button type="button" class="close" onclick="closeLabTestModal()">&times;</button>
+        </header>
+        <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+            <div style="margin-bottom: 1rem;">
+                <input type="text" id="lab_test_search" placeholder="Search lab tests..." style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem;" onkeyup="filterLabTests()">
+            </div>
+            <div id="lab_test_options" style="display: grid; gap: 0.75rem;">
+                <!-- Blood Tests -->
+                <div class="lab-test-group">
+                    <h4 style="margin: 0 0 0.75rem 0; color: #1f2937; font-size: 1rem; font-weight: 600; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">Blood Tests</h4>
+                    <div style="display: grid; gap: 0.5rem;">
+                        <label class="lab-test-option" data-category="blood">
+                            <input type="checkbox" value="Complete Blood Count (CBC)" onchange="updateSelectedLabTests()">
+                            <span>Complete Blood Count (CBC)</span>
+                        </label>
+                        <label class="lab-test-option" data-category="blood">
+                            <input type="checkbox" value="Blood Glucose" onchange="updateSelectedLabTests()">
+                            <span>Blood Glucose</span>
+                        </label>
+                        <label class="lab-test-option" data-category="blood">
+                            <input type="checkbox" value="Lipid Profile" onchange="updateSelectedLabTests()">
+                            <span>Lipid Profile</span>
+                        </label>
+                        <label class="lab-test-option" data-category="blood">
+                            <input type="checkbox" value="Liver Function Test (LFT)" onchange="updateSelectedLabTests()">
+                            <span>Liver Function Test (LFT)</span>
+                        </label>
+                        <label class="lab-test-option" data-category="blood">
+                            <input type="checkbox" value="Kidney Function Test (KFT)" onchange="updateSelectedLabTests()">
+                            <span>Kidney Function Test (KFT)</span>
+                        </label>
+                        <label class="lab-test-option" data-category="blood">
+                            <input type="checkbox" value="Thyroid Function Test" onchange="updateSelectedLabTests()">
+                            <span>Thyroid Function Test</span>
+                        </label>
+                        <label class="lab-test-option" data-category="blood">
+                            <input type="checkbox" value="Hemoglobin A1C" onchange="updateSelectedLabTests()">
+                            <span>Hemoglobin A1C</span>
+                        </label>
+                        <label class="lab-test-option" data-category="blood">
+                            <input type="checkbox" value="Blood Culture" onchange="updateSelectedLabTests()">
+                            <span>Blood Culture</span>
+                        </label>
+                        <label class="lab-test-option" data-category="blood">
+                            <input type="checkbox" value="Blood Typing" onchange="updateSelectedLabTests()">
+                            <span>Blood Typing</span>
+                        </label>
+                        <label class="lab-test-option" data-category="blood">
+                            <input type="checkbox" value="Coagulation Profile" onchange="updateSelectedLabTests()">
+                            <span>Coagulation Profile</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Urine Tests -->
+                <div class="lab-test-group">
+                    <h4 style="margin: 0 0 0.75rem 0; color: #1f2937; font-size: 1rem; font-weight: 600; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">Urine Tests</h4>
+                    <div style="display: grid; gap: 0.5rem;">
+                        <label class="lab-test-option" data-category="urine">
+                            <input type="checkbox" value="Urine Analysis" onchange="updateSelectedLabTests()">
+                            <span>Urine Analysis</span>
+                        </label>
+                        <label class="lab-test-option" data-category="urine">
+                            <input type="checkbox" value="Urinalysis" onchange="updateSelectedLabTests()">
+                            <span>Urinalysis</span>
+                        </label>
+                        <label class="lab-test-option" data-category="urine">
+                            <input type="checkbox" value="Urine Culture" onchange="updateSelectedLabTests()">
+                            <span>Urine Culture</span>
+                        </label>
+                        <label class="lab-test-option" data-category="urine">
+                            <input type="checkbox" value="24-Hour Urine Collection" onchange="updateSelectedLabTests()">
+                            <span>24-Hour Urine Collection</span>
+                        </label>
+                        <label class="lab-test-option" data-category="urine">
+                            <input type="checkbox" value="Urine Pregnancy Test" onchange="updateSelectedLabTests()">
+                            <span>Urine Pregnancy Test</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Imaging Tests -->
+                <div class="lab-test-group">
+                    <h4 style="margin: 0 0 0.75rem 0; color: #1f2937; font-size: 1rem; font-weight: 600; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">Imaging Tests</h4>
+                    <div style="display: grid; gap: 0.5rem;">
+                        <label class="lab-test-option" data-category="imaging">
+                            <input type="checkbox" value="X-Ray" onchange="updateSelectedLabTests()">
+                            <span>X-Ray</span>
+                        </label>
+                        <label class="lab-test-option" data-category="imaging">
+                            <input type="checkbox" value="CT Scan" onchange="updateSelectedLabTests()">
+                            <span>CT Scan</span>
+                        </label>
+                        <label class="lab-test-option" data-category="imaging">
+                            <input type="checkbox" value="MRI" onchange="updateSelectedLabTests()">
+                            <span>MRI</span>
+                        </label>
+                        <label class="lab-test-option" data-category="imaging">
+                            <input type="checkbox" value="Ultrasound" onchange="updateSelectedLabTests()">
+                            <span>Ultrasound</span>
+                        </label>
+                        <label class="lab-test-option" data-category="imaging">
+                            <input type="checkbox" value="Echocardiogram" onchange="updateSelectedLabTests()">
+                            <span>Echocardiogram</span>
+                        </label>
+                        <label class="lab-test-option" data-category="imaging">
+                            <input type="checkbox" value="Mammography" onchange="updateSelectedLabTests()">
+                            <span>Mammography</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Microbiology -->
+                <div class="lab-test-group">
+                    <h4 style="margin: 0 0 0.75rem 0; color: #1f2937; font-size: 1rem; font-weight: 600; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">Microbiology</h4>
+                    <div style="display: grid; gap: 0.5rem;">
+                        <label class="lab-test-option" data-category="microbiology">
+                            <input type="checkbox" value="Sputum Culture" onchange="updateSelectedLabTests()">
+                            <span>Sputum Culture</span>
+                        </label>
+                        <label class="lab-test-option" data-category="microbiology">
+                            <input type="checkbox" value="Stool Culture" onchange="updateSelectedLabTests()">
+                            <span>Stool Culture</span>
+                        </label>
+                        <label class="lab-test-option" data-category="microbiology">
+                            <input type="checkbox" value="Throat Swab" onchange="updateSelectedLabTests()">
+                            <span>Throat Swab</span>
+                        </label>
+                        <label class="lab-test-option" data-category="microbiology">
+                            <input type="checkbox" value="Wound Culture" onchange="updateSelectedLabTests()">
+                            <span>Wound Culture</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Other Tests -->
+                <div class="lab-test-group">
+                    <h4 style="margin: 0 0 0.75rem 0; color: #1f2937; font-size: 1rem; font-weight: 600; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.5rem;">Other Tests</h4>
+                    <div style="display: grid; gap: 0.5rem;">
+                        <label class="lab-test-option" data-category="other">
+                            <input type="checkbox" value="ECG (Electrocardiogram)" onchange="updateSelectedLabTests()">
+                            <span>ECG (Electrocardiogram)</span>
+                        </label>
+                        <label class="lab-test-option" data-category="other">
+                            <input type="checkbox" value="ECG" onchange="updateSelectedLabTests()">
+                            <span>ECG</span>
+                        </label>
+                        <label class="lab-test-option" data-category="other">
+                            <input type="checkbox" value="Other" onchange="updateSelectedLabTests()">
+                            <span>Other</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="clearLabTestSelection()">Clear All</button>
+            <button type="button" class="btn-secondary" onclick="closeLabTestModal()">Cancel</button>
+            <button type="button" class="btn-primary" onclick="confirmLabTestSelection()">Confirm Selection</button>
+        </footer>
+    </div>
+</div>
+
 <!-- Add Appointment Modal -->
 <div id="addAppointmentModal" class="modal" aria-hidden="true" style="display:none;">
     <div class="modal-backdrop" id="addAppointmentModalBackdrop"></div>
@@ -229,16 +501,67 @@
         </header>
         <form id="addAppointmentForm" class="modal-body" action="<?= base_url('reception/createAppointment') ?>" method="post">
             <?= csrf_field() ?>
-            <div class="form-grid">
+            
+            <!-- Step 1: Appointment Type Selection -->
+            <div id="appointment_type_selection" class="appointment-type-selection" style="text-align: center; padding: 2rem 1rem;">
+                <h3 style="margin-bottom: 1.5rem; color: #1f2937; font-size: 1.25rem;">Select Appointment Type</h3>
+                <div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;">
+                    <button type="button" class="appointment-type-btn" data-type="consultation" onclick="selectAppointmentType('consultation')" style="flex: 1; min-width: 200px; max-width: 300px; padding: 2rem; background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%); color: white; border: 3px solid transparent; border-radius: 0.75rem; cursor: pointer; font-size: 1.1rem; font-weight: 600; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); transition: all 0.3s ease;">
+                        <i class="fas fa-user-md" style="font-size: 2.5rem; margin-bottom: 0.75rem; display: block;"></i>
+                        <div style="font-size: 1.25rem; margin-bottom: 0.5rem; font-weight: 700;">Consultation</div>
+                        <div style="font-size: 0.875rem; opacity: 0.95;">Doctor consultation appointment</div>
+                    </button>
+                    <button type="button" class="appointment-type-btn" data-type="laboratory_test" onclick="selectAppointmentType('laboratory_test')" style="flex: 1; min-width: 200px; max-width: 300px; padding: 2rem; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border: 3px solid transparent; border-radius: 0.75rem; cursor: pointer; font-size: 1.1rem; font-weight: 600; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+                        <i class="fas fa-flask" style="font-size: 2.5rem; margin-bottom: 0.75rem; display: block;"></i>
+                        <div style="font-size: 1.25rem; margin-bottom: 0.5rem; font-weight: 700;">Lab Test</div>
+                        <div style="font-size: 0.875rem; opacity: 0.95;">Laboratory test appointment</div>
+                    </button>
+                </div>
+                <p style="margin-top: 1.5rem; color: #6b7280; font-size: 0.875rem;">Choose the type of appointment you want to create</p>
+            </div>
+            
+            <!-- Step 2: Appointment Form (Hidden initially) -->
+            <div id="appointment_form_fields" class="form-grid" style="display: none;">
+                <!-- Hidden field to store selected appointment type -->
+                <input type="hidden" name="appointment_type" id="appointment_type_hidden">
+                
                 <div class="form-field">
                     <label>Select Patient <span class="req">*</span></label>
                     <select name="patient_id" id="patient_select" required onchange="loadPatientDetails()">
                         <option value="">Choose a patient...</option>
                         <?php if (isset($patients) && is_array($patients)): ?>
                             <?php foreach ($patients as $patient): ?>
+                                <?php
+                                    // Calculate age from date of birth
+                                    $ageDob = '—';
+                                    if (!empty($patient['date_of_birth']) && $patient['date_of_birth'] !== '0000-00-00' && $patient['date_of_birth'] !== '' && $patient['date_of_birth'] !== null) {
+                                        try {
+                                            $dateStr = $patient['date_of_birth'];
+                                            if (strpos($dateStr, '/') !== false) {
+                                                $parts = explode('/', $dateStr);
+                                                if (count($parts) === 3) {
+                                                    $dateStr = $parts[2] . '-' . $parts[0] . '-' . $parts[1];
+                                                }
+                                            }
+                                            $birthDate = new \DateTime($dateStr);
+                                            $today = new \DateTime();
+                                            $ageDiff = $today->diff($birthDate);
+                                            $age = $ageDiff->y;
+                                            $dobTimestamp = strtotime($dateStr);
+                                            if ($dobTimestamp !== false) {
+                                                $ageDob = "Age: {$age} years | DOB: " . date('M d, Y', $dobTimestamp);
+                                            }
+                                        } catch (\Exception $e) {
+                                            $ageDob = '—';
+                                        }
+                                    }
+                                    $gender = !empty($patient['gender']) ? htmlspecialchars($patient['gender']) : '—';
+                                ?>
                                 <option value="<?= $patient['id'] ?>" 
                                         data-name="<?= htmlspecialchars($patient['full_name']) ?>" 
-                                        data-contact="<?= htmlspecialchars($patient['contact']) ?>">
+                                        data-contact="<?= htmlspecialchars($patient['contact'] ?? '') ?>"
+                                        data-age-dob="<?= htmlspecialchars($ageDob) ?>"
+                                        data-gender="<?= htmlspecialchars($gender) ?>">
                                     <?= $patient['id'] ?> - <?= htmlspecialchars($patient['full_name']) ?>
                                 </option>
                             <?php endforeach; ?>
@@ -256,9 +579,19 @@
                     <input type="tel" name="contact" id="patient_contact" readonly>
                     <div class="error" data-error-for="contact"></div>
                 </div>
-                <div class="form-field">
+                <!-- Patient Age/DOB and Gender (for Lab Tests) -->
+                <div class="form-field" id="patient_age_field" style="display: none;">
+                    <label>Age / Date of Birth</label>
+                    <input type="text" id="patient_age_dob" readonly>
+                </div>
+                <div class="form-field" id="patient_gender_field" style="display: none;">
+                    <label>Gender</label>
+                    <input type="text" id="patient_gender" readonly>
+                </div>
+                <!-- Doctor Field (Hidden for Lab Tests) -->
+                <div class="form-field" id="doctor_field">
                     <label>Select Doctor <span class="req">*</span></label>
-                    <select name="doctor_id" id="doctor_select" required onchange="loadDoctorScheduleCalendar()">
+                    <select name="doctor_id" id="doctor_select" onchange="loadDoctorScheduleCalendar()">
                         <option value="">Choose a doctor...</option>
                         <?php if (isset($doctors) && is_array($doctors)): ?>
                             <?php foreach ($doctors as $doctor): ?>
@@ -285,19 +618,20 @@
                         <p style="color: #64748b; margin: 0; text-align: center;">Select a doctor to view their schedule</p>
                     </div>
                 </div>
-                <div class="form-field" id="appointment_type_field">
-                    <label>Appointment Type <span class="req">*</span></label>
-                    <select name="appointment_type" id="appointment_type_select">
-                        <option value="">Select Type</option>
-                        <option value="consultation">Consultation</option>
-                        <option value="follow-up">Follow-up</option>
-                        <option value="procedure">Procedure</option>
-                        <option value="laboratory_test">Laboratory Test</option>
-                    </select>
-                    <div class="error" data-error-for="appointment_type"></div>
-                    <small class="form-help" style="color: #64748b;">
-                        For outpatient appointments only
-                    </small>
+                <!-- Appointment type is now selected via buttons, hidden field stores the value -->
+                <!-- Lab Test Fields (Hidden for Consultation) -->
+                <div class="form-field form-field--full" id="lab_test_field" style="display: none;">
+                    <label>Lab Test(s) <span class="req">*</span></label>
+                    <button type="button" id="btnSelectLabTests" onclick="showLabTestModal()" style="width: 100%; padding: 0.75rem 1rem; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 0.5rem; cursor: pointer; text-align: left; color: #64748b; font-size: 0.875rem; transition: all 0.2s ease;">
+                        <i class="fas fa-flask" style="margin-right: 0.5rem; color: #10b981;"></i>
+                        <span id="lab_test_selected_text">Click to select lab test(s)...</span>
+                        <i class="fas fa-chevron-right" style="float: right; margin-top: 0.25rem;"></i>
+                    </button>
+                    <input type="hidden" name="lab_test_type" id="lab_test_type_hidden" value="">
+                    <div class="error" data-error-for="lab_test_type"></div>
+                    <div id="selected_lab_tests_display" style="margin-top: 0.75rem; display: none;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;" id="selected_tests_chips"></div>
+                    </div>
                 </div>
                 <div class="form-field">
                     <label>Appointment Date <span class="req">*</span></label>
@@ -311,8 +645,8 @@
                     </div>
                 </div>
                 <div class="form-field">
-                    <label>Appointment Time <span class="req">*</span></label>
-                    <input type="time" name="appointment_time" required>
+                    <label id="appointment_time_label">Appointment Time <span class="req">*</span></label>
+                    <input type="time" name="appointment_time" id="appointment_time" required>
                     <div class="error" data-error-for="appointment_time"></div>
                 </div>
                 <div class="form-field">
@@ -320,8 +654,19 @@
                     <select name="status" required>
                         <option value="scheduled">Scheduled</option>
                         <option value="confirmed">Confirmed</option>
+                        <option value="pending">Pending</option>
                     </select>
                     <div class="error" data-error-for="status"></div>
+                </div>
+                <!-- Payment Status (For Lab Tests only) -->
+                <div class="form-field" id="payment_status_field" style="display: none;">
+                    <label>Payment Status</label>
+                    <select name="payment_status" id="payment_status">
+                        <option value="unpaid">Unpaid</option>
+                        <option value="paid">Paid</option>
+                        <option value="partially_paid">Partially Paid</option>
+                    </select>
+                    <div class="error" data-error-for="payment_status"></div>
                 </div>
                 <div class="form-field">
                     <label>Select Room</label>
@@ -329,17 +674,25 @@
                         <option value="">Choose a room...</option>
                     </select>
                     <div class="error" data-error-for="room_id"></div>
-                    <small class="form-help">Optional: Select an OPD clinic room for outpatient appointment</small>
+                    <small class="form-help" id="room_help_text">Optional: Select an OPD clinic room for outpatient appointment</small>
                 </div>
-                <div class="form-field form-field--full">
-                    <label>Notes</label>
-                    <textarea name="notes" rows="3" placeholder="Additional notes or instructions..."></textarea>
+                <!-- Notes (Consultation Notes - Hidden for Lab Tests) -->
+                <div class="form-field form-field--full" id="consultation_notes_field">
+                    <label>Consultation Notes</label>
+                    <textarea name="notes" id="consultation_notes" rows="3" placeholder="Additional notes or instructions..."></textarea>
                     <div class="error" data-error-for="notes"></div>
+                </div>
+                <!-- Remarks/Notes (For Lab Tests) -->
+                <div class="form-field form-field--full" id="lab_remarks_field" style="display: none;">
+                    <label>Remarks / Notes</label>
+                    <textarea name="lab_remarks" id="lab_remarks" rows="3" placeholder="Special instructions (e.g., fasting required, specimen collection time, etc.)..."></textarea>
+                    <div class="error" data-error-for="lab_remarks"></div>
                 </div>
             </div>
             <footer class="modal-footer">
+                <button type="button" class="btn-secondary" id="back_to_selection_btn" onclick="backToAppointmentTypeSelection()" style="display: none;">← Back</button>
                 <button type="button" class="btn-secondary" onclick="closeAddAppointmentModal()">Cancel</button>
-                <button type="submit" class="btn-primary">Add Appointment</button>
+                <button type="submit" class="btn-primary" id="submit_appointment_btn" style="display: none;">Add Appointment</button>
             </footer>
         </form>
     </div>
@@ -351,6 +704,9 @@ function showAddAppointmentModal() {
     const modal = document.getElementById('addAppointmentModal');
     modal.style.display = 'block';
     modal.setAttribute('aria-hidden', 'false');
+    
+    // Show selection step, hide form
+    showAppointmentTypeSelection();
 }
 
 function closeAddAppointmentModal() {
@@ -362,6 +718,208 @@ function closeAddAppointmentModal() {
     
     // Reset form fields
     resetRoomField();
+    
+    // Reset to selection step
+    showAppointmentTypeSelection();
+}
+
+// Show appointment type selection buttons
+function showAppointmentTypeSelection() {
+    const selectionDiv = document.getElementById('appointment_type_selection');
+    const formFields = document.getElementById('appointment_form_fields');
+    const submitBtn = document.getElementById('submit_appointment_btn');
+    const backBtn = document.getElementById('back_to_selection_btn');
+    
+    if (selectionDiv) selectionDiv.style.display = 'block';
+    if (formFields) formFields.style.display = 'none';
+    if (submitBtn) submitBtn.style.display = 'none';
+    if (backBtn) backBtn.style.display = 'none';
+    
+    // Reset appointment type
+    const hiddenField = document.getElementById('appointment_type_hidden');
+    if (hiddenField) hiddenField.value = '';
+}
+
+// Select appointment type and show form
+function selectAppointmentType(type) {
+    const selectionDiv = document.getElementById('appointment_type_selection');
+    const formFields = document.getElementById('appointment_form_fields');
+    const submitBtn = document.getElementById('submit_appointment_btn');
+    const backBtn = document.getElementById('back_to_selection_btn');
+    const hiddenField = document.getElementById('appointment_type_hidden');
+    
+    // Set the appointment type
+    if (hiddenField) hiddenField.value = type;
+    
+    // Hide selection, show form
+    if (selectionDiv) selectionDiv.style.display = 'none';
+    if (formFields) formFields.style.display = 'grid';
+    if (submitBtn) submitBtn.style.display = 'inline-block';
+    if (backBtn) backBtn.style.display = 'inline-block';
+    
+    // Toggle fields based on type
+    toggleAppointmentFields();
+    
+    // Load rooms based on appointment type
+    loadOPDRooms();
+}
+
+// Back to appointment type selection
+function backToAppointmentTypeSelection() {
+    showAppointmentTypeSelection();
+}
+
+// Lab Test Modal Functions
+function showLabTestModal() {
+    const modal = document.getElementById('labTestModal');
+    if (modal) {
+        modal.style.display = 'block';
+        modal.setAttribute('aria-hidden', 'false');
+        // Restore previously selected tests
+        restoreLabTestSelection();
+    }
+}
+
+function closeLabTestModal() {
+    const modal = document.getElementById('labTestModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+    }
+}
+
+function filterLabTests() {
+    const searchTerm = document.getElementById('lab_test_search').value.toLowerCase();
+    const options = document.querySelectorAll('.lab-test-option');
+    const groups = document.querySelectorAll('.lab-test-group');
+    
+    let hasVisibleOptions = false;
+    
+    groups.forEach(group => {
+        const groupOptions = group.querySelectorAll('.lab-test-option');
+        let groupHasVisible = false;
+        
+        groupOptions.forEach(option => {
+            const text = option.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                option.style.display = 'flex';
+                groupHasVisible = true;
+                hasVisibleOptions = true;
+            } else {
+                option.style.display = 'none';
+            }
+        });
+        
+        // Show/hide group based on visible options
+        if (groupHasVisible) {
+            group.classList.remove('hidden');
+        } else {
+            group.classList.add('hidden');
+        }
+    });
+}
+
+function updateSelectedLabTests() {
+    // This function is called when checkboxes change
+    // The actual update happens when modal is confirmed
+}
+
+function restoreLabTestSelection() {
+    const hiddenField = document.getElementById('lab_test_type_hidden');
+    if (!hiddenField || !hiddenField.value) return;
+    
+    const selectedTests = hiddenField.value.split(',').map(t => t.trim()).filter(t => t);
+    selectedTests.forEach(testName => {
+        const checkbox = document.querySelector(`#labTestModal input[type="checkbox"][value="${testName.replace(/"/g, '&quot;')}"]`);
+        if (checkbox) {
+            checkbox.checked = true;
+        }
+    });
+}
+
+function confirmLabTestSelection() {
+    const checkboxes = document.querySelectorAll('#labTestModal input[type="checkbox"]:checked');
+    const selectedTests = Array.from(checkboxes).map(cb => cb.value);
+    const hiddenField = document.getElementById('lab_test_type_hidden');
+    const selectedText = document.getElementById('lab_test_selected_text');
+    const displayDiv = document.getElementById('selected_lab_tests_display');
+    const chipsContainer = document.getElementById('selected_tests_chips');
+    
+    if (selectedTests.length === 0) {
+        alert('Please select at least one lab test');
+        return;
+    }
+    
+    // Update hidden field (comma-separated values)
+    if (hiddenField) {
+        hiddenField.value = selectedTests.join(', ');
+    }
+    
+    // Update button text
+    if (selectedText) {
+        if (selectedTests.length === 1) {
+            selectedText.textContent = selectedTests[0];
+        } else {
+            selectedText.textContent = `${selectedTests.length} test(s) selected`;
+        }
+    }
+    
+    // Update button style
+    const btn = document.getElementById('btnSelectLabTests');
+    if (btn) {
+        btn.style.background = '#d1fae5';
+        btn.style.borderColor = '#10b981';
+        btn.style.color = '#065f46';
+    }
+    
+    // Display selected tests as chips
+    if (displayDiv) displayDiv.style.display = 'block';
+    if (chipsContainer) {
+        chipsContainer.innerHTML = '';
+        selectedTests.forEach(test => {
+            const chip = document.createElement('span');
+            chip.className = 'test-chip';
+            chip.innerHTML = `${test} <span class="remove-chip" onclick="removeLabTest('${test.replace(/'/g, "\\'")}')">×</span>`;
+            chipsContainer.appendChild(chip);
+        });
+    }
+    
+    closeLabTestModal();
+}
+
+function clearLabTestSelection() {
+    const checkboxes = document.querySelectorAll('#labTestModal input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = false);
+}
+
+function removeLabTest(testName) {
+    const hiddenField = document.getElementById('lab_test_type_hidden');
+    if (!hiddenField) return;
+    
+    const currentTests = hiddenField.value.split(', ').filter(t => t && t !== testName);
+    hiddenField.value = currentTests.join(', ');
+    
+    // Update display
+    if (currentTests.length === 0) {
+        const selectedText = document.getElementById('lab_test_selected_text');
+        const displayDiv = document.getElementById('selected_lab_tests_display');
+        const btn = document.getElementById('btnSelectLabTests');
+        
+        if (selectedText) selectedText.textContent = 'Click to select lab test(s)...';
+        if (displayDiv) displayDiv.style.display = 'none';
+        if (btn) {
+            btn.style.background = '#f8fafc';
+            btn.style.borderColor = '#cbd5e1';
+            btn.style.color = '#64748b';
+        }
+    } else {
+        // Re-confirm to update display
+        const checkboxes = document.querySelectorAll('#labTestModal input[type="checkbox"]');
+        checkboxes.forEach(cb => {
+            cb.checked = currentTests.includes(cb.value);
+        });
+        confirmLabTestSelection();
+    }
 }
 
 // Load Patient Details when patient is selected
@@ -374,20 +932,126 @@ function loadPatientDetails() {
         document.getElementById('patient_name').value = selectedOption.getAttribute('data-name');
         document.getElementById('patient_contact').value = selectedOption.getAttribute('data-contact');
         
+        // Fill age/DOB and gender if available (for lab tests)
+        const ageDob = selectedOption.getAttribute('data-age-dob');
+        const gender = selectedOption.getAttribute('data-gender');
+        if (ageDob) {
+            document.getElementById('patient_age_dob').value = ageDob;
+        }
+        if (gender) {
+            document.getElementById('patient_gender').value = gender;
+        }
+        
         // Load OPD rooms for outpatient appointments
         loadOPDRooms();
     } else {
         document.getElementById('patient_name').value = '';
         document.getElementById('patient_contact').value = '';
+        document.getElementById('patient_age_dob').value = '';
+        document.getElementById('patient_gender').value = '';
         resetRoomField();
     }
+}
+
+// Toggle fields based on appointment type
+function toggleAppointmentFields() {
+    const hiddenField = document.getElementById('appointment_type_hidden');
+    if (!hiddenField) return;
+    
+    const appointmentType = hiddenField.value;
+    const doctorField = document.getElementById('doctor_field');
+    const doctorSelect = document.getElementById('doctor_select');
+    const doctorScheduleContainer = document.getElementById('doctor_schedule_calendar_container');
+    const labTestField = document.getElementById('lab_test_field');
+    const labTestType = document.getElementById('lab_test_type');
+    const paymentStatusField = document.getElementById('payment_status_field');
+    const consultationNotesField = document.getElementById('consultation_notes_field');
+    const labRemarksField = document.getElementById('lab_remarks_field');
+    const patientAgeField = document.getElementById('patient_age_field');
+    const patientGenderField = document.getElementById('patient_gender_field');
+    const roomHelpText = document.getElementById('room_help_text');
+    
+    if (appointmentType === 'laboratory_test') {
+        // Lab Test: Hide doctor, show lab fields
+        if (doctorField) doctorField.style.display = 'none';
+        if (doctorSelect) {
+            doctorSelect.removeAttribute('required');
+            doctorSelect.value = '';
+        }
+        if (doctorScheduleContainer) doctorScheduleContainer.style.display = 'none';
+        
+        if (labTestField) {
+            labTestField.style.display = 'block';
+            // Lab test is now handled via modal button
+        }
+        
+        if (paymentStatusField) paymentStatusField.style.display = 'block';
+        
+        if (consultationNotesField) consultationNotesField.style.display = 'none';
+        if (labRemarksField) labRemarksField.style.display = 'block';
+        
+        if (patientAgeField) patientAgeField.style.display = 'block';
+        if (patientGenderField) patientGenderField.style.display = 'block';
+        
+        if (roomHelpText) {
+            roomHelpText.textContent = 'Select a laboratory room for specimen collection';
+        }
+        
+        // Update appointment time label for lab tests
+        const timeLabel = document.getElementById('appointment_time_label');
+        if (timeLabel) {
+            timeLabel.innerHTML = 'Appointment Time / Slot <span class="req">*</span>';
+        }
+        
+    } else {
+        // Consultation: Show doctor, hide lab fields
+        if (doctorField) doctorField.style.display = 'block';
+        if (doctorSelect) doctorSelect.setAttribute('required', 'required');
+        
+        if (labTestField) labTestField.style.display = 'none';
+        // Clear lab test selection when switching to consultation
+        const hiddenField = document.getElementById('lab_test_type_hidden');
+        const selectedText = document.getElementById('lab_test_selected_text');
+        const displayDiv = document.getElementById('selected_lab_tests_display');
+        const btn = document.getElementById('btnSelectLabTests');
+        
+        if (hiddenField) hiddenField.value = '';
+        if (selectedText) selectedText.textContent = 'Click to select lab test(s)...';
+        if (displayDiv) displayDiv.style.display = 'none';
+        if (btn) {
+            btn.style.background = '#f8fafc';
+            btn.style.borderColor = '#cbd5e1';
+            btn.style.color = '#64748b';
+        }
+        
+        if (paymentStatusField) paymentStatusField.style.display = 'none';
+        
+        if (consultationNotesField) consultationNotesField.style.display = 'block';
+        if (labRemarksField) labRemarksField.style.display = 'none';
+        
+        if (patientAgeField) patientAgeField.style.display = 'none';
+        if (patientGenderField) patientGenderField.style.display = 'none';
+        
+        if (roomHelpText) {
+            roomHelpText.textContent = 'Optional: Select an OPD clinic room for outpatient appointment';
+        }
+        
+        // Reset appointment time label
+        const timeLabel = document.getElementById('appointment_time_label');
+        if (timeLabel) {
+            timeLabel.innerHTML = 'Appointment Time <span class="req">*</span>';
+        }
+    }
+    
+    // Reload rooms based on appointment type
+    loadOPDRooms();
 }
 
 // Load OPD rooms for outpatient appointments based on appointment type
 function loadOPDRooms() {
     const roomSelect = document.getElementById('room_select');
-    const appointmentTypeSelect = document.getElementById('appointment_type_select');
-    const appointmentType = appointmentTypeSelect ? appointmentTypeSelect.value : null;
+    const hiddenField = document.getElementById('appointment_type_hidden');
+    const appointmentType = hiddenField ? hiddenField.value : null;
     
     // Reset room dropdown
     roomSelect.innerHTML = '<option value="">Loading rooms...</option>';
@@ -439,11 +1103,8 @@ document.getElementById('btnOpenAddAppointment').addEventListener('click', funct
 const appointmentTypeSelect = document.getElementById('appointment_type_select');
 if (appointmentTypeSelect) {
     appointmentTypeSelect.addEventListener('change', function() {
-        // Only reload rooms if a patient is already selected
-        const patientSelect = document.getElementById('patient_select');
-        if (patientSelect && patientSelect.value) {
-            loadOPDRooms();
-        }
+        // Always reload rooms when appointment type changes
+        loadOPDRooms();
     });
 }
 
@@ -456,13 +1117,30 @@ document.getElementById('addAppointmentForm').addEventListener('submit', functio
     const doctorId = document.querySelector('select[name="doctor_id"]').value;
     const appointmentDate = document.querySelector('input[name="appointment_date"]').value;
     const appointmentTime = document.querySelector('input[name="appointment_time"]').value;
-    const appointmentType = document.querySelector('select[name="appointment_type"]').value;
+    const appointmentType = document.getElementById('appointment_type_hidden')?.value || '';
     const roomId = document.querySelector('select[name="room_id"]').value;
+    const labTestType = document.getElementById('lab_test_type');
     
-    // Validate required fields
-    if (!patientId || !doctorId || !appointmentDate || !appointmentTime || !appointmentType) {
+    // Basic validation
+    if (!patientId || !appointmentDate || !appointmentTime || !appointmentType) {
         alert('Please fill in all required fields');
         return false;
+    }
+    
+    // For consultation: doctor is required
+    if (appointmentType === 'consultation' && !doctorId) {
+        alert('Please select a doctor for consultation appointments');
+        return false;
+    }
+    
+    // For lab test: lab test type is required
+    if (appointmentType === 'laboratory_test') {
+        const hiddenField = document.getElementById('lab_test_type_hidden');
+        const selectedTests = hiddenField && hiddenField.value ? hiddenField.value.split(', ') : [];
+        if (selectedTests.length === 0 || (selectedTests.length === 1 && selectedTests[0] === '')) {
+            alert('Please select at least one lab test');
+            return false;
+        }
     }
     
     // Check if selected date is unavailable for the doctor

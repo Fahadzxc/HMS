@@ -36,7 +36,17 @@ class Accounts extends Controller
 						$forge->addColumn($tbl, [
 							'billing_status' => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true]
 						]);
+						// Set all existing records to 'unbilled'
 						$db->table($tbl)->set('billing_status','unbilled')->where('billing_status IS NULL')->update();
+					} else {
+						// Column exists - update any NULL or empty values to 'unbilled'
+						$db->table($tbl)
+							->set('billing_status', 'unbilled')
+							->groupStart()
+								->where('billing_status IS NULL')
+								->orWhere('billing_status', '')
+							->groupEnd()
+							->update();
 					}
 				} catch (\Exception $e) {
 					log_message('debug', 'ensureLabBillingColumns skip for '.$tbl.': '.$e->getMessage());
@@ -580,6 +590,55 @@ class Accounts extends Controller
 			// If bill is fully paid, update related records
 			if ($newStatus === 'paid' && $bill['patient_id']) {
 				$db = \Config\Database::connect();
+				$appointmentModel = new \App\Models\AppointmentModel();
+				
+				// Auto-complete appointment if bill is linked to an appointment
+				if (!empty($bill['appointment_id'])) {
+					$appointment = $appointmentModel->find($bill['appointment_id']);
+					
+					if ($appointment && $appointment['status'] !== 'completed') {
+						$appointmentModel->update($bill['appointment_id'], [
+							'status' => 'completed',
+							'updated_at' => date('Y-m-d H:i:s')
+						]);
+						log_message('info', "Auto-completed appointment #{$bill['appointment_id']} after bill #{$billId} was fully paid");
+					}
+				} else {
+					// If bill doesn't have appointment_id, try to find appointment by patient_id and date
+					// Check if there are any appointments for this patient on the bill date or recent dates
+					$billDate = $bill['created_at'] ?? date('Y-m-d');
+					$billDateFormatted = date('Y-m-d', strtotime($billDate));
+					
+					// Find appointments for this patient within 7 days of bill creation
+					$startDate = date('Y-m-d', strtotime($billDateFormatted . ' -7 days'));
+					$endDate = date('Y-m-d', strtotime($billDateFormatted . ' +1 day'));
+					
+					$appointments = $db->table('appointments')
+						->where('patient_id', $bill['patient_id'])
+						->where('appointment_date >=', $startDate)
+						->where('appointment_date <=', $endDate)
+						->where('status !=', 'completed')
+						->where('status !=', 'cancelled')
+						->orderBy('appointment_date', 'DESC')
+						->orderBy('appointment_time', 'DESC')
+						->get()
+						->getResultArray();
+					
+					// Update the most recent appointment that matches
+					if (!empty($appointments)) {
+						$appointmentToUpdate = $appointments[0]; // Most recent
+						$appointmentModel->update($appointmentToUpdate['id'], [
+							'status' => 'completed',
+							'updated_at' => date('Y-m-d H:i:s')
+						]);
+						log_message('info', "Auto-completed appointment #{$appointmentToUpdate['id']} (matched by patient_id and date) after bill #{$billId} was fully paid");
+						
+						// Also update the bill to link it to this appointment for future reference
+						$billingModel->update($billId, [
+							'appointment_id' => $appointmentToUpdate['id']
+						]);
+					}
+				}
 				
 				// Update admission billing_cleared for inpatients
 				$admission = $db->table('admissions')
@@ -892,17 +951,64 @@ class Accounts extends Controller
 			// lab_test_requests (include all requests that haven't been billed)
 			if ($db->tableExists('lab_test_requests')) {
 				try {
-					// Get all lab requests for this patient that haven't been billed
+					// Ensure billing_status column exists and update existing records
+					$this->ensureLabBillingColumns();
+					
+					// Get ALL lab requests for this patient first (we'll filter in PHP)
+					// This ensures we don't miss any due to column issues
+					// Check if appointment_id column exists before selecting it
+					$fields = $db->getFieldData('lab_test_requests');
+					$hasAppointmentId = false;
+					foreach ($fields as $f) {
+						if (strtolower($f->name) === 'appointment_id') {
+							$hasAppointmentId = true;
+							break;
+						}
+					}
+					
+					$selectFields = 'rq.id, rq.test_type, rq.requested_at, rq.status, rq.doctor_id';
+					if ($hasAppointmentId) {
+						$selectFields .= ', rq.appointment_id';
+					}
+					
 					$allRequests = $db->table('lab_test_requests rq')
-						->select('rq.id, rq.test_type, rq.requested_at, rq.status, rq.billing_status')
+						->select($selectFields)
 						->where('rq.patient_id', $patientId)
-						->groupStart()
-							->where('rq.billing_status', 'unbilled')
-							->orWhere('rq.billing_status IS NULL')
-							->orWhere('rq.billing_status', '')
-						->groupEnd()
 						->orderBy('rq.requested_at', 'DESC')
 						->get()->getResultArray();
+					
+					// Try to get billing_status if column exists
+					if (!empty($allRequests)) {
+						try {
+							$requestIds = array_column($allRequests, 'id');
+							$requestsWithBilling = $db->table('lab_test_requests')
+								->select('id, billing_status')
+								->whereIn('id', $requestIds)
+								->get()->getResultArray();
+							
+							$billingStatusMap = [];
+							foreach ($requestsWithBilling as $req) {
+								$billingStatusMap[$req['id']] = $req['billing_status'] ?? null;
+							}
+							
+							// Add billing_status to each request
+							foreach ($allRequests as &$req) {
+								$req['billing_status'] = $billingStatusMap[$req['id']] ?? null;
+							}
+						} catch (\Exception $e) {
+							// Column doesn't exist or error - assume all are unbilled
+							foreach ($allRequests as &$req) {
+								$req['billing_status'] = null;
+							}
+						}
+					}
+					
+					// Filter: Include if billing_status is NULL, empty, or 'unbilled'
+					// Also include if billing_status column doesn't exist (null)
+					$allRequests = array_filter($allRequests, function($req) {
+						$status = $req['billing_status'] ?? null;
+						return ($status === null || $status === '' || $status === 'unbilled');
+					});
 					
 					// Get request IDs that already have billed results
 					$requestIdsWithBilledResults = [];
@@ -925,14 +1031,34 @@ class Accounts extends Controller
 						}
 					}
 					
+					// Log for debugging
+					log_message('info', 'Patient ' . $patientId . ': Found ' . count($allRequests) . ' total lab requests, ' . count($requests) . ' will be added to billing');
+					
 					foreach ($requests as $row) {
 						$testType = trim(strtolower($row['test_type'] ?? 'Lab Test'));
 						$unitPrice = $defaultLabPrices[$testType] ?? $this->guessLabPrice($testType, $defaultLabPrices, 500.00);
+						
+						// Check if this request is linked to an appointment
+						$appointmentInfo = '';
+						if (isset($row['appointment_id']) && !empty($row['appointment_id']) && $db->tableExists('appointments')) {
+							try {
+								$appointment = $db->table('appointments')
+									->select('appointment_date, appointment_time')
+									->where('id', $row['appointment_id'])
+									->get()->getRowArray();
+								if ($appointment) {
+									$appointmentInfo = ' (Appointment: ' . date('M d, Y', strtotime($appointment['appointment_date'] ?? '')) . ')';
+								}
+							} catch (\Exception $e) {
+								// Ignore errors
+							}
+						}
+						
 						$billableItems[] = [
 							'category' => 'laboratory',
 							'code' => 'LABRQ-' . str_pad((string)$row['id'], 6, '0', STR_PAD_LEFT),
 							'date_time' => !empty($row['requested_at']) ? date('Y-m-d\TH:i', strtotime($row['requested_at'])) : date('Y-m-d\TH:i'),
-							'item_name' => strtoupper($row['test_type'] ?? 'Lab Test'),
+							'item_name' => strtoupper($row['test_type'] ?? 'Lab Test') . $appointmentInfo,
 							'unit_price' => $unitPrice,
 							'quantity' => 1,
 							'reference_id' => $row['id'],
@@ -960,14 +1086,17 @@ class Accounts extends Controller
 			}
 			
 			// Get unbilled appointments (Doctor Fees) - get all non-cancelled appointments
+			// Exclude lab test appointments (they are billed via lab_test_requests)
 			$appointments = [];
 			if ($db->tableExists('appointments')) {
 				try {
 					$appointmentModel = new AppointmentModel();
-					// Get all appointments except cancelled and no-show
+					// Get all appointments except cancelled, no-show, and lab test appointments
 					$appointmentsQuery = $appointmentModel
 						->where('patient_id', $patientId)
-						->whereNotIn('status', ['cancelled', 'no-show']);
+						->whereNotIn('status', ['cancelled', 'no-show'])
+						->where('appointment_type !=', 'laboratory_test') // Exclude lab test appointments
+						->where('doctor_id IS NOT NULL', null, false); // Only appointments with doctors
 					
 					if (!empty($billedAppointmentIds)) {
 						$appointmentsQuery->whereNotIn('id', $billedAppointmentIds);

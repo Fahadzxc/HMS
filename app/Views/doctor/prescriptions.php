@@ -79,6 +79,7 @@
                                 <th style="min-width: 100px;">Duration</th>
                                 <th style="min-width: 100px;">Quantity</th>
                                 <th style="min-width: 150px;">Notes</th>
+                                <th style="min-width: 100px;">Follow-up</th>
                                 <th style="width: 60px;">Actions</th>
                             </tr>
                         </thead>
@@ -269,6 +270,15 @@ function addRxItem() {
         <td>
             <input type="text" class="form-input form-input-sm" placeholder="Additional notes..." data-field="notes">
         </td>
+        <td style="text-align: center;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                <input type="checkbox" data-field="requires_followup" title="Check if patient needs follow-up appointment" onchange="toggleFollowupDateTime(this)">
+                <div class="followup-datetime-container" style="display: none; width: 100%; margin-top: 8px;">
+                    <input type="date" class="form-input form-input-sm" data-field="followup_date" style="width: 100%; margin-bottom: 4px;" placeholder="Follow-up Date" title="Follow-up Date">
+                    <input type="time" class="form-input form-input-sm" data-field="followup_time" style="width: 100%;" placeholder="Follow-up Time" title="Follow-up Time">
+                </div>
+            </div>
+        </td>
         <td>
             <button type="button" class="btn-remove" onclick="this.closest('tr').remove()" title="Remove">
                 🗑️
@@ -276,6 +286,37 @@ function addRxItem() {
         </td>
     `;
     container.appendChild(row);
+}
+
+// Toggle follow-up date and time inputs
+function toggleFollowupDateTime(checkbox) {
+    const row = checkbox.closest('tr');
+    const container = row.querySelector('.followup-datetime-container');
+    const dateInput = row.querySelector('[data-field="followup_date"]');
+    const timeInput = row.querySelector('[data-field="followup_time"]');
+    
+    if (checkbox.checked) {
+        container.style.display = 'block';
+        // Set minimum date to today
+        const today = new Date().toISOString().split('T')[0];
+        if (dateInput) {
+            dateInput.setAttribute('min', today);
+            dateInput.required = true;
+        }
+        if (timeInput) {
+            timeInput.required = true;
+        }
+    } else {
+        container.style.display = 'none';
+        if (dateInput) {
+            dateInput.value = '';
+            dateInput.required = false;
+        }
+        if (timeInput) {
+            timeInput.value = '';
+            timeInput.required = false;
+        }
+    }
 }
 
 // Medication change handler
@@ -428,7 +469,11 @@ function collectItems() {
     rows.forEach(r => {
         const item = {};
         r.querySelectorAll('[data-field]').forEach(inp => {
-            item[inp.dataset.field] = inp.value.trim();
+            if (inp.type === 'checkbox') {
+                item[inp.dataset.field] = inp.checked;
+            } else {
+                item[inp.dataset.field] = inp.value.trim();
+            }
         });
         if ((!item.name || item.name.length === 0) && item.med_id) {
             const sel = r.querySelector('select[data-field="med_id"]');
@@ -458,6 +503,26 @@ function savePrescription() {
     if (items.length === 0) {
         alert('Please add at least one medication item.');
         return;
+    }
+
+    // Validate follow-up date and time if follow-up is checked
+    const rows = document.querySelectorAll('#rx_items_container .medication-row');
+    for (let row of rows) {
+        const followupCheckbox = row.querySelector('[data-field="requires_followup"]');
+        if (followupCheckbox && followupCheckbox.checked) {
+            const followupDate = row.querySelector('[data-field="followup_date"]');
+            const followupTime = row.querySelector('[data-field="followup_time"]');
+            if (!followupDate || !followupDate.value.trim()) {
+                alert('Please select a follow-up date for the medication with follow-up checked.');
+                followupDate?.focus();
+                return;
+            }
+            if (!followupTime || !followupTime.value.trim()) {
+                alert('Please select a follow-up time for the medication with follow-up checked.');
+                followupTime?.focus();
+                return;
+            }
+        }
     }
 
     const saveBtn = document.querySelector('button[onclick="savePrescription()"]');
@@ -851,6 +916,31 @@ input[data-field="quantity"]:focus {
 
 .quantity-info {
     cursor: help;
+}
+
+/* Follow-up date and time styling */
+.followup-datetime-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    padding: 4px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.followup-datetime-container input[type="date"],
+.followup-datetime-container input[type="time"] {
+    font-size: 12px;
+    padding: 4px 6px;
+}
+
+/* Adjust follow-up column width */
+.medication-table th:nth-child(8),
+.medication-table td:nth-child(8) {
+    min-width: 150px;
+    max-width: 180px;
 }
 </style>
 

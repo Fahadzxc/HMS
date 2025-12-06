@@ -398,6 +398,53 @@ class Reception extends Controller
 		return $this->response->setBody($html);
 	}
 
+	public function followups(): ResponseInterface|RedirectResponse
+	{
+		if (!$this->isReceptionist()) {
+			return redirect()->to('/login');
+		}
+
+		$appointmentModel = new \App\Models\AppointmentModel();
+		$db = \Config\Database::connect();
+		$today = date('Y-m-d');
+		
+		// Get all follow-up appointments
+		$builder = $db->table('appointments a');
+		$builder->select('a.*, p.full_name as patient_name, p.patient_id as patient_code, u.name as doctor_name, r.room_number');
+		$builder->join('patients p', 'p.id = a.patient_id', 'left');
+		$builder->join('users u', 'u.id = a.doctor_id', 'left');
+		$builder->join('rooms r', 'r.id = a.room_id', 'left');
+		$builder->where('a.appointment_type', 'follow-up');
+		$builder->where('a.status !=', 'cancelled');
+		$builder->orderBy('a.appointment_date', 'ASC');
+		$builder->orderBy('a.appointment_time', 'ASC');
+		$allFollowups = $builder->get()->getResultArray();
+		
+		// Separate today's and upcoming follow-ups
+		$todaysFollowups = [];
+		$upcomingFollowups = [];
+		
+		foreach ($allFollowups as $followup) {
+			if ($followup['appointment_date'] === $today) {
+				$todaysFollowups[] = $followup;
+			} elseif ($followup['appointment_date'] > $today) {
+				$upcomingFollowups[] = $followup;
+			}
+		}
+		
+		$data = [
+			'title'                 => 'Follow-ups - HMS',
+			'user_role'             => 'receptionist',
+			'user_name'             => session()->get('name'),
+			'followups'             => $todaysFollowups,
+			'upcoming_followups'    => $upcomingFollowups,
+		];
+
+		$html = view('reception/followups', $data);
+
+		return $this->response->setBody($html);
+	}
+
     public function store(): ResponseInterface
     {
         log_message('info', 'Store method called - Request method: ' . $this->request->getMethod());
@@ -899,6 +946,7 @@ class Reception extends Controller
 		$patientType = $patient['patient_type'] ?? 'outpatient';
 		$appointmentType = $this->request->getPost('appointment_type');
 		$roomId = $this->request->getPost('room_id') ?: null;
+		$doctorId = $this->request->getPost('doctor_id') ?: null;
 		
 		// Validate based on patient type
 		if ($patientType === 'inpatient') {
@@ -917,6 +965,16 @@ class Reception extends Controller
 					'status' => 'error',
 					'message' => 'Appointment type is required for outpatient appointments',
 					'errors' => ['appointment_type' => 'Appointment type is required']
+				]);
+			}
+			
+			// For lab test appointments: doctor is NOT required (no consultation)
+			// For consultation appointments: doctor IS required
+			if ($appointmentType === 'consultation' && empty($doctorId)) {
+				return $this->response->setJSON([
+					'status' => 'error',
+					'message' => 'Doctor selection is required for consultation appointments',
+					'errors' => ['doctor_id' => 'Doctor is required for consultation']
 				]);
 			}
 		}
@@ -960,45 +1018,82 @@ class Reception extends Controller
 			}
 		}
 		
+		// Get lab test type and remarks if lab test appointment
+		$labTestType = $this->request->getPost('lab_test_type');
+		$labRemarks = $this->request->getPost('lab_remarks');
+		$paymentStatus = $this->request->getPost('payment_status');
+		
+		// Build notes field - use lab remarks for lab tests, regular notes for consultation
+		$notes = '';
+		if ($appointmentType === 'laboratory_test') {
+			$notes = $labRemarks ?? '';
+			// Store lab test type in notes or create separate field if needed
+			if (!empty($labTestType)) {
+				$testTypes = is_array($labTestType) ? implode(', ', $labTestType) : $labTestType;
+				$notes = 'Lab Tests: ' . $testTypes . ($notes ? "\n\nRemarks: " . $notes : '');
+			}
+		} else {
+			$notes = $this->request->getPost('notes') ?? '';
+		}
+		
+		// Set doctor_id to null for lab test appointments
+		$finalDoctorId = null;
+		if ($appointmentType === 'laboratory_test') {
+			$finalDoctorId = null; // Explicitly null for lab tests
+		} else {
+			$finalDoctorId = !empty($doctorId) ? (int)$doctorId : null;
+		}
+		
 		$data = [
 			'patient_id' => $patientId,
-			'doctor_id' => $this->request->getPost('doctor_id'),
+			'doctor_id' => $finalDoctorId, // null for lab tests, doctor_id for consultations
 			'room_id' => $roomId,
 			'appointment_date' => $this->request->getPost('appointment_date'),
 			'appointment_time' => $this->request->getPost('appointment_time'),
-			'appointment_type' => $patientType === 'inpatient' ? 'emergency' : ($appointmentType ?: 'consultation'), // Use 'emergency' for inpatient
-			'status' => 'scheduled',
-			'notes' => $this->request->getPost('notes'),
+			'appointment_type' => $patientType === 'inpatient' ? 'emergency' : ($appointmentType ?: 'consultation'),
+			'status' => $this->request->getPost('status') ?? 'scheduled',
+			'notes' => $notes,
 			'created_by' => $userId
 		];
 
 		// Debug logging
 		log_message('info', 'Appointment data: ' . json_encode($data));
 
-		// Check doctor availability
-		log_message('info', 'Checking doctor availability...');
-		$isAvailable = $appointmentModel->isDoctorAvailable($data['doctor_id'], $data['appointment_date'], $data['appointment_time']);
-		log_message('info', 'Doctor available: ' . ($isAvailable ? 'Yes' : 'No'));
-		
-		if (!$isAvailable) {
-			log_message('info', 'Doctor not available, returning error');
+		// Check doctor availability only for consultation appointments
+		if ($appointmentType === 'consultation' && !empty($data['doctor_id'])) {
+			log_message('info', 'Checking doctor availability...');
+			$isAvailable = $appointmentModel->isDoctorAvailable($data['doctor_id'], $data['appointment_date'], $data['appointment_time']);
+			log_message('info', 'Doctor available: ' . ($isAvailable ? 'Yes' : 'No'));
 			
-			// Check if it's a schedule issue or appointment conflict
-			$scheduleModel = new \App\Models\DoctorScheduleModel();
-			$hasSchedule = $scheduleModel->isDoctorAvailableOnSchedule($data['doctor_id'], $data['appointment_date'], $data['appointment_time']);
-			
-			$message = $hasSchedule ? 
-				'Doctor already has an appointment at the selected date and time' : 
-				'Doctor has not set their schedule for the selected date and time. Please ask the doctor to set their availability first.';
-			
-			return $this->response->setJSON([
-				'status' => 'error',
-				'message' => $message
-			]);
+			if (!$isAvailable) {
+				log_message('info', 'Doctor not available, returning error');
+				
+				// Check if it's a schedule issue or appointment conflict
+				$scheduleModel = new \App\Models\DoctorScheduleModel();
+				$hasSchedule = $scheduleModel->isDoctorAvailableOnSchedule($data['doctor_id'], $data['appointment_date'], $data['appointment_time']);
+				
+				$message = $hasSchedule ? 
+					'Doctor already has an appointment at the selected date and time' : 
+					'Doctor has not set their schedule for the selected date and time. Please ask the doctor to set their availability first.';
+				
+				return $this->response->setJSON([
+					'status' => 'error',
+					'message' => $message
+				]);
+			}
 		}
 
 		log_message('info', 'Attempting to insert appointment...');
-		$insertResult = $appointmentModel->insert($data);
+		log_message('info', 'Appointment data before insert: ' . json_encode($data));
+		
+		// For lab test appointments, ensure doctor_id is explicitly set to null
+		if ($appointmentType === 'laboratory_test') {
+			$data['doctor_id'] = null; // Explicitly set to null
+			$insertResult = $appointmentModel->skipValidation(true)->insert($data);
+		} else {
+			$insertResult = $appointmentModel->insert($data);
+		}
+		
 		log_message('info', 'Insert result: ' . ($insertResult ? 'Success' : 'Failed'));
 		
 		if ($insertResult) {
@@ -1006,6 +1101,49 @@ class Reception extends Controller
 			if (!empty($roomId)) {
 				$roomModel->updateOccupancy($roomId, true);
 			}
+			
+			// If lab test appointment, create lab_test_request entry
+			if ($appointmentType === 'laboratory_test') {
+				try {
+					$labTestRequestModel = new \App\Models\LabTestRequestModel();
+					$labTestType = $this->request->getPost('lab_test_type');
+					$labRemarks = $this->request->getPost('lab_remarks');
+					$paymentStatus = $this->request->getPost('payment_status') ?? 'unpaid';
+					
+					// Parse lab test types (comma-separated)
+					$testTypes = [];
+					if (!empty($labTestType)) {
+						if (is_array($labTestType)) {
+							$testTypes = $labTestType;
+						} else {
+							$testTypes = array_map('trim', explode(',', $labTestType));
+						}
+					}
+					
+					// Create a lab test request for each test type
+					foreach ($testTypes as $testType) {
+						if (!empty($testType)) {
+							$labRequestData = [
+								'patient_id' => $patientId,
+								'doctor_id' => null, // No doctor for walk-in lab tests
+								'test_type' => $testType,
+								'priority' => 'normal',
+								'status' => 'pending',
+								'requested_at' => date('Y-m-d H:i:s'),
+								'notes' => $labRemarks ?? '',
+								'appointment_id' => $insertResult, // Link to appointment
+								'billing_status' => 'unbilled', // Ensure it's billable
+							];
+							
+							$labTestRequestModel->insert($labRequestData);
+						}
+					}
+				} catch (\Exception $e) {
+					log_message('error', 'Error creating lab test request: ' . $e->getMessage());
+					// Don't fail the appointment creation if lab request fails
+				}
+			}
+			
 			// Always return JSON for this endpoint
 			return $this->response->setJSON([
 				'status' => 'success',
@@ -1028,14 +1166,14 @@ class Reception extends Controller
 				'errors' => $errors
 			]);
 		}
-		} catch (\Exception $e) {
-			log_message('error', 'Exception in createAppointment: ' . $e->getMessage());
-			log_message('error', 'Stack trace: ' . $e->getTraceAsString());
-			return $this->response->setJSON([
-				'status' => 'error',
-				'message' => 'An error occurred: ' . $e->getMessage()
-			]);
-		}
+	} catch (\Exception $e) {
+		log_message('error', 'Exception in createAppointment: ' . $e->getMessage());
+		log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+		return $this->response->setJSON([
+			'status' => 'error',
+			'message' => 'An error occurred: ' . $e->getMessage()
+		]);
+	}
 	}
 
 	public function checkInPatient()
@@ -1294,6 +1432,7 @@ class Reception extends Controller
 
 		$type = $this->request->getGet('type') ?? 'outpatient';
 		$appointmentType = $this->request->getGet('appointment_type') ?? null;
+		$patientAgeDays = $this->request->getGet('patient_age_days') ?? null;
 		
 		// Validate type
 		if (!in_array($type, ['outpatient', 'inpatient'])) {
@@ -1304,15 +1443,56 @@ class Reception extends Controller
 		}
 
 		$roomModel = new \App\Models\RoomModel();
+		$db = \Config\Database::connect();
 		
-		// If appointment type is provided, filter by it
-		if ($appointmentType && $type === 'outpatient') {
+		// For inpatient: if patient age is provided, filter by age
+		if ($type === 'inpatient' && $patientAgeDays !== null) {
+			$ageInDays = (int) $patientAgeDays;
+			if ($ageInDays >= 0) {
+				$rooms = $roomModel->getRoomsByPatientAge($ageInDays, $type);
+			} else {
+				// Invalid age, return all inpatient rooms
+				$rooms = $roomModel->getInpatientRooms();
+			}
+		}
+		// If appointment type is provided, filter by it (for outpatient)
+		else if ($appointmentType && $type === 'outpatient') {
 			$rooms = $roomModel->getRoomsByAppointmentType($appointmentType, $type);
 		} else if ($type === 'outpatient') {
 			$rooms = $roomModel->getOutpatientRooms();
 		} else {
+			// Default: all inpatient rooms
 			$rooms = $roomModel->getInpatientRooms();
 		}
+
+		// Get occupied rooms from active admissions
+		$occupiedRooms = [];
+		if ($type === 'inpatient') {
+			$occupied = $db->table('admissions')
+				->select('room_id, COUNT(*) as occupied_count')
+				->where('status', 'Admitted')
+				->where('room_id IS NOT NULL', null, false)
+				->groupBy('room_id')
+				->get()
+				->getResultArray();
+			
+			foreach ($occupied as $occ) {
+				$occupiedRooms[$occ['room_id']] = (int)$occ['occupied_count'];
+			}
+		}
+
+		// Mark rooms as unavailable if occupied
+		foreach ($rooms as &$room) {
+			$roomId = $room['id'] ?? $room['room_id'] ?? null;
+			$capacity = (int)($room['capacity'] ?? 0);
+			$currentOccupancy = (int)($room['current_occupancy'] ?? 0);
+			
+			// Get actual occupancy from admissions
+			$actualOccupancy = isset($occupiedRooms[$roomId]) ? $occupiedRooms[$roomId] : $currentOccupancy;
+			$room['actual_occupancy'] = $actualOccupancy;
+			$room['is_available'] = ($actualOccupancy < $capacity) && ($room['is_available'] ?? true);
+		}
+		unset($room);
 
 		return $this->response->setJSON([
 			'status' => 'success',

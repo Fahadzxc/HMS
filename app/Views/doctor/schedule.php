@@ -88,9 +88,25 @@
                         
                         <?php if (!empty($dayAppointments)): ?>
                             <?php foreach (array_slice($dayAppointments, 0, 3) as $apt): ?>
-                                <div class="calendar-appointment-item" title="<?= esc($apt['patient_name'] ?? 'Patient') ?> - <?= date('g:i A', strtotime($apt['appointment_time'])) ?>">
+                                <?php 
+                                $appointmentType = ucfirst(str_replace('_', ' ', $apt['appointment_type'] ?? 'consultation'));
+                                $typeBadge = 'primary';
+                                if (strtolower($appointmentType) === 'follow-up') {
+                                    $typeBadge = 'info';
+                                } elseif (strtolower($appointmentType) === 'procedure') {
+                                    $typeBadge = 'warning';
+                                } elseif (strtolower($appointmentType) === 'laboratory_test') {
+                                    $typeBadge = 'success';
+                                }
+                                ?>
+                                <div class="calendar-appointment-item" title="<?= esc($apt['patient_name'] ?? 'Patient') ?> - <?= date('g:i A', strtotime($apt['appointment_time'])) ?> - <?= esc($appointmentType) ?>">
                                     <div class="appointment-patient">
                                         👤 <?= esc(substr($apt['patient_name'] ?? 'Patient', 0, 15)) ?><?= strlen($apt['patient_name'] ?? '') > 15 ? '...' : '' ?>
+                                    </div>
+                                    <div class="appointment-type">
+                                        <span class="appointment-type-badge appointment-type-<?= $typeBadge ?>">
+                                            <?= esc($appointmentType) ?>
+                                        </span>
                                     </div>
                                     <div class="appointment-time">
                                         <?= date('g:i A', strtotime($apt['appointment_time'])) ?>
@@ -299,6 +315,9 @@
     color: #1e40af;
     border-left: 3px solid #3b82f6;
     margin-top: 0.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
 }
 
 .appointment-patient {
@@ -307,6 +326,40 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.appointment-type {
+    margin: 0.2rem 0 0.15rem 0;
+}
+
+.appointment-type-badge {
+    display: inline-block;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.appointment-type-primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.appointment-type-info {
+    background: #06b6d4;
+    color: white;
+}
+
+.appointment-type-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.appointment-type-success {
+    background: #10b981;
+    color: white;
 }
 
 .appointment-time {
