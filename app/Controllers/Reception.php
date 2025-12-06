@@ -374,8 +374,12 @@ class Reception extends Controller
 		$todaysAppointments   = $appointmentModel->getAppointmentsByDate(date('Y-m-d'));
 		$upcomingAppointments = $appointmentModel->getUpcomingAppointments(50);
 		
-		// Get only OUTPATIENTS for appointment booking (inpatients have their own appointment system)
-		$patients = $patientModel->where('patient_type', 'outpatient')->orderBy('id', 'DESC')->findAll();
+		// Get only ACTIVE OUTPATIENTS for appointment booking (inpatients have their own appointment system)
+		// Exclude inactive patients (walk-in patients who have paid their bills)
+		$patients = $patientModel->where('patient_type', 'outpatient')
+			->where('status', 'active')
+			->orderBy('id', 'DESC')
+			->findAll();
 		
 		$doctors = $userModel->getDoctors();
 		

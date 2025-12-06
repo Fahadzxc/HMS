@@ -914,6 +914,26 @@ class Doctor extends Controller
         $medModel = new MedicationModel();
 
         $prescriptions = $rxModel->getDoctorPrescriptions((int) $doctorId);
+        
+        // Fix existing prescriptions with null/empty status - set to 'completed' for outpatients
+        $patientModel = new PatientModel();
+        foreach ($prescriptions as &$rx) {
+            if (empty($rx['status']) || $rx['status'] === null || trim($rx['status']) === '') {
+                $patient = $patientModel->find($rx['patient_id'] ?? 0);
+                if ($patient && strtolower($patient['patient_type'] ?? '') === 'outpatient') {
+                    // Update prescription status to 'completed' for outpatients
+                    $rxModel->update($rx['id'], [
+                        'status' => 'completed',
+                        'updated_at' => date('Y-m-d H:i:s')
+                    ]);
+                    $rx['status'] = 'completed';
+                }
+            }
+        }
+        unset($rx);
+        
+        // Re-fetch prescriptions to get updated statuses
+        $prescriptions = $rxModel->getDoctorPrescriptions((int) $doctorId);
 
         // Patients assigned to this doctor for selection - from BOTH appointments AND admissions
         $db = \Config\Database::connect();
@@ -1100,9 +1120,9 @@ class Doctor extends Controller
             }
         }
 
-        // For outpatients: status = 'printed' (direct print, no nurse)
+        // For outpatients: status = 'completed' (prescription is given/printed, no nurse needed)
         // For inpatients: status = 'pending' (nurse will administer)
-        $prescriptionStatus = $isOutpatient ? 'printed' : 'pending';
+        $prescriptionStatus = $isOutpatient ? 'completed' : 'pending';
         
         $data = [
             'patient_id' => $patientId,
@@ -1172,6 +1192,14 @@ class Doctor extends Controller
                 $medicineName = $item['name'] ?? '';
                 
                 if (empty($medicineName)) {
+                    continue;
+                }
+                
+                // Check if patient will buy from hospital (for outpatients only)
+                // If buy_from_hospital is false or not set, skip stock deduction
+                $buyFromHospital = isset($item['buy_from_hospital']) ? (bool)$item['buy_from_hospital'] : true;
+                if (!$buyFromHospital) {
+                    log_message('info', "Skipping stock deduction for {$medicineName} - patient will not buy from hospital");
                     continue;
                 }
                 

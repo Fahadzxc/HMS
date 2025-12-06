@@ -407,7 +407,7 @@
                     </select>
                     <div class="error" data-error-for="patient_type"></div>
                 </div>
-                <div class="form-field">
+                <div class="form-field" id="insuranceProviderField" style="display: none;">
                     <label>Insurance Provider</label>
                     <select name="insurance_provider" id="insuranceProvider">
                         <option value="">Select Insurance Provider</option>
@@ -719,6 +719,10 @@
 		// Inpatient section toggle and dynamic dropdowns
 		const patientTypeEl = document.getElementById('patientType');
 		const inpatientEl = document.getElementById('inpatientSection');
+		const insuranceProviderField = document.getElementById('insuranceProviderField');
+		const insuranceProvider = document.getElementById('insuranceProvider');
+		const insuranceDetails = document.getElementById('insuranceDetails');
+		
 		function showInpatient() {
 			if (!inpatientEl) return;
 			inpatientEl.style.display = 'block';
@@ -732,12 +736,37 @@
 			// Use a small timeout to hide completely after transition
 			setTimeout(() => { inpatientEl.style.display = 'none'; }, 250);
 		}
+		
+		function toggleInsuranceField(patientType) {
+			if (patientType === 'inpatient') {
+				// Show insurance field for inpatients
+				if (insuranceProviderField) insuranceProviderField.style.display = 'block';
+			} else {
+				// Hide insurance field for outpatients and clear values
+				if (insuranceProviderField) insuranceProviderField.style.display = 'none';
+				if (insuranceProvider) {
+					insuranceProvider.value = '';
+					insuranceProvider.dispatchEvent(new Event('change'));
+				}
+				if (insuranceDetails) insuranceDetails.style.display = 'none';
+			}
+		}
+		
 		if (patientTypeEl && inpatientEl) {
 			// Initialize state
-			if (patientTypeEl.value === 'inpatient') showInpatient(); else hideInpatient();
+			const initialType = patientTypeEl.value;
+			if (initialType === 'inpatient') {
+				showInpatient();
+				toggleInsuranceField('inpatient');
+			} else {
+				hideInpatient();
+				toggleInsuranceField('outpatient');
+			}
+			
 			patientTypeEl.addEventListener('change', function() {
 				if (this.value === 'inpatient') {
                     showInpatient();
+                    toggleInsuranceField('inpatient');
                     // Ensure admission datetime defaults to now when switching to inpatient
                     const ad = document.querySelector('input[name="admission_datetime"]');
                     if (ad && !ad.value) {
@@ -751,6 +780,7 @@
 					setTimeout(() => { try { filterDoctorsByAdmission(); } catch(_e) {} }, 400);
 				} else {
 					hideInpatient();
+					toggleInsuranceField('outpatient');
 				}
 			});
 		}

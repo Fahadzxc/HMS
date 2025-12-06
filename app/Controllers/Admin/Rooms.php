@@ -32,15 +32,62 @@ class Rooms extends Controller
             ->get()
             ->getResultArray();
 
+        // Get active appointments with room assignments (for consultations)
+        $activeAppointments = $db->table('appointments a')
+            ->select('a.room_id, COUNT(*) as appointment_count, GROUP_CONCAT(p.full_name SEPARATOR ", ") as patient_names')
+            ->join('patients p', 'p.id = a.patient_id', 'left')
+            ->whereIn('a.status', ['scheduled', 'confirmed'])
+            ->where('a.room_id IS NOT NULL', null, false)
+            ->groupBy('a.room_id')
+            ->get()
+            ->getResultArray();
+
         // Create a map of room_id => occupancy info
         $roomOccupancy = [];
+        
+        // Process admissions
         foreach ($activeAdmissions as $admission) {
             $roomId = $admission['room_id'];
-            $roomOccupancy[$roomId] = [
-                'count' => (int)$admission['occupied_count'],
-                'patients' => $admission['patient_names'] ?? ''
-            ];
+            if (!isset($roomOccupancy[$roomId])) {
+                $roomOccupancy[$roomId] = [
+                    'count' => 0,
+                    'patients' => []
+                ];
+            }
+            $roomOccupancy[$roomId]['count'] += (int)$admission['occupied_count'];
+            if (!empty($admission['patient_names'])) {
+                $patientList = explode(', ', $admission['patient_names']);
+                $roomOccupancy[$roomId]['patients'] = array_merge(
+                    $roomOccupancy[$roomId]['patients'],
+                    $patientList
+                );
+            }
         }
+        
+        // Process appointments (add to existing or create new)
+        foreach ($activeAppointments as $appointment) {
+            $roomId = $appointment['room_id'];
+            if (!isset($roomOccupancy[$roomId])) {
+                $roomOccupancy[$roomId] = [
+                    'count' => 0,
+                    'patients' => []
+                ];
+            }
+            $roomOccupancy[$roomId]['count'] += (int)$appointment['appointment_count'];
+            if (!empty($appointment['patient_names'])) {
+                $patientList = explode(', ', $appointment['patient_names']);
+                $roomOccupancy[$roomId]['patients'] = array_merge(
+                    $roomOccupancy[$roomId]['patients'],
+                    $patientList
+                );
+            }
+        }
+        
+        // Convert patient arrays back to comma-separated strings and remove duplicates
+        foreach ($roomOccupancy as $roomId => &$info) {
+            $info['patients'] = implode(', ', array_unique($info['patients']));
+        }
+        unset($info);
 
         // Calculate statistics and add occupancy info to rooms
         $stats = [

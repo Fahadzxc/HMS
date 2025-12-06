@@ -133,6 +133,7 @@
             </div>
         </div>
         <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="printBill()">Print</button>
             <button type="button" class="btn-secondary" onclick="closeViewBillModal()">Close</button>
         </div>
     </div>
@@ -376,6 +377,208 @@ function closeViewBillModal() {
     document.getElementById('viewBillModal').style.display = 'none';
     document.body.style.overflow = '';
     document.getElementById('viewBillContent').innerHTML = '<div class="text-center-empty" style="padding: 2rem;"><p>Loading bill details...</p></div>';
+}
+
+function printBill() {
+    // Get the bill content
+    const billContent = document.getElementById('viewBillContent').innerHTML;
+    const billNumber = document.querySelector('.view-bill-value strong')?.textContent || 'BILL';
+    
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    
+    // Get current date and time
+    const now = new Date();
+    const printDate = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    
+    // Create print-friendly HTML
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Bill - ${billNumber}</title>
+            <style>
+                @media print {
+                    @page {
+                        size: A4;
+                        margin: 1cm;
+                    }
+                    body {
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .no-print {
+                        display: none !important;
+                    }
+                }
+                body {
+                    font-family: Arial, sans-serif;
+                    font-size: 12px;
+                    line-height: 1.6;
+                    color: #000;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }
+                .print-header {
+                    text-align: center;
+                    border-bottom: 2px solid #000;
+                    padding-bottom: 15px;
+                    margin-bottom: 20px;
+                }
+                .print-header h1 {
+                    margin: 0;
+                    font-size: 24px;
+                    color: #000;
+                }
+                .print-header p {
+                    margin: 5px 0;
+                    font-size: 14px;
+                }
+                .print-date {
+                    text-align: right;
+                    margin-bottom: 10px;
+                    font-size: 11px;
+                }
+                .view-bill-section {
+                    margin-bottom: 25px;
+                    page-break-inside: avoid;
+                }
+                .view-bill-section h4 {
+                    background: #f0f0f0;
+                    padding: 8px 12px;
+                    margin: 0 0 12px 0;
+                    border-left: 4px solid #000;
+                    font-size: 14px;
+                    color: #000;
+                }
+                .view-bill-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 12px;
+                    margin-bottom: 15px;
+                }
+                .view-bill-info {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 6px 0;
+                    border-bottom: 1px dotted #ccc;
+                }
+                .view-bill-label {
+                    font-weight: 600;
+                    color: #333;
+                }
+                .view-bill-value {
+                    text-align: right;
+                    color: #000;
+                }
+                .view-bill-value strong {
+                    font-weight: 700;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 15px 0;
+                }
+                table th {
+                    background: #f0f0f0;
+                    padding: 8px;
+                    text-align: left;
+                    border: 1px solid #000;
+                    font-weight: 600;
+                    font-size: 11px;
+                }
+                table td {
+                    padding: 8px;
+                    border: 1px solid #ccc;
+                    font-size: 11px;
+                }
+                .view-bill-summary {
+                    margin-top: 15px;
+                    border-top: 2px solid #000;
+                    padding-top: 15px;
+                }
+                .view-bill-summary-row {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 8px 0;
+                    border-bottom: 1px dotted #ccc;
+                }
+                .view-bill-summary-label {
+                    font-weight: 600;
+                }
+                .view-bill-summary-value {
+                    text-align: right;
+                    font-weight: 600;
+                }
+                .view-bill-total {
+                    border-top: 2px solid #000;
+                    border-bottom: 2px solid #000;
+                    margin-top: 10px;
+                    padding-top: 10px;
+                    font-size: 14px;
+                }
+                .badge {
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 10px;
+                    font-weight: 600;
+                }
+                .badge-success {
+                    background: #d4edda;
+                    color: #155724;
+                    border: 1px solid #c3e6cb;
+                }
+                .badge-warning {
+                    background: #fff3cd;
+                    color: #856404;
+                    border: 1px solid #ffeaa7;
+                }
+                .badge-danger {
+                    background: #f8d7da;
+                    color: #721c24;
+                    border: 1px solid #f5c6cb;
+                }
+                .text-center-empty {
+                    text-align: center;
+                    padding: 20px;
+                }
+                .print-footer {
+                    margin-top: 30px;
+                    padding-top: 15px;
+                    border-top: 1px solid #ccc;
+                    text-align: center;
+                    font-size: 10px;
+                    color: #666;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="print-header">
+                <h1>HOSPITAL MANAGEMENT SYSTEM</h1>
+                <p>Official Bill / Invoice</p>
+            </div>
+            <div class="print-date">
+                Printed on: ${printDate}
+            </div>
+            ${billContent}
+            <div class="print-footer">
+                <p>This is a computer-generated document. No signature required.</p>
+                <p>For inquiries, please contact the billing department.</p>
+            </div>
+        </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    
+    // Wait for content to load, then print
+    setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+        // Optionally close the window after printing
+        // printWindow.close();
+    }, 250);
 }
 </script>
 

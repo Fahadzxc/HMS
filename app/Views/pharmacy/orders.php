@@ -109,7 +109,7 @@
 <!-- Create Order Modal -->
 <div id="createOrderModal" class="modal" style="display: none;">
     <div class="modal-backdrop" onclick="closeCreateOrderModal()"></div>
-    <div class="modal-dialog" style="max-width: 600px;">
+    <div class="modal-dialog" style="max-width: 900px; width: 90%;">
         <div class="modal-header">
             <h3>Create New Order</h3>
             <button class="modal-close" onclick="closeCreateOrderModal()">&times;</button>
@@ -118,41 +118,9 @@
             <form id="createOrderForm" onsubmit="submitOrder(event)">
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display: block; font-weight: 500; color: #4a5568; margin-bottom: 0.5rem;">
-                        Medicine <span style="color: #e53e3e;">*</span>
-                    </label>
-                    <select id="medication_id" name="medication_id" onchange="onMedicationChange()" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.9rem;" required>
-                        <option value="">Select Medicine</option>
-                        <?php foreach ($medications ?? [] as $med): ?>
-                            <option value="<?= $med['id'] ?>" data-name="<?= esc($med['name']) ?>" data-price="<?= $med['price'] ?? 0 ?>"><?= esc($med['name']) ?> <?= isset($med['price']) && $med['price'] > 0 ? '₱' . number_format($med['price'], 2) : '' ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <input type="hidden" id="medicine_name" name="medicine_name">
-                </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; font-weight: 500; color: #4a5568; margin-bottom: 0.5rem;">
-                        Unit Price (₱) <span style="color: #e53e3e;">*</span>
-                    </label>
-                    <input type="number" id="unit_price" name="unit_price" required min="0" step="0.01" oninput="calculateTotal()" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.9rem;" placeholder="Enter price per unit">
-                    <small style="color: #64748b; font-size: 0.85rem;">Price per unit of medicine</small>
-                </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; font-weight: 500; color: #4a5568; margin-bottom: 0.5rem;">
                         Supplier Name <span style="color: #e53e3e;">*</span>
                     </label>
                     <input type="text" id="supplier_name" name="supplier_name" required style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.9rem;" placeholder="Enter supplier name">
-                </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; font-weight: 500; color: #4a5568; margin-bottom: 0.5rem;">
-                        Quantity Ordered <span style="color: #e53e3e;">*</span>
-                    </label>
-                    <input type="number" id="quantity_ordered" name="quantity_ordered" required min="1" oninput="calculateTotal()" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.9rem;" placeholder="Enter quantity">
-                </div>
-                <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 0.5rem;">
-                    <label style="display: block; font-weight: 600; color: #0369a1; margin-bottom: 0.5rem;">
-                        Total Price
-                    </label>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #0c4a6e;" id="total_price_display">₱0.00</div>
-                    <input type="hidden" id="total_price" name="total_price" value="0">
                 </div>
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display: block; font-weight: 500; color: #4a5568; margin-bottom: 0.5rem;">
@@ -166,6 +134,43 @@
                     </label>
                     <input type="text" id="reference" name="reference" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.9rem;" placeholder="Enter invoice number or reference">
                 </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <label style="display: block; font-weight: 600; color: #4a5568;">
+                            Medicines <span style="color: #e53e3e;">*</span>
+                        </label>
+                        <button type="button" onclick="addMedicineRow()" style="padding: 0.5rem 1rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                            <span>+</span> Add Medicine
+                        </button>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table id="medicines_table" style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; border-radius: 0.5rem; overflow: hidden;">
+                            <thead>
+                                <tr style="background: #f8fafc;">
+                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem; border-bottom: 1px solid #e2e8f0;">Medicine</th>
+                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem; border-bottom: 1px solid #e2e8f0;">Unit Price (₱)</th>
+                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem; border-bottom: 1px solid #e2e8f0;">Quantity</th>
+                                    <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem; border-bottom: 1px solid #e2e8f0;">Total</th>
+                                    <th style="padding: 0.75rem; text-align: center; font-weight: 600; color: #475569; font-size: 0.875rem; border-bottom: 1px solid #e2e8f0; width: 60px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="medicines_tbody">
+                                <!-- Medicine rows will be added here -->
+                            </tbody>
+                            <tfoot>
+                                <tr style="background: #f0f9ff; border-top: 2px solid #bae6fd;">
+                                    <td colspan="3" style="padding: 1rem; text-align: right; font-weight: 600; color: #0369a1;">
+                                        Grand Total:
+                                    </td>
+                                    <td colspan="2" style="padding: 1rem; font-size: 1.25rem; font-weight: 700; color: #0c4a6e;" id="grand_total_display">
+                                        ₱0.00
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
                 <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
                     <button type="button" onclick="closeCreateOrderModal()" style="padding: 0.75rem 1.5rem; background: #e2e8f0; color: #475569; border: none; border-radius: 0.5rem; font-size: 0.9rem; font-weight: 500; cursor: pointer;">Cancel</button>
                     <button type="submit" style="padding: 0.75rem 1.5rem; background: #3b82f6; color: white; border: none; border-radius: 0.5rem; font-size: 0.9rem; font-weight: 500; cursor: pointer;">Create Order</button>
@@ -176,49 +181,176 @@
 </div>
 
 <script>
+const medicationsData = <?= json_encode($medications ?? []) ?>;
+
 function openCreateOrderModal() {
     document.getElementById('createOrderModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    // Add first row when opening modal
+    if (document.getElementById('medicines_tbody').children.length === 0) {
+        addMedicineRow();
+    }
 }
 
 function closeCreateOrderModal() {
     document.getElementById('createOrderModal').style.display = 'none';
     document.body.style.overflow = '';
     document.getElementById('createOrderForm').reset();
-    document.getElementById('medicine_name').value = '';
+    // Clear all medicine rows
+    document.getElementById('medicines_tbody').innerHTML = '';
+    updateGrandTotal();
 }
 
-function onMedicationChange() {
-    const select = document.getElementById('medication_id');
+function addMedicineRow() {
+    const tbody = document.getElementById('medicines_tbody');
+    const row = document.createElement('tr');
+    const rowIndex = tbody.children.length;
+    
+    row.innerHTML = `
+        <td style="padding: 0.75rem;">
+            <select class="medicine-select" data-row="${rowIndex}" onchange="onMedicineChange(this)" required style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.375rem; font-size: 0.875rem;">
+                <option value="">Select Medicine</option>
+                <?php foreach ($medications ?? [] as $med): ?>
+                    <option value="<?= $med['id'] ?>" data-name="<?= esc($med['name']) ?>" data-price="<?= $med['price'] ?? 0 ?>"><?= esc($med['name']) ?> <?= isset($med['price']) && $med['price'] > 0 ? '₱' . number_format($med['price'], 2) : '' ?></option>
+                <?php endforeach; ?>
+            </select>
+            <input type="hidden" class="medicine-name" data-row="${rowIndex}">
+        </td>
+        <td style="padding: 0.75rem;">
+            <input type="number" class="unit-price" data-row="${rowIndex}" min="0" step="0.01" oninput="calculateRowTotal(this)" required style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.375rem; font-size: 0.875rem;" placeholder="0.00">
+        </td>
+        <td style="padding: 0.75rem;">
+            <input type="number" class="quantity" data-row="${rowIndex}" min="1" oninput="calculateRowTotal(this)" required style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.375rem; font-size: 0.875rem;" placeholder="0">
+        </td>
+        <td style="padding: 0.75rem;">
+            <div class="row-total" data-row="${rowIndex}" style="font-weight: 600; color: #059669;">₱0.00</div>
+        </td>
+        <td style="padding: 0.75rem; text-align: center;">
+            <button type="button" onclick="removeMedicineRow(this)" style="padding: 0.375rem 0.75rem; background: #ef4444; color: white; border: none; border-radius: 0.375rem; font-size: 0.875rem; cursor: pointer;">Remove</button>
+        </td>
+    `;
+    
+    tbody.appendChild(row);
+}
+
+function removeMedicineRow(button) {
+    const row = button.closest('tr');
+    row.remove();
+    updateGrandTotal();
+    // Re-index rows
+    const rows = document.querySelectorAll('#medicines_tbody tr');
+    rows.forEach((r, index) => {
+        r.querySelectorAll('[data-row]').forEach(el => {
+            el.setAttribute('data-row', index);
+            if (el.oninput) {
+                el.setAttribute('oninput', el.getAttribute('oninput').replace(/\d+/, index));
+            }
+            if (el.onchange) {
+                el.setAttribute('onchange', el.getAttribute('onchange').replace(/\d+/, index));
+            }
+        });
+    });
+}
+
+function onMedicineChange(select) {
     const selectedOption = select.options[select.selectedIndex];
     const medicineName = selectedOption.getAttribute('data-name') || '';
     const price = parseFloat(selectedOption.getAttribute('data-price') || 0);
     
-    document.getElementById('medicine_name').value = medicineName;
-    document.getElementById('unit_price').value = price > 0 ? price.toFixed(2) : '';
+    const row = select.closest('tr');
+    const nameInput = row.querySelector('.medicine-name');
+    const unitPriceInput = row.querySelector('.unit-price');
     
-    // Calculate total if quantity is already entered
-    calculateTotal();
+    if (nameInput) nameInput.value = medicineName;
+    if (unitPriceInput && price > 0) {
+        unitPriceInput.value = price.toFixed(2);
+    }
+    
+    calculateRowTotal(unitPriceInput || select);
 }
 
-function calculateTotal() {
-    const unitPrice = parseFloat(document.getElementById('unit_price').value) || 0;
-    const quantity = parseFloat(document.getElementById('quantity_ordered').value) || 0;
+function calculateRowTotal(input) {
+    const row = input.closest('tr');
+    if (!row) return;
+    
+    const unitPrice = parseFloat(row.querySelector('.unit-price')?.value) || 0;
+    const quantity = parseFloat(row.querySelector('.quantity')?.value) || 0;
     const total = unitPrice * quantity;
     
-    document.getElementById('total_price').value = total.toFixed(2);
-    document.getElementById('total_price_display').textContent = '₱' + total.toFixed(2);
+    const totalDisplay = row.querySelector('.row-total');
+    if (totalDisplay) {
+        totalDisplay.textContent = '₱' + total.toFixed(2);
+    }
+    
+    updateGrandTotal();
+}
+
+function updateGrandTotal() {
+    const rows = document.querySelectorAll('#medicines_tbody tr');
+    let grandTotal = 0;
+    
+    rows.forEach(row => {
+        const unitPrice = parseFloat(row.querySelector('.unit-price')?.value) || 0;
+        const quantity = parseFloat(row.querySelector('.quantity')?.value) || 0;
+        grandTotal += unitPrice * quantity;
+    });
+    
+    document.getElementById('grand_total_display').textContent = '₱' + grandTotal.toFixed(2);
 }
 
 function submitOrder(event) {
     event.preventDefault();
     
-    const formData = new FormData(event.target);
-    formData.append('medicine_name', document.getElementById('medicine_name').value);
+    const supplierName = document.getElementById('supplier_name').value;
+    const orderDate = document.getElementById('order_date').value;
+    const reference = document.getElementById('reference').value;
+    
+    if (!supplierName || !orderDate) {
+        alert('Please fill in supplier name and order date');
+        return;
+    }
+    
+    // Collect all medicine rows
+    const rows = document.querySelectorAll('#medicines_tbody tr');
+    const medicines = [];
+    
+    rows.forEach(row => {
+        const select = row.querySelector('.medicine-select');
+        const nameInput = row.querySelector('.medicine-name');
+        const unitPrice = parseFloat(row.querySelector('.unit-price').value) || 0;
+        const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+        
+        if (select.value && nameInput.value && unitPrice > 0 && quantity > 0) {
+            medicines.push({
+                medication_id: select.value,
+                medicine_name: nameInput.value,
+                unit_price: unitPrice,
+                quantity_ordered: quantity,
+                total_price: unitPrice * quantity
+            });
+        }
+    });
+    
+    if (medicines.length === 0) {
+        alert('Please add at least one medicine to the order');
+        return;
+    }
+    
+    // Prepare data
+    const orderData = {
+        supplier_name: supplierName,
+        order_date: orderDate,
+        reference: reference || null,
+        medicines: medicines
+    };
     
     fetch('<?= base_url('pharmacy/orders/create') ?>', {
         method: 'POST',
-        body: formData
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(orderData)
     })
     .then(response => response.json())
     .then(data => {

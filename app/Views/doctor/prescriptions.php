@@ -80,6 +80,7 @@
                                 <th style="min-width: 100px;">Quantity</th>
                                 <th style="min-width: 150px;">Notes</th>
                                 <th style="min-width: 100px;">Follow-up</th>
+                                <th class="buy-from-hospital-header" style="min-width: 120px; display: none;">Buy from Hospital</th>
                                 <th style="width: 60px;">Actions</th>
                             </tr>
                         </thead>
@@ -145,6 +146,7 @@
                             <th>Duration</th>
                             <th>Status</th>
                             <th>Date</th>
+                            <th style="width: 100px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -152,6 +154,25 @@
                             <?php 
                             $items = json_decode($rx['items_json'] ?? '[]', true) ?: [];
                             $firstItem = $items[0] ?? [];
+                            $rxData = [
+                                'id' => $rx['id'],
+                                'patient_name' => $rx['patient_name'] ?? 'N/A',
+                                'items' => $items,
+                                'notes' => $rx['notes'] ?? '',
+                                'created_at' => $rx['created_at'] ?? date('Y-m-d H:i:s')
+                            ];
+                            // Ensure status is set - if empty or null, default to 'completed' for outpatients
+                            $status = $rx['status'] ?? '';
+                            if (empty($status)) {
+                                // Check if patient is outpatient - if so, set to completed
+                                $patientModel = new \App\Models\PatientModel();
+                                $patient = $patientModel->find($rx['patient_id'] ?? 0);
+                                if ($patient && strtolower($patient['patient_type'] ?? '') === 'outpatient') {
+                                    $status = 'completed';
+                                } else {
+                                    $status = 'pending';
+                                }
+                            }
                             ?>
                             <tr>
                                 <td><strong>RX#<?= str_pad((string)$rx['id'], 3, '0', STR_PAD_LEFT) ?></strong></td>
@@ -161,12 +182,21 @@
                                 <td><?= esc($firstItem['meal_instruction'] ?? '—') ?></td>
                                 <td><?= esc($firstItem['duration'] ?? '—') ?></td>
                                 <td>
-                                    <span class="status-badge status-<?= strtolower($rx['status'] ?? 'pending') ?>">
+                                    <span class="status-badge status-<?= strtolower($status) ?>">
                                         <span class="status-dot"></span>
-                                        <?= ucfirst($rx['status'] ?? 'pending') ?>
+                                        <?= ucfirst($status) ?>
                                     </span>
                                 </td>
                                 <td><?= date('M j, Y', strtotime($rx['created_at'])) ?></td>
+                                <td>
+                                    <button type="button" 
+                                            class="btn-print-prescription" 
+                                            onclick="printExistingPrescription(<?= htmlspecialchars(json_encode($rxData), ENT_QUOTES, 'UTF-8') ?>)"
+                                            title="Print Prescription"
+                                            style="background: #3B82F6; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; width: 100%; justify-content: center;">
+                                        🖨️ Print
+                                    </button>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -187,9 +217,35 @@ document.getElementById('rx_patient').addEventListener('change', function() {
     if (selectedOption.value) {
         document.getElementById('patient_age').value = selectedOption.dataset.age || '—';
         document.getElementById('patient_gender').value = selectedOption.dataset.gender || '—';
+        
+        // Show/hide "Buy from Hospital" column based on patient type
+        const patientType = selectedOption.dataset.type || 'outpatient';
+        const isOutpatient = patientType === 'outpatient';
+        
+        // Show/hide header
+        const headerCells = document.querySelectorAll('.buy-from-hospital-header');
+        headerCells.forEach(cell => {
+            cell.style.display = isOutpatient ? 'table-cell' : 'none';
+        });
+        
+        // Show/hide cells in existing rows
+        const rowCells = document.querySelectorAll('.buy-from-hospital-cell');
+        rowCells.forEach(cell => {
+            cell.style.display = isOutpatient ? 'table-cell' : 'none';
+        });
     } else {
         document.getElementById('patient_age').value = '';
         document.getElementById('patient_gender').value = '';
+        
+        // Hide "Buy from Hospital" column when no patient selected
+        const headerCells = document.querySelectorAll('.buy-from-hospital-header');
+        headerCells.forEach(cell => {
+            cell.style.display = 'none';
+        });
+        const rowCells = document.querySelectorAll('.buy-from-hospital-cell');
+        rowCells.forEach(cell => {
+            cell.style.display = 'none';
+        });
     }
 });
 
@@ -198,6 +254,14 @@ function addRxItem() {
     const container = document.getElementById('rx_items_container');
     const row = document.createElement('tr');
     row.className = 'medication-row';
+    
+    // Check if current patient is outpatient to show/hide "Buy from Hospital" column
+    const patientSelect = document.getElementById('rx_patient');
+    const selectedOption = patientSelect ? patientSelect.options[patientSelect.selectedIndex] : null;
+    const patientType = selectedOption ? selectedOption.dataset.type : 'outpatient';
+    const isOutpatient = patientType === 'outpatient';
+    const buyFromHospitalDisplay = isOutpatient ? 'table-cell' : 'none';
+    
     row.innerHTML = `
         <td style="position: relative;">
             <select class="form-input form-input-sm" data-field="med_id" onchange="onMedChange(this)" required style="width: 100%;">
@@ -278,6 +342,12 @@ function addRxItem() {
                     <input type="time" class="form-input form-input-sm" data-field="followup_time" style="width: 100%;" placeholder="Follow-up Time" title="Follow-up Time">
                 </div>
             </div>
+        </td>
+        <td class="buy-from-hospital-cell" style="text-align: center; display: ${buyFromHospitalDisplay};">
+            <label style="display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; font-size: 12px;">
+                <input type="checkbox" data-field="buy_from_hospital" checked style="cursor: pointer;" title="Check if patient will buy this medication from hospital pharmacy">
+                <span>Yes</span>
+            </label>
         </td>
         <td>
             <button type="button" class="btn-remove" onclick="this.closest('tr').remove()" title="Remove">
@@ -481,6 +551,10 @@ function collectItems() {
                 item.name = sel.selectedOptions[0].dataset.name || sel.options[sel.selectedIndex].text;
             }
         }
+        // Default buy_from_hospital to true if not set (for inpatients or if checkbox doesn't exist)
+        if (item.buy_from_hospital === undefined) {
+            item.buy_from_hospital = true;
+        }
         if (item.med_id || item.name) items.push(item);
     });
     return items;
@@ -643,11 +717,15 @@ function showPrescriptionPreview(patientId, notes, items, isOutpatient = false, 
     document.getElementById('prescriptionPreview').style.display = 'block';
     document.getElementById('prescriptionPreview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     
-    // Show print and done buttons for outpatients
+    // Show print and done buttons for outpatients (always show for outpatients)
     const printBtn = document.getElementById('printBtn');
     const doneBtn = document.getElementById('doneBtn');
     if (printBtn) {
         printBtn.style.display = isOutpatient ? 'inline-block' : 'none';
+        // Ensure print button is always visible for outpatients
+        if (isOutpatient) {
+            printBtn.style.display = 'inline-block';
+        }
     }
     if (doneBtn) {
         doneBtn.style.display = isOutpatient ? 'inline-block' : 'none';
@@ -787,6 +865,134 @@ function clearForm() {
         document.getElementById('prescriptionPreview').style.display = 'none';
         addRxItem(); // Add one empty row
     }
+}
+
+// Print existing prescription from Recent Prescriptions table
+function printExistingPrescription(rxData) {
+    if (!rxData || !rxData.items || rxData.items.length === 0) {
+        alert('No prescription data available to print.');
+        return;
+    }
+    
+    const rxNumber = 'RX#' + String(rxData.id).padStart(3, '0');
+    const currentDate = new Date(rxData.created_at).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    
+    // Get patient info - we'll need to fetch this or use what we have
+    const patientName = rxData.patient_name || 'N/A';
+    const doctorName = '<?= esc($user_name ?? session()->get('name') ?? 'Dr. ' . session()->get('name') ?? 'Doctor') ?>';
+    
+    let medicationsHtml = '';
+    rxData.items.forEach((item, index) => {
+        medicationsHtml += `
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${index + 1}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>${item.name || 'Medication'}</strong></td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.dosage || '—'}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.frequency || '—'}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.meal_instruction || '—'}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.duration || '—'}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.quantity || '—'}</td>
+            </tr>
+        `;
+    });
+    
+    const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Prescription - ${rxNumber}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+                .header h1 { margin: 0; color: #1a365d; font-size: 24px; }
+                .header p { margin: 5px 0; color: #666; }
+                .rx-info { display: flex; justify-content: space-between; margin-bottom: 20px; }
+                .patient-info { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+                .patient-info h3 { margin: 0 0 10px 0; color: #333; }
+                .diagnosis { background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                th { background: #1a365d; color: white; padding: 10px; text-align: left; }
+                .footer { margin-top: 40px; display: flex; justify-content: space-between; }
+                .signature-box { width: 45%; }
+                .signature-line { border-top: 1px solid #333; margin-top: 50px; padding-top: 5px; text-align: center; }
+                .outpatient-notice { background: #d4edda; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center; color: #155724; font-weight: bold; }
+                @media print { body { padding: 0; } }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>🏥 Hospital Management System</h1>
+                <p>Medical Prescription</p>
+            </div>
+            
+            <div class="outpatient-notice">
+                📋 OUTPATIENT PRESCRIPTION - For External Pharmacy Use
+            </div>
+            
+            <div class="rx-info">
+                <div><strong>Prescription No:</strong> ${rxNumber}</div>
+                <div><strong>Date:</strong> ${currentDate}</div>
+            </div>
+            
+            <div class="patient-info">
+                <h3>Patient Information</h3>
+                <p><strong>Name:</strong> ${patientName}</p>
+            </div>
+            
+            ${rxData.notes ? `
+            <div class="diagnosis">
+                <strong>Diagnosis / Notes:</strong><br>
+                ${rxData.notes}
+            </div>
+            ` : ''}
+            
+            <h3>Prescribed Medications</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Medication</th>
+                        <th>Dosage</th>
+                        <th>Frequency</th>
+                        <th>Meal</th>
+                        <th>Duration</th>
+                        <th>Qty</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${medicationsHtml}
+                </tbody>
+            </table>
+            
+            <div class="footer">
+                <div class="signature-box">
+                    <div class="signature-line">
+                        <strong>${doctorName}, M.D.</strong><br>
+                        <small>Attending Physician</small>
+                    </div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line">
+                        <small>PRC License No: ___________</small><br>
+                        <small>PTR No: ___________</small>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+        printWindow.print();
+    }, 250);
 }
 
 // Initialize with one row

@@ -506,15 +506,10 @@
             <div id="appointment_type_selection" class="appointment-type-selection" style="text-align: center; padding: 2rem 1rem;">
                 <h3 style="margin-bottom: 1.5rem; color: #1f2937; font-size: 1.25rem;">Select Appointment Type</h3>
                 <div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap;">
-                    <button type="button" class="appointment-type-btn" data-type="consultation" onclick="selectAppointmentType('consultation')" style="flex: 1; min-width: 200px; max-width: 300px; padding: 2rem; background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%); color: white; border: 3px solid transparent; border-radius: 0.75rem; cursor: pointer; font-size: 1.1rem; font-weight: 600; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); transition: all 0.3s ease;">
+                    <button type="button" class="appointment-type-btn" data-type="consultation" onclick="selectAppointmentType('consultation')" style="min-width: 200px; max-width: 300px; padding: 2rem; background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%); color: white; border: 3px solid transparent; border-radius: 0.75rem; cursor: pointer; font-size: 1.1rem; font-weight: 600; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3); transition: all 0.3s ease;">
                         <i class="fas fa-user-md" style="font-size: 2.5rem; margin-bottom: 0.75rem; display: block;"></i>
                         <div style="font-size: 1.25rem; margin-bottom: 0.5rem; font-weight: 700;">Consultation</div>
                         <div style="font-size: 0.875rem; opacity: 0.95;">Doctor consultation appointment</div>
-                    </button>
-                    <button type="button" class="appointment-type-btn" data-type="laboratory_test" onclick="selectAppointmentType('laboratory_test')" style="flex: 1; min-width: 200px; max-width: 300px; padding: 2rem; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border: 3px solid transparent; border-radius: 0.75rem; cursor: pointer; font-size: 1.1rem; font-weight: 600; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
-                        <i class="fas fa-flask" style="font-size: 2.5rem; margin-bottom: 0.75rem; display: block;"></i>
-                        <div style="font-size: 1.25rem; margin-bottom: 0.5rem; font-weight: 700;">Lab Test</div>
-                        <div style="font-size: 0.875rem; opacity: 0.95;">Laboratory test appointment</div>
                     </button>
                 </div>
                 <p style="margin-top: 1.5rem; color: #6b7280; font-size: 0.875rem;">Choose the type of appointment you want to create</p>

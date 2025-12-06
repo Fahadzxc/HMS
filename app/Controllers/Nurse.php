@@ -361,6 +361,7 @@ class Nurse extends Controller
         $db = \Config\Database::connect();
         
         // Use COALESCE to prefer admission data for inpatients
+        // Exclude walk-in patients who only have lab test appointments (no consultation needed)
         $sql = "
             SELECT p.*, 
                    COALESCE(adm_doc.name, appt_doc.name) as assigned_doctor_name,
@@ -370,7 +371,7 @@ class Nurse extends Controller
                    COALESCE(adm_room.room_number, appt_room.room_number) as appointment_room_number
             FROM patients p
             LEFT JOIN (
-                SELECT patient_id, doctor_id, appointment_date, status, room_id,
+                SELECT patient_id, doctor_id, appointment_date, status, room_id, appointment_type,
                                 ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
                          FROM appointments 
                 WHERE status != 'cancelled'
@@ -381,6 +382,43 @@ class Nurse extends Controller
             LEFT JOIN users adm_doc ON adm_doc.id = adm.doctor_id
             LEFT JOIN rooms adm_room ON adm_room.id = adm.room_id
             WHERE p.status = 'active'
+            AND (
+                -- Include inpatients (admitted patients) - they need nurse care
+                adm.patient_id IS NOT NULL
+                OR
+                -- Include patients with doctor assignments (consultation appointments)
+                a.doctor_id IS NOT NULL
+                OR
+                -- Include patients with consultation appointment type
+                a.appointment_type = 'consultation'
+                OR
+                -- Include patients who have at least one consultation appointment (even if latest is lab test)
+                EXISTS (
+                    SELECT 1 FROM appointments ap
+                    WHERE ap.patient_id = p.id
+                    AND ap.status != 'cancelled'
+                    AND (ap.appointment_type = 'consultation' OR ap.doctor_id IS NOT NULL)
+                )
+            )
+            -- Exclude walk-in patients who ONLY have lab test appointments (no consultation, no doctor, not admitted)
+            AND NOT (
+                -- Patient is not admitted
+                adm.patient_id IS NULL
+                AND
+                -- Latest appointment is walk-in or lab test only
+                (a.appointment_type IN ('walk-in', 'laboratory_test', 'lab_test') OR a.appointment_type IS NULL)
+                AND
+                -- No doctor assigned
+                a.doctor_id IS NULL
+                AND
+                -- No consultation appointments exist
+                NOT EXISTS (
+                    SELECT 1 FROM appointments ap
+                    WHERE ap.patient_id = p.id
+                    AND ap.status != 'cancelled'
+                    AND (ap.appointment_type = 'consultation' OR ap.doctor_id IS NOT NULL)
+                )
+            )
             ORDER BY p.id DESC
         ";
         

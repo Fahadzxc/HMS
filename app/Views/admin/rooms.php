@@ -68,6 +68,7 @@
                                 <th>Capacity</th>
                                 <th>Occupied</th>
                                 <th>Available</th>
+                                <th>Patient(s)</th>
                                 <th>Price</th>
                                 <th>Status</th>
                                 <th>Occupancy Rate</th>
@@ -89,11 +90,6 @@
                                 <tr>
                                     <td>
                                         <strong><?= esc($room['room_number'] ?? '—') ?></strong>
-                                        <?php if ($occupancy > 0 && !empty($occupiedPatients)): ?>
-                                            <br><small style="color: #6b7280; font-size: 0.75rem;">
-                                                Patients: <?= esc($occupiedPatients) ?>
-                                            </small>
-                                        <?php endif; ?>
                                     </td>
                                     <td><?= esc($room['floor'] ?? '—') ?></td>
                                     <td><?= esc($room['specialization'] ?? '—') ?></td>
@@ -107,6 +103,15 @@
                                         <span class="badge badge-<?= $available > 0 ? 'success' : 'danger' ?>">
                                             <?= $available ?>
                                         </span>
+                                    </td>
+                                    <td>
+                                        <?php if ($occupancy > 0 && !empty($occupiedPatients)): ?>
+                                            <div style="color: #1f2937; font-weight: 500; font-size: 0.875rem;">
+                                                <?= esc($occupiedPatients) ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <span style="color: #9ca3af; font-style: italic;">—</span>
+                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <?php 

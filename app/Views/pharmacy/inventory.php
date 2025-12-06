@@ -227,7 +227,8 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                     <div>
                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #475569;">Stock Quantity</label>
-                        <input type="number" id="stock_quantity" name="stock_quantity" min="0" style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;">
+                        <input type="number" id="stock_quantity" name="stock_quantity" min="0" readonly style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; background: #f8fafc; cursor: not-allowed;">
+                        <small style="color: #64748b; font-size: 0.75rem; display: block; margin-top: 0.25rem;">Use "Stock" button to adjust stock</small>
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #475569;">Reorder Level</label>
@@ -286,9 +287,10 @@
                 </div>
                 <div style="margin-bottom: 1rem;">
                     <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #475569;">Adjustment Type</label>
-                    <select id="adjustment_type" name="adjustment_type" style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;">
+                    <select id="adjustment_type" name="adjustment_type" onchange="onAdjustmentTypeChange()" style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;">
                         <option value="add">Add Stock</option>
                         <option value="set">Set Stock</option>
+                        <option value="remove_expired">Remove Expired</option>
                     </select>
                 </div>
                 <div style="margin-bottom: 1rem;">
@@ -316,6 +318,13 @@ function openAddMedicineModal() {
     document.getElementById('medication_id').value = '';
     document.getElementById('medicine_strength').value = '';
     document.getElementById('medicine_form').value = '';
+    
+    // Enable stock quantity for new medicine
+    const stockQuantityInput = document.getElementById('stock_quantity');
+    stockQuantityInput.readOnly = false;
+    stockQuantityInput.style.background = '';
+    stockQuantityInput.style.cursor = '';
+    
     document.getElementById('medicineModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 }
@@ -348,7 +357,13 @@ function editMedicine(medicineId) {
                     document.getElementById('medicine_form').value = data.medication.form || '';
                 }
                 
-                document.getElementById('stock_quantity').value = data.inventory.stock_quantity || 0;
+                // Set stock quantity as readonly (display only)
+                const stockQuantityInput = document.getElementById('stock_quantity');
+                stockQuantityInput.value = data.inventory.stock_quantity || 0;
+                stockQuantityInput.readOnly = true;
+                stockQuantityInput.style.background = '#f8fafc';
+                stockQuantityInput.style.cursor = 'not-allowed';
+                
                 document.getElementById('reorder_level').value = data.inventory.reorder_level || 10;
                 document.getElementById('category').value = data.inventory.category || 'General';
                 document.getElementById('expiration_date').value = data.inventory.expiration_date || '';
@@ -376,6 +391,12 @@ function adjustStock(medicineId) {
                 document.getElementById('stock_quantity_input').value = '';
                 document.getElementById('adjustment_type').value = 'add';
                 document.getElementById('stock_notes').value = '';
+                
+                // Store expiration date for expired check
+                const expirationDate = data.inventory.expiration_date || null;
+                document.getElementById('stock_quantity_input').setAttribute('data-expiration', expirationDate || '');
+                
+                onAdjustmentTypeChange();
                 document.getElementById('stockModal').style.display = 'flex';
                 document.body.style.overflow = 'hidden';
             } else {
@@ -386,6 +407,34 @@ function adjustStock(medicineId) {
             console.error('Error:', error);
             alert('Error loading medicine details');
         });
+}
+
+function onAdjustmentTypeChange() {
+    const adjustmentType = document.getElementById('adjustment_type').value;
+    const quantityInput = document.getElementById('stock_quantity_input');
+    const notesTextarea = document.getElementById('stock_notes');
+    const expirationDate = quantityInput.getAttribute('data-expiration');
+    
+    if (adjustmentType === 'remove_expired') {
+        // Auto-fill notes with expired removal note
+        if (notesTextarea) {
+            notesTextarea.value = 'Removed expired medicines from stock';
+        }
+        
+        // Check if medicine is expired
+        if (expirationDate && new Date(expirationDate) < new Date()) {
+            // Medicine is expired - show warning
+            const currentStock = parseInt(document.getElementById('stock_current').value) || 0;
+            if (currentStock > 0) {
+                // Suggest removing all expired stock
+                quantityInput.placeholder = 'Enter quantity to remove (max: ' + currentStock + ')';
+                quantityInput.max = currentStock;
+            }
+        }
+    } else {
+        quantityInput.placeholder = '';
+        quantityInput.removeAttribute('max');
+    }
 }
 
 function closeStockModal() {

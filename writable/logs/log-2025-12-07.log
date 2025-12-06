@@ -1,0 +1,9 @@
+CRITICAL - 2025-12-07 02:11:32 --> Error: Call to undefined method App\Controllers\Reception::updateWalkInPatientsWithPaidBills()
+[Method: GET, Route: reception/patients]
+in APPPATH\Controllers\Reception.php on line 329.
+ 1 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Reception->patients()
+ 2 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Reception))
+ 3 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 4 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 6 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))

@@ -20,6 +20,63 @@ class Accounts extends Controller
 	{
 		$this->ensureBillingTables();
 	}
+	
+	/**
+	 * Check and update walk-in patients who have paid bills but are still active
+	 * This handles cases where payments were made before the auto-update logic was added
+	 */
+	private function updateWalkInPatientsWithPaidBills()
+	{
+		try {
+			$db = \Config\Database::connect();
+			$patientModel = new PatientModel();
+			$billingModel = new BillingModel();
+			
+			// Get all active outpatient patients
+			$activeOutpatients = $patientModel->where('patient_type', 'outpatient')
+				->where('status', 'active')
+				->findAll();
+			
+			foreach ($activeOutpatients as $patient) {
+				// Check if patient has any paid bills
+				$paidBills = $billingModel->where('patient_id', $patient['id'])
+					->where('status', 'paid')
+					->findAll();
+				
+				if (!empty($paidBills)) {
+					// Check if patient is a walk-in (no consultation, no doctor, not admitted)
+					$hasConsultation = $db->table('appointments')
+						->where('patient_id', $patient['id'])
+						->where('status !=', 'cancelled')
+						->where('appointment_type', 'consultation')
+						->countAllResults() > 0;
+					
+					$hasDoctor = $db->table('appointments')
+						->where('patient_id', $patient['id'])
+						->where('status !=', 'cancelled')
+						->where('doctor_id IS NOT NULL', null, false)
+						->countAllResults() > 0;
+					
+					$isAdmitted = $db->table('admissions')
+						->where('patient_id', $patient['id'])
+						->where('status', 'Admitted')
+						->countAllResults() > 0;
+					
+					// If walk-in patient with paid bills, set to inactive
+					if (!$hasConsultation && !$hasDoctor && !$isAdmitted) {
+						$patientModel->update($patient['id'], [
+							'status' => 'inactive',
+							'updated_at' => date('Y-m-d H:i:s')
+						]);
+						log_message('info', "Updated walk-in patient #{$patient['id']} to inactive (has paid bills)");
+					}
+				}
+			}
+		} catch (\Exception $e) {
+			// Silently fail - don't break the page if this check fails
+			log_message('debug', 'Error updating walk-in patients: ' . $e->getMessage());
+		}
+	}
 
 	// ---------- Helpers for Lab billing ----------
 	private function ensureLabBillingColumns(): void
@@ -110,6 +167,9 @@ class Accounts extends Controller
 		if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
 			return redirect()->to('/login');
 		}
+
+		// Check and update walk-in patients with paid bills
+		$this->updateWalkInPatientsWithPaidBills();
 
 		$billingModel = new BillingModel();
 		$patientModel = new PatientModel();
@@ -226,8 +286,13 @@ class Accounts extends Controller
 			// Calculate discount based on patient's insurance provider
 			$discount = floatval($postData['discount'] ?? 0);
 			
-			// If discount is 0, check if patient has insurance
-			if ($discount == 0) {
+			// Check patient type - outpatients should not have insurance deductions
+			$patientModel = new PatientModel();
+			$patient = $patientModel->find($postData['patient_id']);
+			$isOutpatient = $patient && isset($patient['patient_type']) && strtolower($patient['patient_type']) === 'outpatient';
+			
+			// If discount is 0 and patient is not outpatient, check if patient has insurance
+			if ($discount == 0 && !$isOutpatient) {
 				$insuranceModel = new InsuranceModel();
 				// Get patient's most recent insurance claim
 				$insuranceClaim = $insuranceModel->where('patient_id', $postData['patient_id'])
@@ -337,9 +402,9 @@ class Accounts extends Controller
 				return $this->response->setJSON(['success' => false, 'message' => 'Failed to create bill: ' . (is_array($errors) ? implode(', ', $errors) : 'Unknown error')]);
 			}
 			
-			// Get insurance coverage for item-level tracking
+			// Get insurance coverage for item-level tracking (only for inpatients)
 			$insuranceCoverage = null;
-			if ($discount > 0) {
+			if ($discount > 0 && !$isOutpatient) {
 				$insuranceModel = new InsuranceModel();
 				$insuranceClaim = $insuranceModel->where('patient_id', $postData['patient_id'])
 					->whereIn('status', ['pending', 'submitted', 'approved', 'paid'])
@@ -394,14 +459,14 @@ class Accounts extends Controller
 					}
 				}
 				
-				// Calculate insurance coverage per item
+				// Calculate insurance coverage per item (only for inpatients)
 				$itemCategory = strtolower($item['category'] ?? 'other');
 				$itemAmount = floatval($item['quantity']) * floatval($item['unit_price']);
 				$insuranceCoveragePercent = 0;
 				$insuranceDiscountAmount = 0;
 				$patientPaysAmount = $itemAmount;
 				
-				if ($insuranceCoverage) {
+				if ($insuranceCoverage && !$isOutpatient) {
 					// Map category to coverage key
 					$coverageKey = 'professional'; // default
 					if ($itemCategory === 'room' || $itemCategory === 'room/bed') {
@@ -587,26 +652,30 @@ class Accounts extends Controller
 				'status' => $newStatus,
 			]);
 			
+			// Get updated bill data
+			$updatedBill = $billingModel->find($billId);
+			
 			// If bill is fully paid, update related records
-			if ($newStatus === 'paid' && $bill['patient_id']) {
+			if ($newStatus === 'paid' && $updatedBill && $updatedBill['patient_id']) {
 				$db = \Config\Database::connect();
 				$appointmentModel = new \App\Models\AppointmentModel();
+				$patientModel = new \App\Models\PatientModel();
 				
 				// Auto-complete appointment if bill is linked to an appointment
-				if (!empty($bill['appointment_id'])) {
-					$appointment = $appointmentModel->find($bill['appointment_id']);
+				if (!empty($updatedBill['appointment_id'])) {
+					$appointment = $appointmentModel->find($updatedBill['appointment_id']);
 					
 					if ($appointment && $appointment['status'] !== 'completed') {
-						$appointmentModel->update($bill['appointment_id'], [
+						$appointmentModel->update($updatedBill['appointment_id'], [
 							'status' => 'completed',
 							'updated_at' => date('Y-m-d H:i:s')
 						]);
-						log_message('info', "Auto-completed appointment #{$bill['appointment_id']} after bill #{$billId} was fully paid");
+						log_message('info', "Auto-completed appointment #{$updatedBill['appointment_id']} after bill #{$billId} was fully paid");
 					}
 				} else {
 					// If bill doesn't have appointment_id, try to find appointment by patient_id and date
 					// Check if there are any appointments for this patient on the bill date or recent dates
-					$billDate = $bill['created_at'] ?? date('Y-m-d');
+					$billDate = $updatedBill['created_at'] ?? date('Y-m-d');
 					$billDateFormatted = date('Y-m-d', strtotime($billDate));
 					
 					// Find appointments for this patient within 7 days of bill creation
@@ -614,7 +683,7 @@ class Accounts extends Controller
 					$endDate = date('Y-m-d', strtotime($billDateFormatted . ' +1 day'));
 					
 					$appointments = $db->table('appointments')
-						->where('patient_id', $bill['patient_id'])
+						->where('patient_id', $updatedBill['patient_id'])
 						->where('appointment_date >=', $startDate)
 						->where('appointment_date <=', $endDate)
 						->where('status !=', 'completed')
@@ -640,9 +709,42 @@ class Accounts extends Controller
 					}
 				}
 				
+				// Check if patient is a walk-in (only has walk-in or lab test appointments, no consultation)
+				$patient = $patientModel->find($updatedBill['patient_id']);
+				if ($patient) {
+					// Check if patient has any consultation appointments
+					$hasConsultation = $db->table('appointments')
+						->where('patient_id', $updatedBill['patient_id'])
+						->where('status !=', 'cancelled')
+						->where('appointment_type', 'consultation')
+						->countAllResults() > 0;
+					
+					// Check if patient has any doctor assignments
+					$hasDoctor = $db->table('appointments')
+						->where('patient_id', $updatedBill['patient_id'])
+						->where('status !=', 'cancelled')
+						->where('doctor_id IS NOT NULL', null, false)
+						->countAllResults() > 0;
+					
+					// Check if patient is admitted
+					$isAdmitted = $db->table('admissions')
+						->where('patient_id', $updatedBill['patient_id'])
+						->where('status', 'Admitted')
+						->countAllResults() > 0;
+					
+					// If walk-in patient (no consultation, no doctor, not admitted) and bill is paid, set to inactive
+					if (!$hasConsultation && !$hasDoctor && !$isAdmitted && strtolower($patient['patient_type'] ?? '') === 'outpatient') {
+						$patientModel->update($updatedBill['patient_id'], [
+							'status' => 'inactive',
+							'updated_at' => date('Y-m-d H:i:s')
+						]);
+						log_message('info', "Set walk-in patient #{$updatedBill['patient_id']} to inactive after bill #{$billId} was fully paid");
+					}
+				}
+				
 				// Update admission billing_cleared for inpatients
 				$admission = $db->table('admissions')
-					->where('patient_id', $bill['patient_id'])
+					->where('patient_id', $updatedBill['patient_id'])
 					->orderBy('id', 'DESC')
 					->get()->getRowArray();
 				
@@ -654,7 +756,7 @@ class Accounts extends Controller
 				
 				// Update insurance claim status to paid
 				$insuranceClaim = $db->table('insurance_claims')
-					->where('patient_id', $bill['patient_id'])
+					->where('patient_id', $updatedBill['patient_id'])
 					->orderBy('id', 'DESC')
 					->get()->getRowArray();
 				
@@ -663,8 +765,8 @@ class Accounts extends Controller
 						->where('id', $insuranceClaim['id'])
 						->update([
 							'bill_id' => $billId,
-							'claim_amount' => $bill['total_amount'],
-							'approved_amount' => $bill['total_amount'],
+							'claim_amount' => $updatedBill['total_amount'],
+							'approved_amount' => $updatedBill['total_amount'],
 							'status' => 'paid',
 							'approved_date' => date('Y-m-d H:i:s'),
 							'updated_at' => date('Y-m-d H:i:s')
@@ -778,6 +880,32 @@ class Accounts extends Controller
 		}
 		
 		try {
+			// Check patient type - outpatients should not have insurance
+			$patientModel = new PatientModel();
+			$patient = $patientModel->find($patientId);
+			
+			if ($patient && isset($patient['patient_type']) && strtolower($patient['patient_type']) === 'outpatient') {
+				// Outpatients don't have insurance coverage
+				return $this->response->setJSON([
+					'success' => true,
+					'has_insurance' => false,
+					'has_philhealth' => false,
+					'discount_percentage' => 0,
+					'copay_percentage' => 100,
+					'provider' => null,
+					'policy_number' => null,
+					'member_id' => null,
+					'coverage' => null,
+					'debug' => [
+						'insurance_claim_found' => false,
+						'provider_name' => null,
+						'discount_calculated' => 0,
+						'coverage_found' => false,
+						'reason' => 'Outpatient - insurance not applicable'
+					]
+				]);
+			}
+			
 			$insuranceModel = new InsuranceModel();
 			
 			// Get patient's most recent insurance claim (any record with valid provider, regardless of bill_id or status)
@@ -1842,6 +1970,9 @@ class Accounts extends Controller
 		if (!session()->get('isLoggedIn') || session()->get('role') !== 'accountant') {
 			return redirect()->to('/login');
 		}
+
+		// Check and update walk-in patients with paid bills
+		$this->updateWalkInPatientsWithPaidBills();
 
 		$paymentModel = new PaymentModel();
 		$billingModel = new BillingModel();
