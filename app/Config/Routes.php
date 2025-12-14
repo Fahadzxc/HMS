@@ -40,6 +40,7 @@ $routes->post('nurse/assignPatient', 'Nurse::assignPatient');
 $routes->post('nurse/markPrescriptionAsGiven', 'Nurse::markPrescriptionAsGiven');
 $routes->get('nurse/lab-requests', 'Nurse::labRequests');
 $routes->post('nurse/mark-lab-sent', 'Nurse::markLabRequestAsSent');
+$routes->post('nurse/collect-specimen', 'Nurse::collectSpecimen');
 
 // Reception Routes
 $routes->get('reception/patients', 'Reception::patients');
@@ -131,6 +132,7 @@ $routes->post('doctor/prescriptions/create', 'Doctor::createPrescription');
 $routes->get('doctor/labs', 'Doctor::labRequests');
 $routes->get('doctor/labRequests', 'Doctor::labRequests');
 $routes->post('doctor/createLabRequest', 'Doctor::createLabRequest');
+$routes->get('doctor/getTestInfo', 'Doctor::getTestInfo');
 $routes->get('doctor/reports', 'Doctor::reports');
 
 // Admin Routes (expanded, no group)
@@ -151,6 +153,7 @@ $routes->get('admin/lab', 'Admin\\Lab\\Dashboard::index');
 $routes->get('admin/lab/requests', 'Admin\\Lab\\Requests::index');
 $routes->get('admin/pharmacy-inventory', 'Admin\\Pharmacy::index');
 $routes->get('admin/pharmacy-inventory/details/(:num)', 'Admin\\Pharmacy::getMedicineDetails/$1');
+$routes->post('admin/pharmacy-inventory/create-order', 'Admin\\Pharmacy::createOrder');
 $routes->get('admin/lab/results', 'Admin\\Lab\\Results::index');
 $routes->get('admin/lab/staff', 'Admin\\Lab\\Staff::index');
 $routes->get('admin/lab/departments', 'Admin\\Lab\\Departments::index');

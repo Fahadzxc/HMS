@@ -983,8 +983,22 @@ class Reception extends Controller
 			}
 		}
 		
-		// Validate room if selected
-		if (!empty($roomId)) {
+		// For outpatients: room is not required (no room selection)
+		// For inpatients: room is required
+		if ($patientType === 'outpatient') {
+			// Outpatients don't need rooms - set room_id to null
+			$roomId = null;
+		} else if ($patientType === 'inpatient') {
+			// Inpatients require a room
+			if (empty($roomId)) {
+				return $this->response->setJSON([
+					'status' => 'error',
+					'message' => 'Room selection is required for inpatient appointments',
+					'errors' => ['room_id' => 'Room is required for inpatients']
+				]);
+			}
+			
+			// Validate room if selected for inpatients
 			$room = $roomModel->find($roomId);
 			
 			if (!$room) {
@@ -995,20 +1009,12 @@ class Reception extends Controller
 				]);
 			}
 			
-			// Validate room type matches patient type
-			if ($patientType === 'inpatient' && $room['room_type'] !== 'inpatient') {
+			// Validate room type matches patient type (inpatient rooms only)
+			if ($room['room_type'] !== 'inpatient') {
 				return $this->response->setJSON([
 					'status' => 'error',
-					'message' => 'Inpatient patients must be assigned to hospital admission rooms, not OPD clinic rooms',
+					'message' => 'Inpatient patients must be assigned to hospital admission rooms',
 					'errors' => ['room_id' => 'Invalid room type for inpatient']
-				]);
-			}
-			
-			if ($patientType === 'outpatient' && $room['room_type'] !== 'outpatient') {
-				return $this->response->setJSON([
-					'status' => 'error',
-					'message' => 'Outpatient appointments can only use OPD clinic rooms, not hospital admission rooms',
-					'errors' => ['room_id' => 'Invalid room type for outpatient']
 				]);
 			}
 			
@@ -1124,15 +1130,35 @@ class Reception extends Controller
 						}
 					}
 					
+					// Get test master model for pricing and specimen info
+					$labTestMasterModel = new \App\Models\LabTestMasterModel();
+					
 					// Create a lab test request for each test type
 					foreach ($testTypes as $testType) {
 						if (!empty($testType)) {
+							// Get test pricing and specimen requirement
+							$testInfo = $labTestMasterModel->getTestByName($testType);
+							
+							$price = 0.00;
+							$requiresSpecimen = 0;
+							
+							if ($testInfo) {
+								$price = (float)($testInfo['price'] ?? 0.00);
+								$requiresSpecimen = (int)($testInfo['requires_specimen'] ?? 0);
+							}
+							
+							// All requests with specimens must go through nurse
+							// Per user requirement: all requests with specimens must go through nurse
+							$status = 'pending'; // Always pending to go through nurse
+							
 							$labRequestData = [
 								'patient_id' => $patientId,
 								'doctor_id' => null, // No doctor for walk-in lab tests
 								'test_type' => $testType,
+								'price' => $price,
+								'requires_specimen' => $requiresSpecimen,
 								'priority' => 'normal',
-								'status' => 'pending',
+								'status' => $status,
 								'requested_at' => date('Y-m-d H:i:s'),
 								'notes' => $labRemarks ?? '',
 								'appointment_id' => $insertResult, // Link to appointment
@@ -1434,10 +1460,19 @@ class Reception extends Controller
 			return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
 		}
 
-		$type = $this->request->getGet('type') ?? 'outpatient';
+		$type = $this->request->getGet('type') ?? 'inpatient';
 		$appointmentType = $this->request->getGet('appointment_type') ?? null;
 		$patientAgeDays = $this->request->getGet('patient_age_days') ?? null;
-		
+
+		// Outpatients don't need rooms anymore - return empty array
+		if ($type === 'outpatient') {
+			return $this->response->setJSON([
+				'status' => 'success',
+				'message' => 'Outpatients do not require room assignment',
+				'rooms' => []
+			]);
+		}
+
 		// Validate type
 		if (!in_array($type, ['outpatient', 'inpatient'])) {
 			return $this->response->setJSON([
@@ -1459,11 +1494,17 @@ class Reception extends Controller
 				$rooms = $roomModel->getInpatientRooms();
 			}
 		}
-		// If appointment type is provided, filter by it (for outpatient)
-		else if ($appointmentType && $type === 'outpatient') {
-			$rooms = $roomModel->getRoomsByAppointmentType($appointmentType, $type);
-		} else if ($type === 'outpatient') {
-			$rooms = $roomModel->getOutpatientRooms();
+		// Outpatients don't need rooms - only return inpatient rooms
+		// (outpatient case already handled above with early return)
+		// For inpatient: if patient age is provided, filter by age
+		if ($patientAgeDays !== null) {
+			$ageInDays = (int) $patientAgeDays;
+			if ($ageInDays >= 0) {
+				$rooms = $roomModel->getRoomsByPatientAge($ageInDays, 'inpatient');
+			} else {
+				// Invalid age, return all inpatient rooms
+				$rooms = $roomModel->getInpatientRooms();
+			}
 		} else {
 			// Default: all inpatient rooms
 			$rooms = $roomModel->getInpatientRooms();

@@ -556,7 +556,8 @@
                                         data-name="<?= htmlspecialchars($patient['full_name']) ?>" 
                                         data-contact="<?= htmlspecialchars($patient['contact'] ?? '') ?>"
                                         data-age-dob="<?= htmlspecialchars($ageDob) ?>"
-                                        data-gender="<?= htmlspecialchars($gender) ?>">
+                                        data-gender="<?= htmlspecialchars($gender) ?>"
+                                        data-patient-type="<?= htmlspecialchars(strtolower($patient['patient_type'] ?? 'outpatient')) ?>">
                                     <?= $patient['id'] ?> - <?= htmlspecialchars($patient['full_name']) ?>
                                 </option>
                             <?php endforeach; ?>
@@ -663,13 +664,13 @@
                     </select>
                     <div class="error" data-error-for="payment_status"></div>
                 </div>
-                <div class="form-field">
+                <div class="form-field" id="room_field" style="display: none;">
                     <label>Select Room</label>
                     <select name="room_id" id="room_select">
                         <option value="">Choose a room...</option>
                     </select>
                     <div class="error" data-error-for="room_id"></div>
-                    <small class="form-help" id="room_help_text">Optional: Select an OPD clinic room for outpatient appointment</small>
+                    <small class="form-help" id="room_help_text">Select a room for inpatient appointment</small>
                 </div>
                 <!-- Notes (Consultation Notes - Hidden for Lab Tests) -->
                 <div class="form-field form-field--full" id="consultation_notes_field">
@@ -699,7 +700,10 @@ function showAddAppointmentModal() {
     const modal = document.getElementById('addAppointmentModal');
     modal.style.display = 'block';
     modal.setAttribute('aria-hidden', 'false');
-    
+
+    // Hide room field by default (outpatients don't need rooms)
+    resetRoomField();
+
     // Show selection step, hide form
     showAppointmentTypeSelection();
 }
@@ -921,12 +925,37 @@ function removeLabTest(testName) {
 function loadPatientDetails() {
     const select = document.getElementById('patient_select');
     const selectedOption = select.options[select.selectedIndex];
-    
+    const roomField = document.getElementById('room_field');
+    const roomSelect = document.getElementById('room_select');
+
     if (selectedOption.value) {
         // Fill patient details
         document.getElementById('patient_name').value = selectedOption.getAttribute('data-name');
         document.getElementById('patient_contact').value = selectedOption.getAttribute('data-contact');
-        
+
+        // Check patient type and show/hide room field
+        const patientType = selectedOption.getAttribute('data-patient-type') || 'outpatient';
+        if (patientType.toLowerCase() === 'inpatient') {
+            // Show room field for inpatients
+            if (roomField) {
+                roomField.style.display = 'block';
+            }
+            if (roomSelect) {
+                roomSelect.setAttribute('required', 'required');
+            }
+            // Load inpatient rooms
+            loadInpatientRooms();
+        } else {
+            // Hide room field for outpatients
+            if (roomField) {
+                roomField.style.display = 'none';
+            }
+            if (roomSelect) {
+                roomSelect.removeAttribute('required');
+                roomSelect.value = '';
+            }
+        }
+
         // Fill age/DOB and gender if available (for lab tests)
         const ageDob = selectedOption.getAttribute('data-age-dob');
         const gender = selectedOption.getAttribute('data-gender');
@@ -1042,23 +1071,16 @@ function toggleAppointmentFields() {
     loadOPDRooms();
 }
 
-// Load OPD rooms for outpatient appointments based on appointment type
-function loadOPDRooms() {
+// Load inpatient rooms
+function loadInpatientRooms() {
     const roomSelect = document.getElementById('room_select');
-    const hiddenField = document.getElementById('appointment_type_hidden');
-    const appointmentType = hiddenField ? hiddenField.value : null;
+    if (!roomSelect) return;
     
     // Reset room dropdown
     roomSelect.innerHTML = '<option value="">Loading rooms...</option>';
     
-    // Build URL with appointment type if available
-    let url = `<?= base_url('reception/rooms') ?>?type=outpatient`;
-    if (appointmentType) {
-        url += `&appointment_type=${encodeURIComponent(appointmentType)}`;
-    }
-    
-    // Fetch OPD rooms from backend
-    fetch(url)
+    // Fetch inpatient rooms from backend
+    fetch(`<?= base_url('reception/rooms') ?>?type=inpatient`)
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success' && data.rooms && data.rooms.length > 0) {
@@ -1072,7 +1094,7 @@ function loadOPDRooms() {
                     roomSelect.appendChild(option);
                 });
             } else {
-                roomSelect.innerHTML = '<option value="">No rooms available for this appointment type</option>';
+                roomSelect.innerHTML = '<option value="">No rooms available</option>';
             }
         })
         .catch(error => {
@@ -1081,11 +1103,27 @@ function loadOPDRooms() {
         });
 }
 
+// Load OPD rooms for outpatient appointments based on appointment type (DEPRECATED - outpatients don't need rooms)
+function loadOPDRooms() {
+    // Outpatients don't need rooms anymore - this function is kept for backward compatibility
+    const roomField = document.getElementById('room_field');
+    if (roomField) {
+        roomField.style.display = 'none';
+    }
+}
+
 // Reset room field
 function resetRoomField() {
+    const roomField = document.getElementById('room_field');
     const roomSelect = document.getElementById('room_select');
-    roomSelect.innerHTML = '<option value="">Choose a room...</option>';
-    roomSelect.removeAttribute('required');
+    if (roomField) {
+        roomField.style.display = 'none';
+    }
+    if (roomSelect) {
+        roomSelect.innerHTML = '<option value="">Choose a room...</option>';
+        roomSelect.removeAttribute('required');
+        roomSelect.value = '';
+    }
 }
 
 // Event listeners
@@ -1094,12 +1132,22 @@ document.getElementById('btnOpenAddAppointment').addEventListener('click', funct
     showAddAppointmentModal();
 });
 
-// Reload rooms when appointment type changes
+// Reload rooms when appointment type changes (only for inpatients)
 const appointmentTypeSelect = document.getElementById('appointment_type_select');
 if (appointmentTypeSelect) {
     appointmentTypeSelect.addEventListener('change', function() {
-        // Always reload rooms when appointment type changes
-        loadOPDRooms();
+        // Check if current patient is inpatient, if so reload rooms
+        const patientSelect = document.getElementById('patient_select');
+        if (patientSelect && patientSelect.value) {
+            const selectedOption = patientSelect.options[patientSelect.selectedIndex];
+            const patientType = selectedOption.getAttribute('data-patient-type') || 'outpatient';
+            if (patientType.toLowerCase() === 'inpatient') {
+                loadInpatientRooms();
+            } else {
+                // Outpatients don't need rooms
+                resetRoomField();
+            }
+        }
     });
 }
 

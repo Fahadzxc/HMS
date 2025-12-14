@@ -6,6 +6,8 @@ use CodeIgniter\Controller;
 use App\Models\PrescriptionModel;
 use App\Models\SettingModel;
 use App\Models\LabTestRequestModel;
+use App\Models\LabTestPriceModel;
+use App\Models\LabSpecimenTrackingModel;
 use App\Models\PatientModel;
 
 class Nurse extends Controller
@@ -2335,18 +2337,33 @@ class Nurse extends Controller
                 ]);
             }
             
+            // Check if specimen needs to be collected
+            $requiresSpecimen = (int)($request['requires_specimen'] ?? 0);
+            $nurseId = session()->get('user_id');
+            
             // Update status to sent_to_lab
             $updateData = [
                 'status' => 'sent_to_lab',
-                'sent_by_nurse_id' => session()->get('user_id'),
+                'sent_by_nurse_id' => $nurseId,
                 'sent_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s'),
             ];
             
+            // If specimen is required, mark it as collected by this nurse
+            if ($requiresSpecimen === 1) {
+                $updateData['specimen_collected_by'] = $nurseId;
+                $updateData['specimen_collected_at'] = date('Y-m-d H:i:s');
+            }
+            
             if ($requestModel->update($requestId, $updateData)) {
+                $message = 'Lab request marked as sent to lab successfully';
+                if ($requiresSpecimen === 1) {
+                    $message = 'Specimen collected and request sent to lab successfully';
+                }
+                
                 return $this->response->setJSON([
                     'success' => true,
-                    'message' => 'Lab request marked as sent to lab successfully'
+                    'message' => $message
                 ]);
             } else {
                 return $this->response->setJSON([
@@ -2358,6 +2375,73 @@ class Nurse extends Controller
             
         } catch (\Exception $e) {
             log_message('error', 'Error marking lab request as sent: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function collectSpecimen()
+    {
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'nurse') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        $this->response->setContentType('application/json');
+
+        $requestId = $this->request->getPost('request_id') ?? $this->request->getJSON(true)['request_id'] ?? null;
+        
+        if (!$requestId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Request ID is required']);
+        }
+
+        try {
+            $requestModel = new LabTestRequestModel();
+            $request = $requestModel->find($requestId);
+            
+            if (!$request) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Lab request not found']);
+            }
+            
+            $requiresSpecimen = (int)($request['requires_specimen'] ?? 0);
+            if ($requiresSpecimen !== 1) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'This test does not require specimen collection'
+                ]);
+            }
+            
+            $currentStatus = $request['status'] ?? 'pending';
+            if ($currentStatus !== 'pending') {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Specimen can only be collected for pending requests'
+                ]);
+            }
+            
+            // Mark specimen as collected
+            $updateData = [
+                'specimen_collected_by' => session()->get('user_id'),
+                'specimen_collected_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ];
+            
+            if ($requestModel->update($requestId, $updateData)) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Specimen collected successfully. You can now send the request to lab.'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to update specimen collection status',
+                    'errors' => $requestModel->errors()
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Error collecting specimen: ' . $e->getMessage());
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage()

@@ -88,6 +88,8 @@
                     <th style="padding: 12px; text-align: left; font-weight: 600;">Request ID</th>
                     <th style="padding: 12px; text-align: left; font-weight: 600;">Patient</th>
                     <th style="padding: 12px; text-align: left; font-weight: 600;">Test Type</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600;">Price</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600;">Specimen</th>
                     <th style="padding: 12px; text-align: left; font-weight: 600;">Doctor</th>
                     <th style="padding: 12px; text-align: left; font-weight: 600;">Priority</th>
                     <th style="padding: 12px; text-align: left; font-weight: 600;">Status</th>
@@ -102,6 +104,10 @@
                         $status = $request['status'] ?? 'pending';
                         $priority = $request['priority'] ?? 'normal';
                         $patientType = strtolower($request['patient_type'] ?? 'outpatient');
+                        $price = (float)($request['price'] ?? 0.00);
+                        $requiresSpecimen = (int)($request['requires_specimen'] ?? 0);
+                        $specimenCollected = !empty($request['specimen_collected_at']);
+                        $isInpatient = ($patientType === 'inpatient');
                         ?>
                         <tr style="border-bottom: 1px solid #e9ecef;">
                             <td style="padding: 12px;">
@@ -113,7 +119,7 @@
                                     <br>
                                     <small style="color: #666;">
                                         <?= ucfirst($patientType) ?>
-                                        <?php if ($patientType === 'inpatient'): ?>
+                                        <?php if ($isInpatient): ?>
                                             <span style="color: #3b82f6;">🏥</span>
                                         <?php else: ?>
                                             <span style="color: #10b981;">🚶</span>
@@ -123,6 +129,33 @@
                             </td>
                             <td style="padding: 12px;">
                                 <?= esc($request['test_type'] ?? 'N/A') ?>
+                            </td>
+                            <td style="padding: 12px;">
+                                <strong style="color: #10b981;">₱<?= number_format($price, 2) ?></strong>
+                            </td>
+                            <td style="padding: 12px;">
+                                <?php if ($requiresSpecimen === 1): ?>
+                                    <?php if ($specimenCollected): ?>
+                                        <span class="badge badge-success" style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: #10b981; color: white;">
+                                            ✅ Collected
+                                        </span>
+                                        <?php if (!empty($request['specimen_collected_at'])): ?>
+                                            <br><small style="color: #666; font-size: 10px;">
+                                                <?= date('M j, g:i A', strtotime($request['specimen_collected_at'])) ?>
+                                            </small>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <span class="badge badge-warning" style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: #f59e0b; color: white;">
+                                            ⚠️ Needs Collection
+                                        </span>
+                                    <?php endif; ?>
+                                <?php elseif ($isInpatient): ?>
+                                    <span class="badge badge-info" style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: #3b82f6; color: white;">
+                                        🏥 Inpatient
+                                    </span>
+                                <?php else: ?>
+                                    <span style="color: #999; font-size: 11px;">—</span>
+                                <?php endif; ?>
                             </td>
                             <td style="padding: 12px;">
                                 <?= esc($request['doctor_name'] ?? 'N/A') ?>
@@ -180,7 +213,7 @@
                                 </small>
                             </td>
                             <td style="padding: 12px; text-align: center;">
-                                <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
+                                <div style="display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">
                                     <?php if ($status === 'pending'): ?>
                                         <button type="button" 
                                                 class="btn-view-patient" 
@@ -189,12 +222,22 @@
                                                 title="View Patient">
                                             👤 View
                                         </button>
+                                        <?php if ($requiresSpecimen === 1 && !$specimenCollected): ?>
+                                            <button type="button" 
+                                                    class="btn-collect-specimen" 
+                                                    onclick="collectSpecimen(<?= $request['id'] ?? 0 ?>)"
+                                                    style="padding: 4px 8px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;"
+                                                    title="Collect Specimen">
+                                                🧪 Collect
+                                            </button>
+                                        <?php endif; ?>
                                         <button type="button" 
                                                 class="btn-mark-sent" 
-                                                onclick="markAsSent(<?= $request['id'] ?? 0 ?>)"
+                                                onclick="markAsSent(<?= $request['id'] ?? 0 ?>, <?= $requiresSpecimen ?>, <?= $specimenCollected ? 'true' : 'false' ?>)"
                                                 style="padding: 4px 8px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;"
-                                                title="Mark as Sent to Lab">
-                                            📤 Send
+                                                title="Send to Lab"
+                                                <?= ($requiresSpecimen === 1 && !$specimenCollected) ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '' ?>>
+                                            📤 Send to Lab
                                         </button>
                                     <?php elseif ($status === 'sent_to_lab'): ?>
                                         <span style="color: #3b82f6; font-size: 11px;">Sent to Lab</span>
@@ -221,7 +264,7 @@
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="8" style="padding: 40px; text-align: center; color: #999;">
+                        <td colspan="10" style="padding: 40px; text-align: center; color: #999;">
                             <p>No lab requests found for the selected filter.</p>
                         </td>
                     </tr>
@@ -243,8 +286,56 @@ function viewPatient(patientId) {
     window.open('<?= base_url('nurse/patients') ?>?patient_id=' + patientId, '_blank');
 }
 
-function markAsSent(requestId) {
-    if (!confirm('Are you sure you want to mark this lab request as sent to the laboratory?\n\nThis will forward the request to the lab department.')) {
+function collectSpecimen(requestId) {
+    if (!confirm('Have you collected the specimen from the patient?\n\nThis will mark the specimen as collected.')) {
+        return;
+    }
+    
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Collecting...';
+    
+    fetch('<?= site_url('nurse/collect-specimen') ?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            request_id: requestId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ ' + (data.message || 'Specimen collected successfully!'));
+            location.reload();
+        } else {
+            alert('❌ ' + (data.message || 'Failed to mark specimen as collected.'));
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Network error. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+function markAsSent(requestId, requiresSpecimen, specimenCollected) {
+    if (requiresSpecimen && !specimenCollected) {
+        alert('⚠️ Please collect the specimen first before sending to lab.');
+        return;
+    }
+    
+    const confirmMsg = requiresSpecimen 
+        ? 'Are you sure you want to send this lab request to the laboratory?\n\nSpecimen has been collected and will be forwarded to the lab department.'
+        : 'Are you sure you want to mark this lab request as sent to the laboratory?\n\nThis will forward the request to the lab department.';
+    
+    if (!confirm(confirmMsg)) {
         return;
     }
     

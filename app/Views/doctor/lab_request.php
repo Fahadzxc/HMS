@@ -41,7 +41,8 @@
                                     <option value="<?= (int) $pt['id'] ?>" 
                                             data-age="<?= esc($pt['age'] ?? '') ?>"
                                             data-gender="<?= esc($pt['gender'] ?? '') ?>"
-                                            data-name="<?= esc($pt['full_name']) ?>">
+                                            data-name="<?= esc($pt['full_name']) ?>"
+                                            data-patient-type="<?= esc(strtolower($pt['patient_type'] ?? 'outpatient')) ?>">
                                         <?= esc($pt['full_name']) ?>
                                         <?php if (!empty($pt['patient_id'])): ?>
                                             (ID: <?= esc($pt['patient_id']) ?>)
@@ -113,6 +114,10 @@
                                     <option value="Other">Other (Specify in Notes)</option>
                                 </optgroup>
                             </select>
+                            <div id="test_info" style="margin-top: 8px; padding: 8px; background: #f0f9ff; border-radius: 4px; display: none;">
+                                <div id="test_price" style="font-weight: 600; color: #10b981; margin-bottom: 4px;"></div>
+                                <div id="test_specimen" style="font-size: 12px; color: #666;"></div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Priority</label>
@@ -122,6 +127,27 @@
                                 <option value="high">High</option>
                                 <option value="critical">Critical</option>
                             </select>
+                        </div>
+                    </div>
+                    <div class="form-row" id="nurse_selection_row" style="display: none;">
+                        <div class="form-group full-width">
+                            <label>Assign Nurse for Specimen Collection <span class="req">*</span></label>
+                            <select id="assigned_nurse_id" name="assigned_nurse_id" class="form-input" required>
+                                <option value="">Select nurse...</option>
+                                <?php if (!empty($nurses)): ?>
+                                    <?php foreach ($nurses as $nurse): ?>
+                                        <option value="<?= (int) $nurse['id'] ?>">
+                                            <?= esc($nurse['name']) ?>
+                                            <?php if (!empty($nurse['email'])): ?>
+                                                (<?= esc($nurse['email']) ?>)
+                                            <?php endif; ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                            <small style="color: #666; display: block; margin-top: 4px;">
+                                Select which nurse will collect the specimen for this test
+                            </small>
                         </div>
                     </div>
                     <div class="form-row">
@@ -160,6 +186,8 @@
                         <th>Patient</th>
                         <th>Patient Type</th>
                         <th>Test Type</th>
+                        <th>Price</th>
+                        <th>Specimen</th>
                         <th>Priority</th>
                         <th>Status</th>
                         <th>Requested Date</th>
@@ -218,6 +246,21 @@
                                 </td>
                                 <td><?= esc($request['test_type'] ?? '—') ?></td>
                                 <td>
+                                    <strong style="color: #10b981;">₱<?= number_format((float)($request['price'] ?? 0.00), 2) ?></strong>
+                                </td>
+                                <td>
+                                    <?php 
+                                    $requiresSpecimen = (int)($request['requires_specimen'] ?? 0);
+                                    if ($requiresSpecimen === 1): 
+                                    ?>
+                                        <span class="badge bg-warning" style="padding: 4px 8px; border-radius: 4px; font-size: 11px; background: #f59e0b; color: white;">
+                                            🧪 Requires Specimen
+                                        </span>
+                                    <?php else: ?>
+                                        <span style="color: #999; font-size: 11px;">—</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
                                     <span class="badge <?= $priorityClass ?>"><?= ucfirst($priority) ?></span>
                                 </td>
                                 <td>
@@ -264,7 +307,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="8" class="text-center py-4 text-muted">No lab test requests found. Create your first request above.</td>
+                            <td colspan="10" class="text-center py-4 text-muted">No lab test requests found. Create your first request above.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -275,10 +318,39 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Update patient age and gender when patient is selected
+    // Get all elements first
     const patientSelect = document.getElementById('lab_patient_id');
     const ageInput = document.getElementById('lab_patient_age');
     const genderInput = document.getElementById('lab_patient_gender');
+    const testTypeSelect = document.getElementById('test_type');
+    const testInfoDiv = document.getElementById('test_info');
+    const testPriceDiv = document.getElementById('test_price');
+    const testSpecimenDiv = document.getElementById('test_specimen');
+    const nurseSelectionRow = document.getElementById('nurse_selection_row');
+    const assignedNurseSelect = document.getElementById('assigned_nurse_id');
+    
+    // Function to check if nurse selection should be shown
+    function checkNurseSelection() {
+        const testType = testTypeSelect ? testTypeSelect.value : '';
+        const patientType = patientSelect ? patientSelect.options[patientSelect.selectedIndex]?.getAttribute('data-patient-type') : '';
+        const isInpatient = patientType && patientType.toLowerCase() === 'inpatient';
+        
+        // Show nurse selection if:
+        // 1. Test requires specimen, OR
+        // 2. Patient is inpatient
+        if (nurseSelectionRow && assignedNurseSelect) {
+            const testRequiresSpecimen = testSpecimenDiv && testSpecimenDiv.textContent.includes('Requires specimen');
+            
+            if (testRequiresSpecimen || isInpatient) {
+                nurseSelectionRow.style.display = 'block';
+                assignedNurseSelect.setAttribute('required', 'required');
+            } else {
+                nurseSelectionRow.style.display = 'none';
+                assignedNurseSelect.removeAttribute('required');
+                assignedNurseSelect.value = '';
+            }
+        }
+    }
     
     if (patientSelect) {
         patientSelect.addEventListener('change', function() {
@@ -286,9 +358,50 @@ document.addEventListener('DOMContentLoaded', function() {
             if (selectedOption && selectedOption.value) {
                 ageInput.value = selectedOption.getAttribute('data-age') || '—';
                 genderInput.value = selectedOption.getAttribute('data-gender') || '—';
+                // Check if nurse selection is needed
+                checkNurseSelection();
             } else {
                 ageInput.value = '';
                 genderInput.value = '';
+                if (nurseSelectionRow) nurseSelectionRow.style.display = 'none';
+            }
+        });
+    }
+    
+    // Update test info when test type is selected
+    if (testTypeSelect && testInfoDiv) {
+        testTypeSelect.addEventListener('change', async function() {
+            const testType = this.value;
+            if (!testType) {
+                testInfoDiv.style.display = 'none';
+                checkNurseSelection();
+                return;
+            }
+            
+            // Fetch test info from server
+            try {
+                const response = await fetch('<?= base_url('doctor/getTestInfo') ?>?test_type=' + encodeURIComponent(testType));
+                const data = await response.json();
+                
+                if (data.success && data.test) {
+                    testPriceDiv.textContent = 'Price: ₱' + parseFloat(data.test.price || 0).toFixed(2);
+                    if (data.test.requires_specimen == 1) {
+                        testSpecimenDiv.innerHTML = '<span style="color: #f59e0b;">⚠️ Requires specimen collection by nurse</span>';
+                    } else {
+                        testSpecimenDiv.innerHTML = '<span style="color: #10b981;">✓ No specimen required</span>';
+                    }
+                    testInfoDiv.style.display = 'block';
+                    
+                    // Check if nurse selection should be shown (consider both test and patient type)
+                    checkNurseSelection();
+                } else {
+                    testInfoDiv.style.display = 'none';
+                    checkNurseSelection();
+                }
+            } catch (error) {
+                console.error('Error fetching test info:', error);
+                testInfoDiv.style.display = 'none';
+                checkNurseSelection();
             }
         });
     }
@@ -320,6 +433,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     form.reset();
                     ageInput.value = '';
                     genderInput.value = '';
+                    testInfoDiv.style.display = 'none';
                     // Reload page to show new request
                     window.location.reload();
                 } else {

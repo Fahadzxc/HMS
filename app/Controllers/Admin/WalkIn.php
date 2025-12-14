@@ -97,21 +97,39 @@ class WalkIn extends Controller
                 ]);
             }
 
+            // Get test pricing and specimen requirement from master table
+            $labTestMasterModel = new \App\Models\LabTestMasterModel();
+            $testInfo = $labTestMasterModel->getTestByName($testType);
+            
+            $price = 0.00;
+            $requiresSpecimen = 0;
+            
+            if ($testInfo) {
+                $price = (float)($testInfo['price'] ?? 0.00);
+                $requiresSpecimen = (int)($testInfo['requires_specimen'] ?? 0);
+            }
+            
+            // Walk-in requests with specimens must go through nurse
+            // Per user requirement: all requests with specimens must go through nurse
+            $status = ($requiresSpecimen === 1) ? 'pending' : 'pending'; // Always pending to go through nurse
+            
             $data = [
                 'patient_id' => $patientId,
                 'doctor_id' => null, // Walk-in requests have no doctor
                 'admission_id' => null, // Walk-in requests have no admission
                 'test_type' => $testType,
+                'price' => $price,
+                'requires_specimen' => $requiresSpecimen,
                 'priority' => $priority,
-                'status' => 'sent_to_lab', // Immediately send to lab for walk-in requests
+                'status' => $status, // Go through nurse if specimen needed
                 'requested_at' => date('Y-m-d H:i:s'),
                 'notes' => $notes,
                 'billing_status' => 'unbilled', // Ensure walk-in lab test is billable
             ];
-
+            
             // Ensure billing_status column exists before inserting
             $this->ensureLabBillingColumn();
-
+            
             // Use skipValidation to allow null doctor_id
             $requestModel->skipValidation(true)->insert($data);
 

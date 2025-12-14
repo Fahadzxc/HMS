@@ -1793,12 +1793,17 @@ class Doctor extends Controller
             $patients[] = $pt;
         }
 
+        // Get all active nurses for specimen collection assignment
+        $userModel = new \App\Models\UserModel();
+        $nurses = $userModel->getNurses(); // Get all active nurses
+
         $data = [
             'title' => 'Lab Requests - HMS',
             'user_role' => 'doctor',
             'user_name' => session()->get('name'),
             'requests' => $myRequests,
             'patients' => $patients,
+            'nurses' => $nurses, // Add nurses list for selection
         ];
 
         return view('doctor/lab_request', $data);
@@ -1867,13 +1872,49 @@ class Doctor extends Controller
                 }
             }
             
+            // Get test pricing and specimen requirement from master table
+            $labTestMasterModel = new \App\Models\LabTestMasterModel();
+            $testInfo = $labTestMasterModel->getTestByName($testType);
+            
+            $price = 0.00;
+            $requiresSpecimen = 0;
+            
+            if ($testInfo) {
+                $price = (float)($testInfo['price'] ?? 0.00);
+                $requiresSpecimen = (int)($testInfo['requires_specimen'] ?? 0);
+            }
+            
+            // Determine if request needs to go through nurse:
+            // 1. If test requires specimen (all patient types: outpatient, inpatient, walk-in)
+            // 2. If patient is inpatient (always needs nurse)
+            $isInpatient = ($patient && strtolower($patient['patient_type'] ?? '') === 'inpatient');
+            $needsNurse = ($requiresSpecimen === 1 || $isInpatient);
+            
+            // Status: 'pending' means it goes to nurse first, then nurse sends to lab
+            // If no specimen needed and not inpatient, it can go directly to lab
+            // But per user requirement, ALL requests with specimens must go through nurse
+            // And ALL inpatients must go through nurse
+            $status = $needsNurse ? 'pending' : 'pending'; // Always pending to go through nurse per requirements
+            
+            // Get assigned nurse ID if specimen is required
+            $assignedNurseId = null;
+            if ($requiresSpecimen === 1 || $isInpatient) {
+                $assignedNurseId = $this->request->getPost('assigned_nurse_id');
+                if (empty($assignedNurseId)) {
+                    $assignedNurseId = null; // Allow null if not specified
+                }
+            }
+            
             $data = [
                 'patient_id' => $patientId,
                 'doctor_id' => $doctorId,
                 'admission_id' => $admissionId, // Set admission_id for inpatients
                 'test_type' => $testType,
+                'price' => $price,
+                'requires_specimen' => $requiresSpecimen,
+                'assigned_nurse_id' => $assignedNurseId, // Nurse assigned to collect specimen
                 'priority' => $priority,
-                'status' => 'pending',
+                'status' => $status,
                 'requested_at' => date('Y-m-d H:i:s'),
                 'notes' => $notes,
                 'billing_status' => 'unbilled', // Ensure lab test is billable
@@ -1894,6 +1935,48 @@ class Doctor extends Controller
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Error creating request: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getTestInfo()
+    {
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'doctor') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        $this->response->setContentType('application/json');
+        
+        $testType = $this->request->getGet('test_type');
+        
+        if (empty($testType)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Test type is required']);
+        }
+
+        try {
+            $labTestMasterModel = new \App\Models\LabTestMasterModel();
+            $testInfo = $labTestMasterModel->getTestByName($testType);
+            
+            if ($testInfo) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'test' => [
+                        'price' => (float)($testInfo['price'] ?? 0.00),
+                        'requires_specimen' => (int)($testInfo['requires_specimen'] ?? 0),
+                        'test_category' => $testInfo['test_category'] ?? '',
+                    ]
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Test information not found'
+                ]);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Error fetching test info: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
             ]);
         }
     }

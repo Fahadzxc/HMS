@@ -14,6 +14,11 @@ class LabTestRequestModel extends Model
         'doctor_id',
         'admission_id', // Links lab request to specific admission for inpatients
         'test_type',
+        'price', // Price of the lab test
+        'requires_specimen', // 1 = requires specimen collection, 0 = no specimen needed
+        'assigned_nurse_id', // Nurse ID assigned to collect specimen (selected by doctor)
+        'specimen_collected_by', // Nurse ID who actually collected the specimen
+        'specimen_collected_at', // Timestamp when specimen was collected
         'priority',
         'status',
         'requested_at',
@@ -47,6 +52,9 @@ class LabTestRequestModel extends Model
         try {
             // Build select statement based on available tables
             $selectFields = 'lab_test_requests.*, patients.full_name AS patient_name, patients.patient_type AS patient_type, doctors.name AS doctor_name';
+            
+            // Ensure price and requires_specimen are included (they may not exist in older schemas)
+            // We'll select them explicitly to avoid issues
             
             if ($db->tableExists('lab_staff')) {
                 $selectFields .= ', staff_user.name AS staff_name';

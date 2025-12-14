@@ -16,8 +16,9 @@ class Rooms extends Controller
         $roomModel = new RoomModel();
         $db = \Config\Database::connect();
 
-        // Get all rooms with their details
-        $rooms = $roomModel->orderBy('room_type', 'ASC')
+        // Get all rooms EXCEPT outpatient rooms (outpatients don't need rooms)
+        $rooms = $roomModel->where('room_type !=', 'outpatient')
+            ->orderBy('room_type', 'ASC')
             ->orderBy('floor', 'ASC')
             ->orderBy('room_number', 'ASC')
             ->findAll();
@@ -125,10 +126,14 @@ class Rooms extends Controller
         }
         unset($room); // Break reference
 
-        // Group rooms by type
+        // Group rooms by type (exclude outpatient rooms)
         $roomsByType = [];
         foreach ($rooms as $room) {
             $type = $room['room_type'] ?? 'other';
+            // Skip outpatient rooms
+            if (strtolower($type) === 'outpatient') {
+                continue;
+            }
             if (!isset($roomsByType[$type])) {
                 $roomsByType[$type] = [];
             }

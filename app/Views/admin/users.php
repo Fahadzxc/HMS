@@ -1,5 +1,23 @@
 <?= $this->extend('template') ?>
 
+<?php
+// Helper function to format role names for display
+function formatRoleName($role) {
+    $roleMap = [
+        'admin' => 'Administrator',
+        'doctor' => 'Doctor',
+        'nurse' => 'Nurse',
+        'receptionist' => 'Receptionist',
+        'pharmacist' => 'Pharmacy',
+        'accountant' => 'Accountant',
+        'lab' => 'Laboratory',
+        'it' => 'IT Staff',
+        'staff' => 'Staff',
+    ];
+    return $roleMap[strtolower($role)] ?? ucfirst($role);
+}
+?>
+
 <?= $this->section('content') ?>
 
 <section class="panel">
@@ -101,12 +119,12 @@
                                 </div>
                                 <div class="patient-details">
                                     <strong><?= htmlspecialchars($user['name']) ?></strong>
-                                    <p class="blood-type">Role: <?= ucfirst($user['role']) ?></p>
+                                    <p class="blood-type">Role: <?= formatRoleName($user['role']) ?></p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-age">
-                            <div><?= ucfirst($user['role']) ?></div>
+                            <div><?= formatRoleName($user['role']) ?></div>
                             <div><?= ucfirst($user['status']) ?></div>
                         </div>
                         <div class="col-contact">
@@ -165,6 +183,11 @@
                         <option value="admin">Administrator</option>
                         <option value="doctor">Doctor</option>
                         <option value="nurse">Nurse</option>
+                        <option value="receptionist">Receptionist</option>
+                        <option value="pharmacist">Pharmacy</option>
+                        <option value="accountant">Accountant</option>
+                        <option value="lab">Laboratory</option>
+                        <option value="it">IT Staff</option>
                         <option value="staff">Staff</option>
                     </select>
                     <div class="error" data-error-for="role"></div>
@@ -221,6 +244,11 @@
                         <option value="admin">Administrator</option>
                         <option value="doctor">Doctor</option>
                         <option value="nurse">Nurse</option>
+                        <option value="receptionist">Receptionist</option>
+                        <option value="pharmacist">Pharmacy</option>
+                        <option value="accountant">Accountant</option>
+                        <option value="lab">Laboratory</option>
+                        <option value="it">IT Staff</option>
                         <option value="staff">Staff</option>
                     </select>
                     <div class="error" data-error-for="role"></div>

@@ -1059,7 +1059,46 @@ class Accounts extends Controller
 					
 					foreach ($results as $row) {
 						$testType = trim(strtolower($row['test_type'] ?? 'Lab Test'));
-						$unitPrice = $defaultLabPrices[$testType] ?? $this->guessLabPrice($testType, $defaultLabPrices, 500.00);
+						
+						// Try to get price from lab_test_requests table first
+						$unitPrice = 0.00;
+						if (!empty($row['request_id']) && $db->tableExists('lab_test_requests')) {
+							try {
+								$request = $db->table('lab_test_requests')
+									->select('price')
+									->where('id', $row['request_id'])
+									->get()
+									->getRowArray();
+								if ($request && isset($request['price']) && $request['price'] > 0) {
+									$unitPrice = (float)$request['price'];
+								}
+							} catch (\Exception $e) {
+								// Ignore errors, fall back to defaults
+							}
+						}
+						
+						// If no price from request, try lab_tests_master
+						if ($unitPrice <= 0 && $db->tableExists('lab_tests_master')) {
+							try {
+								$masterTest = $db->table('lab_tests_master')
+									->select('price')
+									->where('test_name', $row['test_type'] ?? '')
+									->where('is_active', 1)
+									->get()
+									->getRowArray();
+								if ($masterTest && isset($masterTest['price']) && $masterTest['price'] > 0) {
+									$unitPrice = (float)$masterTest['price'];
+								}
+							} catch (\Exception $e) {
+								// Ignore errors, fall back to defaults
+							}
+						}
+						
+						// Fall back to default prices if still no price found
+						if ($unitPrice <= 0) {
+							$unitPrice = $defaultLabPrices[$testType] ?? $this->guessLabPrice($testType, $defaultLabPrices, 500.00);
+						}
+						
 						$billableItems[] = [
 							'category' => 'laboratory',
 							'code' => 'LAB-' . str_pad((string)$row['id'], 6, '0', STR_PAD_LEFT),
@@ -1095,6 +1134,19 @@ class Accounts extends Controller
 					}
 					
 					$selectFields = 'rq.id, rq.test_type, rq.requested_at, rq.status, rq.doctor_id';
+					
+					// Check if price column exists
+					$hasPrice = false;
+					foreach ($fields as $f) {
+						if (strtolower($f->name) === 'price') {
+							$hasPrice = true;
+							break;
+						}
+					}
+					if ($hasPrice) {
+						$selectFields .= ', rq.price';
+					}
+					
 					if ($hasAppointmentId) {
 						$selectFields .= ', rq.appointment_id';
 					}
@@ -1164,7 +1216,34 @@ class Accounts extends Controller
 					
 					foreach ($requests as $row) {
 						$testType = trim(strtolower($row['test_type'] ?? 'Lab Test'));
-						$unitPrice = $defaultLabPrices[$testType] ?? $this->guessLabPrice($testType, $defaultLabPrices, 500.00);
+						
+						// Get price from lab_test_requests table first (this is the actual price saved)
+						$unitPrice = 0.00;
+						if (isset($row['price']) && $row['price'] > 0) {
+							$unitPrice = (float)$row['price'];
+						}
+						
+						// If no price in request, try lab_tests_master
+						if ($unitPrice <= 0 && $db->tableExists('lab_tests_master')) {
+							try {
+								$masterTest = $db->table('lab_tests_master')
+									->select('price')
+									->where('test_name', $row['test_type'] ?? '')
+									->where('is_active', 1)
+									->get()
+									->getRowArray();
+								if ($masterTest && isset($masterTest['price']) && $masterTest['price'] > 0) {
+									$unitPrice = (float)$masterTest['price'];
+								}
+							} catch (\Exception $e) {
+								// Ignore errors, fall back to defaults
+							}
+						}
+						
+						// Fall back to default prices if still no price found
+						if ($unitPrice <= 0) {
+							$unitPrice = $defaultLabPrices[$testType] ?? $this->guessLabPrice($testType, $defaultLabPrices, 500.00);
+						}
 						
 						// Check if this request is linked to an appointment
 						$appointmentInfo = '';
