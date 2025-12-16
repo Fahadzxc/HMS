@@ -89,7 +89,26 @@
                                         <p class="text-muted" style="margin: 0; font-size: 0.875rem;"><?= esc($bill['contact']) ?></p>
                                     <?php endif; ?>
                                 </td>
-                                <td><?= ucfirst(esc($bill['bill_type'] ?? 'N/A')) ?></td>
+                                <td>
+                                    <?php
+                                    // Show "Consultation" or "Follow-up" for appointment bills based on appointment_type
+                                    $displayType = $bill['bill_type'] ?? 'N/A';
+                                    if ($displayType === 'appointment' && !empty($bill['appointment_type'])) {
+                                        $appointmentType = strtolower($bill['appointment_type']);
+                                        if ($appointmentType === 'follow-up' || $appointmentType === 'followup') {
+                                            $displayType = 'Follow-up';
+                                        } elseif ($appointmentType === 'consultation') {
+                                            $displayType = 'Consultation';
+                                        } else {
+                                            // For other appointment types, capitalize first letter
+                                            $displayType = ucfirst($appointmentType);
+                                        }
+                                    } else {
+                                        $displayType = ucfirst($displayType);
+                                    }
+                                    echo esc($displayType);
+                                    ?>
+                                </td>
                                 <td><strong>₱<?= number_format($bill['total_amount'] ?? 0, 2) ?></strong></td>
                                 <td>
                                     <span class="badge badge-<?= 

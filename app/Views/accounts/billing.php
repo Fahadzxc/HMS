@@ -618,7 +618,6 @@ function addBillItem() {
     newItem.innerHTML = `
         <select class="form-input bill-category" onchange="updateItemCategory(this)" required>
             <option value="room">Room/Bed Charges</option>
-            <option value="nursing">Nursing Charges</option>
             <option value="ot">OT Charges</option>
             <option value="professional">Professional Fees</option>
             <option value="medication">Medication</option>

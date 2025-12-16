@@ -50,8 +50,10 @@ class BillingModel extends Model
     {
         $builder = $this->db->table('bills b');
         $builder->select('b.*, p.full_name as patient_name, p.patient_id as patient_code, p.contact, p.email,
+            a.appointment_type,
             (SELECT payment_method FROM payments WHERE bill_id = b.id AND status = "completed" ORDER BY created_at DESC LIMIT 1) as payment_method');
         $builder->join('patients p', 'p.id = b.patient_id', 'left');
+        $builder->join('appointments a', 'a.id = b.appointment_id', 'left');
         
         if (!empty($filters['status'])) {
             $builder->where('b.status', $filters['status']);

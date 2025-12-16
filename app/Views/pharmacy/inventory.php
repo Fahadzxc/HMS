@@ -83,11 +83,60 @@
                     <?php if (!empty($medications)): ?>
                         <?php foreach ($medications as $med): ?>
                             <?php
-                            $invItem = $inventory[$med['id']] ?? null;
-                            $stockQty = $invItem['stock_quantity'] ?? 0;
-                            $reorderLevel = $invItem['reorder_level'] ?? 10;
-                            $expirationDate = $invItem['expiration_date'] ?? null;
-                            $category = $invItem['category'] ?? 'General';
+                            // Try multiple ways to find inventory record
+                            $invItem = null;
+                            
+                            // First try by medication_id (most reliable)
+                            if (!empty($med['id'])) {
+                                // Try direct medication_id match
+                                if (isset($inventory[$med['id']])) {
+                                    $invItem = $inventory[$med['id']];
+                                }
+                                // Try using inventoryByMedId array if available
+                                elseif (isset($inventoryByMedId[$med['id']])) {
+                                    $invItem = $inventoryByMedId[$med['id']];
+                                }
+                            }
+                            
+                            // If not found, try by name (case-insensitive)
+                            if (!$invItem && !empty($med['name'])) {
+                                $medNameLower = strtolower(trim($med['name']));
+                                
+                                // Try using inventoryByName array if available
+                                if (isset($inventoryByName[$medNameLower])) {
+                                    $invItem = $inventoryByName[$medNameLower];
+                                }
+                                // Fallback: search through all inventory
+                                else {
+                                    foreach ($inventory as $key => $inv) {
+                                        if (is_numeric($key)) {
+                                            // This is medication_id key, check if name matches
+                                            $invNameLower = strtolower(trim($inv['name'] ?? ''));
+                                            if ($invNameLower === $medNameLower) {
+                                                $invItem = $inv;
+                                                break;
+                                            }
+                                        } else {
+                                            // This is name key, check if matches
+                                            $invNameLower = strtolower(trim($inv['name'] ?? ''));
+                                            if ($invNameLower === $medNameLower) {
+                                                $invItem = $inv;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // If still not found, try direct name match
+                            if (!$invItem && !empty($med['name']) && isset($inventory[$med['name']])) {
+                                $invItem = $inventory[$med['name']];
+                            }
+                            
+                            $stockQty = $invItem ? (int)($invItem['stock_quantity'] ?? 0) : 0;
+                            $reorderLevel = $invItem ? (int)($invItem['reorder_level'] ?? 10) : 10;
+                            $expirationDate = $invItem ? ($invItem['expiration_date'] ?? null) : null;
+                            $category = $invItem ? ($invItem['category'] ?? 'General') : 'General';
                             
                             $status = 'ok';
                             $statusLabel = 'In Stock';

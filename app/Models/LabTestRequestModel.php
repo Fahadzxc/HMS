@@ -51,7 +51,7 @@ class LabTestRequestModel extends Model
         
         try {
             // Build select statement based on available tables
-            $selectFields = 'lab_test_requests.*, patients.full_name AS patient_name, patients.patient_type AS patient_type, doctors.name AS doctor_name';
+            $selectFields = 'lab_test_requests.*, COALESCE(patients.full_name, CONCAT("Patient #", lab_test_requests.patient_id)) AS patient_name, patients.patient_type AS patient_type, doctors.name AS doctor_name';
             
             // Ensure price and requires_specimen are included (they may not exist in older schemas)
             // We'll select them explicitly to avoid issues
@@ -122,7 +122,22 @@ class LabTestRequestModel extends Model
                 $builder->where('lab_test_requests.admission_id IS NULL', null, false);
             }
 
-            return $builder->orderBy('lab_test_requests.requested_at', 'DESC')->findAll();
+            $results = $builder->orderBy('lab_test_requests.requested_at', 'DESC')->get()->getResultArray();
+            
+            // Fallback: If patient_name is still null/empty, fetch from patients table directly
+            foreach ($results as &$result) {
+                if (empty($result['patient_name']) || $result['patient_name'] === null) {
+                    $patient = $db->table('patients')->where('id', $result['patient_id'])->get()->getRowArray();
+                    if ($patient) {
+                        $result['patient_name'] = $patient['full_name'] ?? 'Patient #' . $result['patient_id'];
+                    } else {
+                        $result['patient_name'] = 'Patient #' . $result['patient_id'];
+                    }
+                }
+            }
+            unset($result);
+            
+            return $results;
             
         } catch (\Exception $e) {
             log_message('error', 'Error in getAllWithRelations: ' . $e->getMessage());

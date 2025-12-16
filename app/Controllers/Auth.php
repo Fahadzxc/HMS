@@ -62,11 +62,22 @@ class Auth extends BaseController
             }
 
             // Redirect to role-specific dashboard URL
-            $role = $user['role'];
+            $role = strtolower(trim($user['role']));
+            
+            // Verify session was set before redirecting
+            if (!session()->get('isLoggedIn')) {
+                log_message('error', 'Session not set after login for user: ' . $user['email']);
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Session error. Please try again.');
+            }
 
             if ($role === 'receptionist') {
                 $this->ensureReceptionistProfile($user['id']);
             }
+            
+            log_message('info', 'Redirecting user to dashboard - Email: ' . $user['email'] . ', Role: ' . $role);
+            
             switch ($role) {
                 case 'admin':
                     return redirect()->to('/admin/dashboard');
@@ -83,8 +94,10 @@ class Auth extends BaseController
                 case 'accountant':
                     return redirect()->to('/accounts/dashboard');
                 case 'it':
+                    log_message('info', 'Redirecting IT user to /it/dashboard');
                     return redirect()->to('/it/dashboard');
                 default:
+                    log_message('warning', 'Unknown role for user: ' . $role);
                     return redirect()->to('/dashboard');
             }
         } else {

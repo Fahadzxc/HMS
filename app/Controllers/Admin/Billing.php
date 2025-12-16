@@ -172,6 +172,12 @@ class Billing extends Controller
             foreach ($items as $item) {
                 if (!is_array($item)) continue;
                 
+                // Check if patient is buying from hospital - only add to bill if true
+                $buyFromHospital = isset($item['buy_from_hospital']) ? (bool)$item['buy_from_hospital'] : true;
+                if (!$buyFromHospital) {
+                    continue; // Skip medications not bought from hospital
+                }
+                
                 // Get medication name
                 $medicationName = $item['name'] ?? $item['medication'] ?? '';
                 

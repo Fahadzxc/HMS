@@ -665,20 +665,32 @@ class Accounts extends Controller
 				if (!empty($updatedBill['appointment_id'])) {
 					$appointment = $appointmentModel->find($updatedBill['appointment_id']);
 					
-					if ($appointment && $appointment['status'] !== 'completed') {
-						$appointmentModel->update($updatedBill['appointment_id'], [
-							'status' => 'completed',
-							'updated_at' => date('Y-m-d H:i:s')
-						]);
-						log_message('info', "Auto-completed appointment #{$updatedBill['appointment_id']} after bill #{$billId} was fully paid");
+					if ($appointment) {
+						$appointmentDate = $appointment['appointment_date'] ?? null;
+						$appointmentType = strtolower($appointment['appointment_type'] ?? '');
+						$today = date('Y-m-d');
+						
+						// Don't auto-complete future follow-up appointments
+						if ($appointmentType === 'follow-up' && $appointmentDate && $appointmentDate > $today) {
+							log_message('info', "Skipping auto-complete for future follow-up appointment #{$updatedBill['appointment_id']} (date: {$appointmentDate})");
+						} elseif ($appointment['status'] !== 'completed' && (!$appointmentDate || $appointmentDate <= $today)) {
+							// Only complete if appointment date is today or in the past
+							$appointmentModel->update($updatedBill['appointment_id'], [
+								'status' => 'completed',
+								'updated_at' => date('Y-m-d H:i:s')
+							]);
+							log_message('info', "Auto-completed appointment #{$updatedBill['appointment_id']} after bill #{$billId} was fully paid");
+						}
 					}
 				} else {
 					// If bill doesn't have appointment_id, try to find appointment by patient_id and date
 					// Check if there are any appointments for this patient on the bill date or recent dates
 					$billDate = $updatedBill['created_at'] ?? date('Y-m-d');
 					$billDateFormatted = date('Y-m-d', strtotime($billDate));
+					$today = date('Y-m-d');
 					
 					// Find appointments for this patient within 7 days of bill creation
+					// Exclude future follow-up appointments
 					$startDate = date('Y-m-d', strtotime($billDateFormatted . ' -7 days'));
 					$endDate = date('Y-m-d', strtotime($billDateFormatted . ' +1 day'));
 					
@@ -686,8 +698,10 @@ class Accounts extends Controller
 						->where('patient_id', $updatedBill['patient_id'])
 						->where('appointment_date >=', $startDate)
 						->where('appointment_date <=', $endDate)
+						->where('appointment_date <=', $today) // Only appointments on or before today
 						->where('status !=', 'completed')
 						->where('status !=', 'cancelled')
+						->where("(appointment_type != 'follow-up' OR appointment_date <= '{$today}')", null, false) // Exclude future follow-ups
 						->orderBy('appointment_date', 'DESC')
 						->orderBy('appointment_time', 'DESC')
 						->get()
@@ -1311,7 +1325,20 @@ class Accounts extends Controller
 					
 					$appointments = $appointmentsQuery->orderBy('appointment_date', 'DESC')->findAll();
 					
+					$today = date('Y-m-d');
+					
 					foreach ($appointments as $appointment) {
+						$appointmentDate = $appointment['appointment_date'] ?? date('Y-m-d');
+						
+						// For follow-up appointments, only add to bill if appointment date is today or in the past
+						// Don't bill future follow-up appointments
+						if (isset($appointment['appointment_type']) && strtolower($appointment['appointment_type']) === 'follow-up') {
+							if ($appointmentDate > $today) {
+								// Follow-up is in the future - skip billing
+								continue;
+							}
+						}
+						
 						// Get doctor name
 						$doctorName = 'Doctor';
 						if (isset($appointment['doctor_id']) && $db->tableExists('users')) {
@@ -1322,8 +1349,6 @@ class Accounts extends Controller
 								log_message('warning', 'Error fetching doctor: ' . $e->getMessage());
 							}
 						}
-						
-						$appointmentDate = $appointment['appointment_date'] ?? date('Y-m-d H:i:s');
 						
 						$billableItems[] = [
 							'category' => 'professional',
@@ -1503,6 +1528,12 @@ class Accounts extends Controller
 						foreach ($items as $item) {
 							if (!is_array($item)) continue;
 							
+							// Check if patient is buying from hospital - only add to bill if true
+							$buyFromHospital = isset($item['buy_from_hospital']) ? (bool)$item['buy_from_hospital'] : true;
+							if (!$buyFromHospital) {
+								continue; // Skip medications not bought from hospital
+							}
+							
 							$medicationName = $item['name'] ?? $item['medication'] ?? $item['med_name'] ?? '';
 							if (empty($medicationName)) continue;
 							
@@ -1595,22 +1626,7 @@ class Accounts extends Controller
 							];
 						}
 						
-						// Add nurse fee if prescription is completed (given by nurse)
-						if ($prescriptionStatus === 'completed') {
-							if (empty($nurseName)) {
-								$nurseName = 'Nurse';
-							}
-							$billableItems[] = [
-								'category' => 'nursing',
-								'code' => '102001',
-								'date_time' => date('Y-m-d\TH:i', strtotime($prescription['updated_at'] ?? $prescriptionDate)),
-								'item_name' => 'Nurse Fee - ' . $nurseName . ' (Medication Administration)',
-								'unit_price' => 200.00, // Default nursing fee
-								'quantity' => 1,
-								'reference_id' => $prescription['id'],
-								'reference_type' => 'prescription'
-							];
-						}
+						// Nurse fees removed - no longer charging for nursing services
 					}
 				} catch (\Exception $e) {
 					log_message('error', 'Error processing prescription: ' . $e->getMessage());
@@ -1618,56 +1634,7 @@ class Accounts extends Controller
 				}
 			}
 			
-			// Check for unbilled nurse fees from completed prescriptions (even if medications were billed)
-			if ($db->tableExists('prescriptions') && !empty($billedPrescriptionIds)) {
-				try {
-					// Get completed prescriptions that were billed but might not have nurse fee
-					$billedCompletedRx = $db->table('prescriptions')
-						->where('patient_id', $patientId)
-						->where('status', 'completed')
-						->whereIn('id', $billedPrescriptionIds)
-						->get()->getResultArray();
-					
-					foreach ($billedCompletedRx as $rx) {
-						// Check if nurse fee was already billed for this prescription
-						$nurseFeeExists = $db->table('bill_items bi')
-							->join('bills b', 'b.id = bi.bill_id')
-							->where('b.patient_id', $patientId)
-							->where('bi.item_type', 'nursing')
-							->where('bi.reference_id', $rx['id'])
-							->countAllResults();
-						
-						if ($nurseFeeExists == 0) {
-							// Add unbilled nurse fee
-							$nurseName = 'Nurse';
-							if ($db->tableExists('treatment_updates')) {
-								$nurseUpdate = $db->table('treatment_updates')
-									->where('patient_id', $patientId)
-									->where('nurse_name IS NOT NULL')
-									->where('nurse_name !=', '')
-									->orderBy('created_at', 'DESC')
-									->get()->getRowArray();
-								if ($nurseUpdate && !empty($nurseUpdate['nurse_name'])) {
-									$nurseName = $nurseUpdate['nurse_name'];
-								}
-							}
-							
-							$billableItems[] = [
-								'category' => 'nursing',
-								'code' => '102001',
-								'date_time' => date('Y-m-d\TH:i', strtotime($rx['updated_at'] ?? $rx['created_at'])),
-								'item_name' => 'Nurse Fee - ' . $nurseName . ' (Medication Administration)',
-								'unit_price' => 200.00,
-								'quantity' => 1,
-								'reference_id' => $rx['id'],
-								'reference_type' => 'prescription'
-							];
-						}
-					}
-				} catch (\Exception $e) {
-					log_message('warning', 'Error checking unbilled nurse fees: ' . $e->getMessage());
-				}
-			}
+			// Nurse fees removed - no longer charging for nursing services
 			
 			// Add Room/Bed Charges if patient has a room (inpatient or outpatient)
 			if ($patient && !empty($patient['room_number'])) {

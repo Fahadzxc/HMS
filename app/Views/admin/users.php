@@ -162,23 +162,38 @@ function formatRoleName($role) {
             <?= csrf_field() ?>
             <div class="form-grid">
                 <div class="form-field">
-                    <label>Full Name <span class="req">*</span></label>
-                    <input type="text" name="name" required>
-                    <div class="error" data-error-for="name"></div>
+                    <label>First Name <span class="req">*</span></label>
+                    <input type="text" name="first_name" id="add_first_name" required>
+                    <div class="error" data-error-for="first_name"></div>
+                </div>
+                <div class="form-field">
+                    <label>Middle Name</label>
+                    <input type="text" name="middle_name" id="add_middle_name">
+                    <div class="error" data-error-for="middle_name"></div>
+                </div>
+                <div class="form-field">
+                    <label>Last Name <span class="req">*</span></label>
+                    <input type="text" name="last_name" id="add_last_name" required>
+                    <div class="error" data-error-for="last_name"></div>
                 </div>
                 <div class="form-field">
                     <label>Email Address <span class="req">*</span></label>
-                    <input type="email" name="email" required>
+                    <input type="email" name="email" id="add_email" required>
                     <div class="error" data-error-for="email"></div>
                 </div>
                 <div class="form-field">
                     <label>Password <span class="req">*</span></label>
-                    <input type="password" name="password" required minlength="6">
+                    <input type="password" name="password" id="add_password" required minlength="6">
                     <div class="error" data-error-for="password"></div>
                 </div>
                 <div class="form-field">
+                    <label>Phone Number <span class="req">*</span></label>
+                    <input type="tel" name="phone" id="add_phone" required>
+                    <div class="error" data-error-for="phone"></div>
+                </div>
+                <div class="form-field">
                     <label>Role <span class="req">*</span></label>
-                    <select name="role" required>
+                    <select name="role" id="add_role" required>
                         <option value="">Select Role</option>
                         <option value="admin">Administrator</option>
                         <option value="doctor">Doctor</option>
@@ -194,12 +209,47 @@ function formatRoleName($role) {
                 </div>
                 <div class="form-field">
                     <label>Status <span class="req">*</span></label>
-                    <select name="status" required>
+                    <select name="status" id="add_status" required>
                         <option value="">Select Status</option>
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
                     </select>
                     <div class="error" data-error-for="status"></div>
+                </div>
+                <div class="form-field" id="specialization_field" style="display: none;">
+                    <label>Specialization <span class="req">*</span></label>
+                    <select name="specialization" id="add_specialization">
+                        <option value="">Select Specialization</option>
+                        <option value="Cardiology">Cardiology</option>
+                        <option value="Pediatrics">Pediatrics</option>
+                        <option value="Internal Medicine">Internal Medicine</option>
+                        <option value="Surgery">Surgery</option>
+                        <option value="Orthopedics">Orthopedics</option>
+                        <option value="Obstetrics and Gynecology">Obstetrics and Gynecology</option>
+                        <option value="Dermatology">Dermatology</option>
+                        <option value="Neurology">Neurology</option>
+                        <option value="Psychiatry">Psychiatry</option>
+                        <option value="Emergency Medicine">Emergency Medicine</option>
+                        <option value="Anesthesiology">Anesthesiology</option>
+                        <option value="Radiology">Radiology</option>
+                        <option value="Pathology">Pathology</option>
+                        <option value="Ophthalmology">Ophthalmology</option>
+                        <option value="ENT (Ear, Nose, Throat)">ENT (Ear, Nose, Throat)</option>
+                        <option value="Urology">Urology</option>
+                        <option value="Pulmonology">Pulmonology</option>
+                        <option value="Gastroenterology">Gastroenterology</option>
+                        <option value="Endocrinology">Endocrinology</option>
+                        <option value="Oncology">Oncology</option>
+                        <option value="General Practice">General Practice</option>
+                    </select>
+                    <div class="error" data-error-for="specialization"></div>
+                </div>
+                <!-- License ID Field (for Doctor, Nurse, Lab) -->
+                <div class="form-field" id="license_id_field" style="display: none;">
+                    <label>License ID <span class="req">*</span></label>
+                    <input type="text" name="license_id" id="add_license_id" readonly style="background-color: #f3f4f6; cursor: not-allowed;" placeholder="Auto-generated">
+                    <small style="color: #6b7280; font-size: 0.875rem;">Random license ID will be auto-generated</small>
+                    <div class="error" data-error-for="license_id"></div>
                 </div>
             </div>
             <footer class="modal-footer">
@@ -223,9 +273,19 @@ function formatRoleName($role) {
             <input type="hidden" name="user_id" id="edit_user_id">
             <div class="form-grid">
                 <div class="form-field">
-                    <label>Full Name <span class="req">*</span></label>
-                    <input type="text" name="name" id="edit_name" required>
-                    <div class="error" data-error-for="name"></div>
+                    <label>First Name <span class="req">*</span></label>
+                    <input type="text" name="first_name" id="edit_first_name" required>
+                    <div class="error" data-error-for="first_name"></div>
+                </div>
+                <div class="form-field">
+                    <label>Middle Name</label>
+                    <input type="text" name="middle_name" id="edit_middle_name">
+                    <div class="error" data-error-for="middle_name"></div>
+                </div>
+                <div class="form-field">
+                    <label>Last Name <span class="req">*</span></label>
+                    <input type="text" name="last_name" id="edit_last_name" required>
+                    <div class="error" data-error-for="last_name"></div>
                 </div>
                 <div class="form-field">
                     <label>Email Address <span class="req">*</span></label>
@@ -233,8 +293,13 @@ function formatRoleName($role) {
                     <div class="error" data-error-for="email"></div>
                 </div>
                 <div class="form-field">
+                    <label>Phone Number <span class="req">*</span></label>
+                    <input type="tel" name="phone" id="edit_phone" required>
+                    <div class="error" data-error-for="phone"></div>
+                </div>
+                <div class="form-field">
                     <label>New Password (leave blank to keep current)</label>
-                    <input type="password" name="password" minlength="6">
+                    <input type="password" name="password" id="edit_password" minlength="6">
                     <div class="error" data-error-for="password"></div>
                 </div>
                 <div class="form-field">
@@ -262,6 +327,40 @@ function formatRoleName($role) {
                     </select>
                     <div class="error" data-error-for="status"></div>
                 </div>
+                <div class="form-field" id="edit_specialization_field" style="display: none;">
+                    <label>Specialization <span class="req">*</span></label>
+                    <select name="specialization" id="edit_specialization">
+                        <option value="">Select Specialization</option>
+                        <option value="Cardiology">Cardiology</option>
+                        <option value="Pediatrics">Pediatrics</option>
+                        <option value="Internal Medicine">Internal Medicine</option>
+                        <option value="Surgery">Surgery</option>
+                        <option value="Orthopedics">Orthopedics</option>
+                        <option value="Obstetrics and Gynecology">Obstetrics and Gynecology</option>
+                        <option value="Dermatology">Dermatology</option>
+                        <option value="Neurology">Neurology</option>
+                        <option value="Psychiatry">Psychiatry</option>
+                        <option value="Emergency Medicine">Emergency Medicine</option>
+                        <option value="Anesthesiology">Anesthesiology</option>
+                        <option value="Radiology">Radiology</option>
+                        <option value="Pathology">Pathology</option>
+                        <option value="Ophthalmology">Ophthalmology</option>
+                        <option value="ENT (Ear, Nose, Throat)">ENT (Ear, Nose, Throat)</option>
+                        <option value="Urology">Urology</option>
+                        <option value="Pulmonology">Pulmonology</option>
+                        <option value="Gastroenterology">Gastroenterology</option>
+                        <option value="Endocrinology">Endocrinology</option>
+                        <option value="Oncology">Oncology</option>
+                        <option value="General Practice">General Practice</option>
+                    </select>
+                    <div class="error" data-error-for="specialization"></div>
+                </div>
+                <div class="form-field" id="edit_license_id_field" style="display: none;">
+                    <label>License ID</label>
+                    <input type="text" name="license_id" id="edit_license_id" readonly style="background-color: #f3f4f6; cursor: not-allowed;">
+                    <small style="color: #6b7280; font-size: 0.875rem;">License ID cannot be changed</small>
+                    <div class="error" data-error-for="license_id"></div>
+                </div>
             </div>
             <footer class="modal-footer">
                 <button type="button" class="btn-secondary" onclick="closeEditUserModal()">Cancel</button>
@@ -285,6 +384,60 @@ function closeAddUserModal() {
     modal.style.display = 'none';
     modal.setAttribute('aria-hidden', 'true');
     form.reset();
+    // Reset license ID field visibility
+    toggleLicenseIdField();
+}
+
+// License ID and Specialization field toggle based on role
+function toggleLicenseIdField() {
+    const roleSelect = document.getElementById('add_role');
+    const licenseField = document.getElementById('license_id_field');
+    const licenseInput = document.getElementById('add_license_id');
+    const specializationField = document.getElementById('specialization_field');
+    const specializationSelect = document.getElementById('add_specialization');
+    
+    if (!roleSelect) return;
+    
+    const selectedRole = roleSelect.value;
+    const isDoctor = selectedRole === 'doctor';
+    const isNurse = selectedRole === 'nurse';
+    const isLab = selectedRole === 'lab';
+    const requiresLicense = isDoctor || isNurse || isLab;
+    
+    // Show/hide License ID field for Doctor, Nurse, and Lab
+    if (licenseField && licenseInput) {
+        if (requiresLicense) {
+            licenseField.style.display = 'block';
+            licenseInput.setAttribute('required', 'required');
+            // Auto-generate random license ID (7 digits)
+            const randomLicenseId = generateRandomLicenseId();
+            licenseInput.value = randomLicenseId;
+        } else {
+            licenseField.style.display = 'none';
+            licenseInput.removeAttribute('required');
+            licenseInput.value = ''; // Clear value when hidden
+        }
+    }
+    
+    // Show/hide Specialization field only for Doctor
+    if (specializationField && specializationSelect) {
+        if (isDoctor) {
+            specializationField.style.display = 'block';
+            specializationSelect.setAttribute('required', 'required');
+        } else {
+            specializationField.style.display = 'none';
+            specializationSelect.removeAttribute('required');
+            specializationSelect.value = ''; // Clear value when hidden
+        }
+    }
+}
+
+// Generate random 7-digit license ID
+function generateRandomLicenseId() {
+    // Generate random 7-digit number (1000000 to 9999999)
+    const min = 1000000;
+    const max = 9999999;
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 // Edit User Modal
@@ -295,10 +448,71 @@ function editUser(user) {
     
     // Fill form with user data
     document.getElementById('edit_user_id').value = user.id;
-    document.getElementById('edit_name').value = user.name;
-    document.getElementById('edit_email').value = user.email;
-    document.getElementById('edit_role').value = user.role;
-    document.getElementById('edit_status').value = user.status;
+    
+    // Split name into parts if available, otherwise parse from full name
+    if (user.first_name) {
+        document.getElementById('edit_first_name').value = user.first_name || '';
+        document.getElementById('edit_middle_name').value = user.middle_name || '';
+        document.getElementById('edit_last_name').value = user.last_name || '';
+    } else if (user.name) {
+        // Parse full name into parts
+        const nameParts = user.name.trim().split(/\s+/);
+        if (nameParts.length >= 2) {
+            document.getElementById('edit_first_name').value = nameParts[0] || '';
+            document.getElementById('edit_middle_name').value = nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '';
+            document.getElementById('edit_last_name').value = nameParts[nameParts.length - 1] || '';
+        } else {
+            document.getElementById('edit_first_name').value = user.name || '';
+            document.getElementById('edit_middle_name').value = '';
+            document.getElementById('edit_last_name').value = '';
+        }
+    }
+    
+    document.getElementById('edit_email').value = user.email || '';
+    document.getElementById('edit_phone').value = user.phone || '';
+    document.getElementById('edit_role').value = user.role || '';
+    document.getElementById('edit_status').value = user.status || '';
+    document.getElementById('edit_specialization').value = user.specialization || '';
+    document.getElementById('edit_license_id').value = user.license_id || '';
+    
+    // Toggle fields based on role
+    toggleEditLicenseIdField();
+}
+
+// Toggle License ID and Specialization for Edit modal
+function toggleEditLicenseIdField() {
+    const roleSelect = document.getElementById('edit_role');
+    const licenseField = document.getElementById('edit_license_id_field');
+    const specializationField = document.getElementById('edit_specialization_field');
+    const specializationSelect = document.getElementById('edit_specialization');
+    
+    if (!roleSelect) return;
+    
+    const selectedRole = roleSelect.value;
+    const isDoctor = selectedRole === 'doctor';
+    const isNurse = selectedRole === 'nurse';
+    const isLab = selectedRole === 'lab';
+    const requiresLicense = isDoctor || isNurse || isLab;
+    
+    // Show/hide License ID field
+    if (licenseField) {
+        if (requiresLicense) {
+            licenseField.style.display = 'block';
+        } else {
+            licenseField.style.display = 'none';
+        }
+    }
+    
+    // Show/hide Specialization field only for Doctor
+    if (specializationField && specializationSelect) {
+        if (isDoctor) {
+            specializationField.style.display = 'block';
+            specializationSelect.setAttribute('required', 'required');
+        } else {
+            specializationField.style.display = 'none';
+            specializationSelect.removeAttribute('required');
+        }
+    }
 }
 
 function closeEditUserModal() {
@@ -345,6 +559,59 @@ document.addEventListener('DOMContentLoaded', function() {
     const editUserBackdrop = document.getElementById('editUserModalBackdrop');
     if (editUserBackdrop) {
         editUserBackdrop.addEventListener('click', closeEditUserModal);
+    }
+    
+    // Role change handler for License ID and Specialization fields (Add form)
+    const addRoleSelect = document.getElementById('add_role');
+    if (addRoleSelect) {
+        addRoleSelect.addEventListener('change', toggleLicenseIdField);
+    }
+    
+    // Role change handler for Edit form
+    const editRoleSelect = document.getElementById('edit_role');
+    if (editRoleSelect) {
+        editRoleSelect.addEventListener('change', toggleEditLicenseIdField);
+    }
+    
+    // Form validation
+    const addUserForm = document.getElementById('addUserForm');
+    if (addUserForm) {
+        addUserForm.addEventListener('submit', function(e) {
+            // Re-check field requirements before submit
+            toggleLicenseIdField();
+            
+            // Basic frontend validation
+            const role = document.getElementById('add_role').value;
+            const specializationSelect = document.getElementById('add_specialization');
+            
+            // Validate specialization for Doctor
+            if (role === 'doctor' && (!specializationSelect || !specializationSelect.value.trim())) {
+                e.preventDefault();
+                alert('Specialization is required for Doctor role.');
+                if (specializationSelect) specializationSelect.focus();
+                return false;
+            }
+            
+            // License ID is auto-generated, so validation is handled by required attribute
+        });
+    }
+    
+    // Search functionality
+    const searchInput = document.querySelector('.search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const userRows = document.querySelectorAll('.table-row');
+            
+            userRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
     }
 });
 </script>

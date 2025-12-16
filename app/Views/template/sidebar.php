@@ -83,8 +83,6 @@ $menus = [
         ['label' => 'System Status', 'url' => base_url('it/system')],
         ['label' => 'User Management', 'url' => base_url('it/users')],
         ['label' => 'Backup', 'url' => base_url('it/backup')],
-        ['label' => 'Security', 'url' => base_url('it/security')],
-        ['label' => 'Support Tickets', 'url' => base_url('it/tickets')],
         ['label' => 'Settings', 'url' => base_url('admin/settings')],
         ['label' => 'Logout', 'url' => base_url('auth/logout')],
     ],

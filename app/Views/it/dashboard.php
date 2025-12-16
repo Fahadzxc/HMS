@@ -8,19 +8,36 @@
         <div class="actions-grid">
             <div class="action-tile">
                 <span>System Status</span>
-                <strong>Online</strong>
+                <?php
+                $status = $overallStatus ?? 'normal';
+                $statusColor = '#10b981'; // normal
+                $statusText = 'Normal';
+                if ($status === 'degraded') {
+                    $statusColor = '#f59e0b';
+                    $statusText = 'Degraded';
+                } elseif ($status === 'down') {
+                    $statusColor = '#ef4444';
+                    $statusText = 'Down';
+                } elseif ($status === 'maintenance') {
+                    $statusColor = '#6366f1';
+                    $statusText = 'Under Maintenance';
+                }
+                ?>
+                <strong style="color: <?= $statusColor ?>">
+                    <?= $statusText ?>
+                </strong>
             </div>
             <div class="action-tile">
                 <span>Active Users</span>
-                <strong>24</strong>
+                <strong><?= $activeUsers ?? 0 ?></strong>
             </div>
             <div class="action-tile">
                 <span>Pending Tickets</span>
-                <strong>5</strong>
+                <strong><?= $pendingTickets ?? 0 ?></strong>
             </div>
             <div class="action-tile">
                 <span>Last Backup</span>
-                <strong>2 hours ago</strong>
+                <strong><?= $lastBackup ?? 'Never' ?></strong>
             </div>
         </div>
     </div>
@@ -32,8 +49,8 @@
     </header>
     <div class="stack">
         <div class="button-group">
-            <a href="/it/system-status" class="button button-primary">System Status</a>
-            <a href="/it/user-management" class="button button-secondary">User Management</a>
+            <a href="/it/system" class="button button-primary">System Status</a>
+            <a href="/it/users" class="button button-secondary">User Management</a>
             <a href="/it/backup" class="button button-secondary">Backup System</a>
             <a href="/it/security" class="button button-secondary">Security Logs</a>
         </div>
@@ -57,34 +74,39 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>Database Server</td>
-                        <td><span class="badge badge-success">Online</span></td>
-                        <td>99.9%</td>
-                        <td>Excellent</td>
-                        <td>2 minutes ago</td>
-                    </tr>
-                    <tr>
-                        <td>Web Server</td>
-                        <td><span class="badge badge-success">Online</span></td>
-                        <td>99.8%</td>
-                        <td>Good</td>
-                        <td>1 minute ago</td>
-                    </tr>
-                    <tr>
-                        <td>File Storage</td>
-                        <td><span class="badge badge-success">Online</span></td>
-                        <td>100%</td>
-                        <td>Excellent</td>
-                        <td>3 minutes ago</td>
-                    </tr>
-                    <tr>
-                        <td>Email Server</td>
-                        <td><span class="badge badge-warning">Degraded</span></td>
-                        <td>95.2%</td>
-                        <td>Fair</td>
-                        <td>5 minutes ago</td>
-                    </tr>
+                    <?php if (isset($systemHealth) && is_array($systemHealth)): ?>
+                        <?php foreach ($systemHealth as $component): ?>
+                        <tr>
+                            <td><?= esc($component['name']) ?></td>
+                            <td>
+                                <?php
+                                $badgeClass = 'badge-success';
+                                $statusText = 'Online';
+                                if ($component['status'] === 'degraded') {
+                                    $badgeClass = 'badge-warning';
+                                    $statusText = 'Degraded';
+                                } elseif ($component['status'] === 'offline') {
+                                    $badgeClass = 'badge-danger';
+                                    $statusText = 'Offline';
+                                }
+                                ?>
+                                <span class="badge <?= $badgeClass ?>"><?= $statusText ?></span>
+                            </td>
+                            <?php
+                            $uptimeParts = explode(' ', $component['uptime'], 2);
+                            $uptimePercent = $uptimeParts[0] ?? 'N/A';
+                            $uptimePerformance = $uptimeParts[1] ?? 'N/A';
+                            ?>
+                            <td><?= esc($uptimePercent) ?></td>
+                            <td><?= esc($uptimePerformance) ?></td>
+                            <td><?= esc($component['last_check']) ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="5">Loading system health data...</td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>

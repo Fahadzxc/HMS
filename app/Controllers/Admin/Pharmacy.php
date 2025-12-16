@@ -150,6 +150,7 @@ class Pharmacy extends Controller
             'orders' => $orders,
             'lowStockItems' => $lowStockItems,
             'expiredItems' => $expiredItems,
+            'medications' => $medications,
         ];
 
         return view('admin/pharmacy/inventory', $data);
@@ -218,6 +219,140 @@ class Pharmacy extends Controller
             'stockHistory' => $stockHistory,
             'orders' => $orders,
         ]);
+    }
+
+    public function createOrder()
+    {
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'admin') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        $this->response->setContentType('application/json');
+
+        $orderModel = new MedicineOrderModel();
+        $medicationModel = new MedicationModel();
+
+        // Get JSON data (for multiple medicines) or form data (for single medicine - backward compatibility)
+        $jsonData = $this->request->getJSON(true);
+        
+        if ($jsonData && isset($jsonData['medicines']) && is_array($jsonData['medicines'])) {
+            // Multiple medicines mode
+            $supplierName = $jsonData['supplier_name'] ?? '';
+            $orderDate = $jsonData['order_date'] ?? '';
+            $reference = $jsonData['reference'] ?? null;
+            $medicines = $jsonData['medicines'] ?? [];
+
+            if (empty($supplierName) || empty($orderDate) || empty($medicines)) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Please fill all required fields']);
+            }
+
+            $baseOrderNumber = $orderModel->generateOrderNumber();
+            $createdCount = 0;
+            $errors = [];
+
+            foreach ($medicines as $index => $medicine) {
+                $medicationId = $medicine['medication_id'] ?? null;
+                $medicineName = $medicine['medicine_name'] ?? '';
+                $quantityOrdered = (int)($medicine['quantity_ordered'] ?? 0);
+                $unitPrice = (float)($medicine['unit_price'] ?? 0);
+                $totalPrice = (float)($medicine['total_price'] ?? 0);
+
+                if (empty($medicineName) || $quantityOrdered <= 0 || $unitPrice <= 0) {
+                    $errors[] = "Medicine #" . ($index + 1) . " has invalid data";
+                    continue;
+                }
+
+                // Calculate total price if not provided
+                if ($totalPrice <= 0) {
+                    $totalPrice = $unitPrice * $quantityOrdered;
+                }
+
+                // Generate unique order number for each medicine (same base, different suffix)
+                $orderNumber = $baseOrderNumber;
+                if ($index > 0) {
+                    $orderNumber = $baseOrderNumber . '-' . str_pad((string)($index + 1), 2, '0', STR_PAD_LEFT);
+                }
+
+                $orderData = [
+                    'order_number' => $orderNumber,
+                    'medication_id' => $medicationId ?: null,
+                    'medicine_name' => $medicineName,
+                    'supplier_name' => $supplierName,
+                    'quantity_ordered' => $quantityOrdered,
+                    'unit_price' => $unitPrice,
+                    'total_price' => $totalPrice,
+                    'order_date' => $orderDate,
+                    'status' => 'pending',
+                    'reference' => $reference,
+                ];
+
+                if ($orderModel->insert($orderData)) {
+                    $createdCount++;
+                } else {
+                    $errors[] = "Failed to create order for " . $medicineName;
+                }
+            }
+
+            if ($createdCount > 0) {
+                $message = "Order created successfully for {$createdCount} medicine(s)";
+                if (!empty($errors)) {
+                    $message .= ". Some errors: " . implode(', ', $errors);
+                }
+                return $this->response->setJSON(['success' => true, 'message' => $message, 'created_count' => $createdCount]);
+            } else {
+                return $this->response->setJSON(['success' => false, 'message' => 'Failed to create orders. ' . implode(', ', $errors)]);
+            }
+        } else {
+            // Single medicine mode (backward compatibility)
+            $medicineName = $this->request->getPost('medicine_name');
+            $medicationId = $this->request->getPost('medication_id');
+            $supplierName = $this->request->getPost('supplier_name');
+            $quantityOrdered = (int)$this->request->getPost('quantity_ordered');
+            $unitPrice = (float)$this->request->getPost('unit_price');
+            $totalPrice = (float)$this->request->getPost('total_price');
+            $orderDate = $this->request->getPost('order_date');
+            $reference = $this->request->getPost('reference');
+
+            if (empty($medicineName) || empty($supplierName) || $quantityOrdered <= 0 || empty($orderDate) || $unitPrice <= 0) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Please fill all required fields including unit price']);
+            }
+
+            // Get medication name and price if ID provided
+            if ($medicationId && empty($medicineName)) {
+                $medication = $medicationModel->find($medicationId);
+                if ($medication) {
+                    $medicineName = $medication['name'];
+                    // Use medication price if unit price not provided
+                    if ($unitPrice <= 0 && isset($medication['price']) && $medication['price'] > 0) {
+                        $unitPrice = (float)$medication['price'];
+                    }
+                }
+            }
+
+            // Calculate total price if not provided
+            if ($totalPrice <= 0) {
+                $totalPrice = $unitPrice * $quantityOrdered;
+            }
+
+            $orderData = [
+                'order_number' => $orderModel->generateOrderNumber(),
+                'medication_id' => $medicationId ?: null,
+                'medicine_name' => $medicineName,
+                'supplier_name' => $supplierName,
+                'quantity_ordered' => $quantityOrdered,
+                'unit_price' => $unitPrice,
+                'total_price' => $totalPrice,
+                'order_date' => $orderDate,
+                'status' => 'pending',
+                'reference' => $reference ?: null,
+            ];
+
+            if ($orderModel->insert($orderData)) {
+                return $this->response->setJSON(['success' => true, 'message' => 'Order created successfully']);
+            }
+
+            return $this->response->setJSON(['success' => false, 'message' => 'Failed to create order']);
+        }
     }
 }
 

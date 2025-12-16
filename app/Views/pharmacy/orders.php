@@ -26,9 +26,14 @@
             <h2>Orders Management</h2>
             <p>Track and manage medicine orders from suppliers</p>
         </div>
-        <button onclick="openCreateOrderModal()" style="padding: 0.75rem 1.5rem; background: #3b82f6; color: white; border: none; border-radius: 0.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
-            <span>+</span> Create Order
-        </button>
+        <div style="display: flex; gap: 0.75rem;">
+            <button onclick="processDeliveredOrders()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                <span>🔄</span> Update Stock from Delivered Orders
+            </button>
+            <button onclick="openCreateOrderModal()" style="padding: 0.75rem 1.5rem; background: #3b82f6; color: white; border: none; border-radius: 0.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                <span>+</span> Create Order
+            </button>
+        </div>
     </header>
     <div class="stack">
         <div class="table-container">
@@ -206,13 +211,22 @@ function addMedicineRow() {
     const row = document.createElement('tr');
     const rowIndex = tbody.children.length;
     
+    // Build options HTML from JavaScript data
+    let optionsHtml = '<option value="">Select Medicine</option>';
+    if (medicationsData && medicationsData.length > 0) {
+        medicationsData.forEach(function(med) {
+            const medId = med.id || '';
+            const medName = med.name || '';
+            const medPrice = parseFloat(med.price || 0);
+            const priceDisplay = medPrice > 0 ? ' ₱' + medPrice.toFixed(2) : '';
+            optionsHtml += `<option value="${medId}" data-name="${medName.replace(/"/g, '&quot;')}" data-price="${medPrice}">${medName}${priceDisplay}</option>`;
+        });
+    }
+    
     row.innerHTML = `
         <td style="padding: 0.75rem;">
             <select class="medicine-select" data-row="${rowIndex}" onchange="onMedicineChange(this)" required style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.375rem; font-size: 0.875rem;">
-                <option value="">Select Medicine</option>
-                <?php foreach ($medications ?? [] as $med): ?>
-                    <option value="<?= $med['id'] ?>" data-name="<?= esc($med['name']) ?>" data-price="<?= $med['price'] ?? 0 ?>"><?= esc($med['name']) ?> <?= isset($med['price']) && $med['price'] > 0 ? '₱' . number_format($med['price'], 2) : '' ?></option>
-                <?php endforeach; ?>
+                ${optionsHtml}
             </select>
             <input type="hidden" class="medicine-name" data-row="${rowIndex}">
         </td>
@@ -393,6 +407,49 @@ function updateOrderStatus(orderId, status) {
     .catch(error => {
         console.error('Error:', error);
         alert('Error updating order status');
+    });
+}
+
+function processDeliveredOrders() {
+    if (!confirm('This will update stock for all delivered orders that haven\'t been processed yet. Continue?')) {
+        return;
+    }
+    
+    // Show loading
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<span>⏳</span> Processing...';
+    
+    fetch('<?= base_url('pharmacy/orders/processDelivered') ?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        button.disabled = false;
+        button.innerHTML = originalText;
+        
+        if (data.success) {
+            alert(data.message + (data.processed > 0 ? '\n\nStock has been updated! Please refresh the inventory page to see the changes.' : ''));
+            // Optionally reload the page
+            if (data.processed > 0) {
+                if (confirm('Stock updated! Would you like to go to the Inventory page to see the changes?')) {
+                    window.location.href = '<?= base_url('pharmacy/inventory') ?>';
+                }
+            }
+        } else {
+            alert('Error: ' + (data.message || 'Failed to process delivered orders'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        button.disabled = false;
+        button.innerHTML = originalText;
+        alert('Error processing delivered orders');
     });
 }
 </script>

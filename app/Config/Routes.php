@@ -81,6 +81,7 @@ $routes->get('pharmacy/stockMovement', 'Pharmacy::stockMovement');
 $routes->get('pharmacy/orders', 'Pharmacy::orders');
 $routes->post('pharmacy/orders/create', 'Pharmacy::createOrder');
 $routes->post('pharmacy/orders/updateStatus', 'Pharmacy::updateOrderStatus');
+$routes->post('pharmacy/orders/processDelivered', 'Pharmacy::processDeliveredOrders');
 $routes->get('pharmacy/reports', 'Pharmacy::reports');
 
 // Accounts Routes
@@ -109,7 +110,13 @@ $routes->post('lab/settings/save', 'Lab::saveSettings');
 // IT Routes
 $routes->get('it/system', 'It::system');
 $routes->get('it/users', 'It::users');
+$routes->post('it/users/create', 'It::createUser');
+$routes->post('it/users/update', 'It::updateUser');
+$routes->post('it/users/delete', 'It::deleteUser');
 $routes->get('it/backup', 'It::backup');
+$routes->post('it/backup/upload', 'It::uploadBackup');
+$routes->post('it/backup/delete', 'It::deleteBackup');
+$routes->get('it/backup/download', 'It::downloadBackup');
 $routes->get('it/security', 'It::security');
 $routes->get('it/tickets', 'It::tickets');
 

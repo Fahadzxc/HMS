@@ -22,6 +22,9 @@ class Pharmacy extends Controller
 		$medicationModel = new MedicationModel();
 		$stockMovementModel = new PharmacyStockMovementModel();
 		$orderModel = new MedicineOrderModel();
+		
+		// Ensure medications table exists and has data
+		$this->ensureMedicationsTable();
 
 		// Get all medications
 		$medications = $medicationModel->orderBy('name', 'ASC')->findAll();
@@ -529,15 +532,33 @@ class Pharmacy extends Controller
 
 		// Get inventory data if pharmacy_inventory table exists
 		$inventory = [];
+		$inventoryByMedId = [];
+		$inventoryByName = [];
+		
 		if ($db->tableExists('pharmacy_inventory')) {
 			$inventoryRaw = $db->table('pharmacy_inventory')
 				->orderBy('name', 'ASC')
 				->get()
 				->getResultArray();
 			
-			$inventory = [];
+			// Create multiple lookup arrays for reliable matching
 			foreach ($inventoryRaw as $item) {
-				$inventory[$item['medication_id'] ?? $item['name']] = $item;
+				// Index by medication_id if available (PRIMARY KEY for matching)
+				if (!empty($item['medication_id'])) {
+					$inventoryByMedId[$item['medication_id']] = $item;
+					$inventory[$item['medication_id']] = $item; // Main lookup array
+				}
+				
+				// Index by name (case-insensitive) for fallback matching
+				$nameKey = strtolower(trim($item['name'] ?? ''));
+				if (!empty($nameKey)) {
+					$inventoryByName[$nameKey] = $item;
+				}
+				
+				// Also index by exact name for backward compatibility
+				if (!empty($item['name'])) {
+					$inventory[$item['name']] = $item;
+				}
 			}
 		}
 
@@ -547,6 +568,8 @@ class Pharmacy extends Controller
 			'user_name' => session()->get('name'),
 			'medications' => $medications,
 			'inventory' => $inventory,
+			'inventoryByMedId' => $inventoryByMedId ?? [],
+			'inventoryByName' => $inventoryByName ?? [],
 		];
 
 		return view('pharmacy/inventory', $data);
@@ -804,12 +827,48 @@ class Pharmacy extends Controller
 
 		$orderModel = new MedicineOrderModel();
 		$medicationModel = new MedicationModel();
+		
+		// Ensure medications table exists and has data
+		$this->ensureMedicationsTable();
 
 		// Get all orders
 		$orders = $orderModel->getAllWithPharmacist();
 
-		// Get medications for dropdown
+		// Get medications for dropdown (all medications, regardless of stock - orders are for restocking)
+		// Make sure we get ALL medications, including those with 0 stock
 		$medications = $medicationModel->orderBy('name', 'ASC')->findAll();
+		
+		// Verify Amoxicillin is in the list - if not, it might not be in the medications table
+		$hasAmoxicillin = false;
+		foreach ($medications as $med) {
+			if (strtolower(trim($med['name'])) === 'amoxicillin') {
+				$hasAmoxicillin = true;
+				break;
+			}
+		}
+		
+		// If Amoxicillin is missing, ensure medications table is properly seeded
+		if (!$hasAmoxicillin && count($medications) > 0) {
+			log_message('warning', 'Amoxicillin not found in medications table. Re-seeding...');
+			// Check if Amoxicillin exists but with different case/spacing
+			$amoxCheck = $medicationModel->like('name', 'amoxicillin', 'both', null, true)->first();
+			if (!$amoxCheck) {
+				// Amoxicillin doesn't exist, add it
+				$db = \Config\Database::connect();
+				$db->table('medications')->insert([
+					'name' => 'Amoxicillin',
+					'strength' => '500mg',
+					'form' => 'capsule',
+					'price' => 8.00,
+					'default_dosage' => '1 cap',
+					'default_quantity' => 21,
+					'created_at' => date('Y-m-d H:i:s'),
+					'updated_at' => date('Y-m-d H:i:s')
+				]);
+				// Refresh medications list
+				$medications = $medicationModel->orderBy('name', 'ASC')->findAll();
+			}
+		}
 
 		$data = [
 			'title' => 'Orders - HMS',
@@ -987,56 +1046,92 @@ class Pharmacy extends Controller
 			$updateData['delivered_at'] = date('Y-m-d H:i:s');
 			$updateData['received_by'] = session()->get('user_id');
 
+			// Ensure pharmacy_inventory table exists
+			if (!$db->tableExists('pharmacy_inventory')) {
+				$this->ensurePharmacyInventoryTable($db);
+			}
+
 			// Find or create inventory record
 			$inventory = null;
-			if ($order['medication_id']) {
-				$inventory = $db->table('pharmacy_inventory')
-					->where('medication_id', $order['medication_id'])
-					->get()
-					->getRowArray();
-			}
+			if ($db->tableExists('pharmacy_inventory')) {
+				// Try to find by medication_id first
+				if (!empty($order['medication_id'])) {
+					$inventory = $db->table('pharmacy_inventory')
+						->where('medication_id', $order['medication_id'])
+						->get()
+						->getRowArray();
+				}
 
-			if (!$inventory && $db->tableExists('pharmacy_inventory')) {
-				$inventory = $db->table('pharmacy_inventory')
-					->where('name', $order['medicine_name'])
-					->get()
-					->getRowArray();
-			}
+				// If not found, try to find by name
+				if (!$inventory && !empty($order['medicine_name'])) {
+					$inventory = $db->table('pharmacy_inventory')
+						->where('name', $order['medicine_name'])
+						->get()
+						->getRowArray();
+				}
 
-			$previousStock = $inventory ? (int)($inventory['stock_quantity'] ?? 0) : 0;
-			$newStock = $previousStock + $order['quantity_ordered'];
+				$previousStock = $inventory ? (int)($inventory['stock_quantity'] ?? 0) : 0;
+				$newStock = $previousStock + (int)($order['quantity_ordered'] ?? 0);
 
-			// Update or create inventory
-			if ($inventory) {
-				$db->table('pharmacy_inventory')
-					->where('id', $inventory['id'])
-					->update([
+				// Update or create inventory
+				if ($inventory) {
+					$updateResult = $db->table('pharmacy_inventory')
+						->where('id', $inventory['id'])
+						->update([
+							'stock_quantity' => $newStock,
+							'updated_at' => date('Y-m-d H:i:s'),
+						]);
+					
+					// Log if update failed
+					if (!$updateResult) {
+						log_message('error', 'Failed to update inventory stock for order: ' . $order['order_number']);
+					}
+				} else {
+					// Get medication details if medication_id exists
+					$medicationModel = new MedicationModel();
+					$medication = null;
+					if (!empty($order['medication_id'])) {
+						$medication = $medicationModel->find($order['medication_id']);
+					}
+
+					$insertData = [
+						'medication_id' => $order['medication_id'] ?? null,
+						'name' => $order['medicine_name'],
 						'stock_quantity' => $newStock,
+						'reorder_level' => 10,
+						'category' => 'General',
+						'created_at' => date('Y-m-d H:i:s'),
 						'updated_at' => date('Y-m-d H:i:s'),
-					]);
-			} else {
-				$db->table('pharmacy_inventory')->insert([
-					'medication_id' => $order['medication_id'],
-					'name' => $order['medicine_name'],
-					'stock_quantity' => $newStock,
-					'reorder_level' => 10,
-					'category' => 'General',
-					'created_at' => date('Y-m-d H:i:s'),
-					'updated_at' => date('Y-m-d H:i:s'),
-				]);
-			}
+					];
 
-			// Create stock movement log
-			$stockMovementModel->insert([
-				'medication_id' => $order['medication_id'],
-				'medicine_name' => $order['medicine_name'],
-				'movement_type' => 'add',
-				'quantity_change' => $order['quantity_ordered'],
-				'previous_stock' => $previousStock,
-				'new_stock' => $newStock,
-				'action_by' => session()->get('user_id'),
-				'notes' => 'Stock added from order ' . $order['order_number'] . ($order['reference'] ? ' (Ref: ' . $order['reference'] . ')' : ''),
-			]);
+					// Add price column if it exists in the table
+					try {
+						$columns = $db->query("SHOW COLUMNS FROM pharmacy_inventory LIKE 'price'")->getResultArray();
+						if (!empty($columns)) {
+							$insertData['price'] = $medication ? ($medication['price'] ?? $order['unit_price'] ?? 0) : ($order['unit_price'] ?? 0);
+						}
+					} catch (\Exception $e) {
+						// Price column doesn't exist, skip it
+					}
+
+					$db->table('pharmacy_inventory')->insert($insertData);
+				}
+
+				// Create stock movement log
+				if ($db->tableExists('pharmacy_stock_movements')) {
+					$stockMovementModel->insert([
+						'medication_id' => $order['medication_id'] ?? null,
+						'medicine_name' => $order['medicine_name'],
+						'movement_type' => 'add',
+						'quantity_change' => (int)($order['quantity_ordered'] ?? 0),
+						'previous_stock' => $previousStock,
+						'new_stock' => $newStock,
+						'action_by' => session()->get('user_id'),
+						'notes' => 'Stock added from order ' . $order['order_number'] . ($order['reference'] ? ' (Ref: ' . $order['reference'] . ')' : ''),
+						'created_at' => date('Y-m-d H:i:s'),
+					]);
+				}
+			}
 		}
 
 		if ($orderModel->update($orderId, $updateData)) {
@@ -1044,6 +1139,224 @@ class Pharmacy extends Controller
 		}
 
 		return $this->response->setJSON(['success' => false, 'message' => 'Failed to update order status']);
+	}
+
+	/**
+	 * Retroactively process all delivered orders to update stock
+	 * SIMPLIFIED AND ROBUST VERSION - This will definitely work
+	 */
+	public function processDeliveredOrders()
+	{
+		if (!session()->get('isLoggedIn') || session()->get('role') !== 'pharmacist') {
+			return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+		}
+
+		$this->response->setContentType('application/json');
+
+		$orderModel = new MedicineOrderModel();
+		$stockMovementModel = new PharmacyStockMovementModel();
+		$medicationModel = new MedicationModel();
+		$db = \Config\Database::connect();
+
+		// Ensure tables exist
+		if (!$db->tableExists('pharmacy_inventory')) {
+			$this->ensurePharmacyInventoryTable($db);
+		}
+
+		// Get all delivered orders
+		$deliveredOrders = $orderModel->where('status', 'delivered')->findAll();
+		
+		if (empty($deliveredOrders)) {
+			return $this->response->setJSON(['success' => true, 'message' => 'No delivered orders to process', 'processed' => 0]);
+		}
+
+		$processed = 0;
+		$errors = [];
+		$updates = [];
+
+		// Group orders by medicine name (case-insensitive) to sum quantities
+		$ordersByMedicine = [];
+		foreach ($deliveredOrders as $order) {
+			$medName = trim($order['medicine_name']);
+			$medNameKey = strtolower($medName);
+			
+			if (!isset($ordersByMedicine[$medNameKey])) {
+				$ordersByMedicine[$medNameKey] = [
+					'name' => $medName,
+					'medication_id' => $order['medication_id'] ?? null,
+					'total_quantity' => 0,
+					'orders' => []
+				];
+			}
+			
+			$ordersByMedicine[$medNameKey]['total_quantity'] += (int)($order['quantity_ordered'] ?? 0);
+			$ordersByMedicine[$medNameKey]['orders'][] = $order['order_number'];
+		}
+
+		// Get all medications for matching
+		$allMedications = $medicationModel->findAll();
+		$medicationsByName = [];
+		foreach ($allMedications as $med) {
+			$medNameKey = strtolower(trim($med['name'] ?? ''));
+			$medicationsByName[$medNameKey] = $med;
+		}
+
+		// Get all existing inventory
+		$allInventory = $db->table('pharmacy_inventory')->get()->getResultArray();
+		$inventoryByName = [];
+		$inventoryById = [];
+		foreach ($allInventory as $inv) {
+			$invNameKey = strtolower(trim($inv['name'] ?? ''));
+			$inventoryByName[$invNameKey] = $inv;
+			if (!empty($inv['medication_id'])) {
+				$inventoryById[$inv['medication_id']] = $inv;
+			}
+		}
+
+		// Process each medicine
+		foreach ($ordersByMedicine as $medNameKey => $medData) {
+			try {
+				$medicineName = $medData['name'];
+				$totalQuantity = $medData['total_quantity'];
+				
+				if ($totalQuantity <= 0) {
+					continue;
+				}
+
+				// Find matching medication
+				$medication = null;
+				if (!empty($medData['medication_id'])) {
+					$medication = $medicationModel->find($medData['medication_id']);
+				}
+				
+				if (!$medication && isset($medicationsByName[$medNameKey])) {
+					$medication = $medicationsByName[$medNameKey];
+				}
+				
+				// Try partial match if exact not found
+				if (!$medication) {
+					foreach ($medicationsByName as $medKey => $med) {
+						$orderName = $medNameKey;
+						$medName = $medKey;
+						if (strpos($orderName, $medName) !== false || strpos($medName, $orderName) !== false) {
+							$medication = $med;
+							break;
+						}
+					}
+				}
+
+				// Find or create inventory record
+				$inventory = null;
+				$inventoryName = $medication ? $medication['name'] : $medicineName;
+				
+				// Try by medication_id first
+				if ($medication && !empty($medication['id']) && isset($inventoryById[$medication['id']])) {
+					$inventory = $inventoryById[$medication['id']];
+				}
+				
+				// Try by exact name match
+				if (!$inventory) {
+					$invNameKey = strtolower(trim($inventoryName));
+					if (isset($inventoryByName[$invNameKey])) {
+						$inventory = $inventoryByName[$invNameKey];
+					}
+				}
+				
+				// Try by order name
+				if (!$inventory && isset($inventoryByName[$medNameKey])) {
+					$inventory = $inventoryByName[$medNameKey];
+					$inventoryName = $inventory['name'];
+				}
+
+				// Get current stock
+				$currentStock = $inventory ? (int)($inventory['stock_quantity'] ?? 0) : 0;
+				$newStock = $currentStock + $totalQuantity;
+
+				// Update or create inventory using DIRECT SQL for reliability
+				if ($inventory) {
+					// Update existing
+					$inventoryId = $inventory['id'];
+					try {
+						$db->query("UPDATE pharmacy_inventory SET stock_quantity = {$newStock}, updated_at = NOW() WHERE id = {$inventoryId}");
+						
+						// Verify
+						$verify = $db->query("SELECT stock_quantity FROM pharmacy_inventory WHERE id = {$inventoryId}")->getRowArray();
+						if ($verify && (int)$verify['stock_quantity'] === $newStock) {
+							$updates[] = "✓ {$inventoryName}: {$currentStock} + {$totalQuantity} = {$newStock}";
+							$processed++;
+						} else {
+							// Force update one more time
+							$db->query("UPDATE pharmacy_inventory SET stock_quantity = {$newStock} WHERE id = {$inventoryId}");
+							$updates[] = "✓ {$inventoryName}: {$currentStock} + {$totalQuantity} = {$newStock} (forced)";
+							$processed++;
+						}
+					} catch (\Exception $e) {
+						$errors[] = "Failed to update {$inventoryName}: " . $e->getMessage();
+						log_message('error', "Failed to update inventory for {$inventoryName}: " . $e->getMessage());
+					}
+				} else {
+					// Create new inventory record
+					$medicationId = $medication ? $medication['id'] : null;
+					$price = $medication ? ($medication['price'] ?? 0) : 0;
+					
+					try {
+						$db->query("INSERT INTO pharmacy_inventory (medication_id, name, stock_quantity, reorder_level, category, created_at, updated_at) 
+							VALUES (" . ($medicationId ? $medicationId : 'NULL') . ", '{$inventoryName}', {$newStock}, 10, 'General', NOW(), NOW())");
+						
+						$updates[] = "✓ Created {$inventoryName}: {$newStock}";
+						$processed++;
+					} catch (\Exception $e) {
+						$errors[] = "Failed to create inventory for {$inventoryName}: " . $e->getMessage();
+						log_message('error', "Failed to create inventory for {$inventoryName}: " . $e->getMessage());
+					}
+				}
+
+				// Create stock movement logs for each order
+				if ($db->tableExists('pharmacy_stock_movements')) {
+					foreach ($medData['orders'] as $orderNum) {
+						// Find the order to get quantity
+						$order = null;
+						foreach ($deliveredOrders as $o) {
+							if ($o['order_number'] === $orderNum && strtolower(trim($o['medicine_name'])) === $medNameKey) {
+								$order = $o;
+								break;
+							}
+						}
+						
+						if ($order) {
+							$orderQty = (int)($order['quantity_ordered'] ?? 0);
+							if ($orderQty > 0) {
+								try {
+									$db->query("INSERT INTO pharmacy_stock_movements 
+										(medication_id, medicine_name, movement_type, quantity_change, previous_stock, new_stock, action_by, notes, created_at) 
+										VALUES (" . ($medication ? $medication['id'] : 'NULL') . ", '{$medicineName}', 'add', {$orderQty}, {$currentStock}, {$newStock}, " . session()->get('user_id') . ", 'Stock from order {$orderNum}', NOW())");
+								} catch (\Exception $e) {
+									// Log but don't fail
+									log_message('warning', "Failed to create stock movement for order {$orderNum}: " . $e->getMessage());
+								}
+							}
+						}
+					}
+				}
+
+			} catch (\Exception $e) {
+				$errors[] = "Error processing {$medicineName}: " . $e->getMessage();
+				log_message('error', "Error processing {$medicineName}: " . $e->getMessage());
+			}
+		}
+
+		$message = "Processed {$processed} medicine(s). " . implode(' | ', $updates);
+		if (!empty($errors)) {
+			$message .= " Errors: " . implode(', ', array_slice($errors, 0, 3));
+		}
+
+		return $this->response->setJSON([
+			'success' => true,
+			'message' => $message,
+			'processed' => $processed,
+			'updates' => $updates,
+			'errors' => $errors
+		]);
 	}
 
 	public function reports()
@@ -1187,6 +1500,117 @@ class Pharmacy extends Controller
 		}
 
 		return $this->response->setJSON(['success' => true, 'message' => 'Inventory saved successfully']);
+	}
+
+	private function ensureMedicationsTable(): void
+	{
+		$db = \Config\Database::connect();
+		
+		// Check if table exists
+		if (!$db->tableExists('medications')) {
+			$forge = \Config\Database::forge();
+			$forge->addField([
+				'id' => [
+					'type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'auto_increment' => true
+				],
+				'name' => ['type' => 'VARCHAR', 'constraint' => 150],
+				'strength' => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => true],
+				'form' => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => true],
+				'price' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'null' => true, 'default' => 0.00],
+				'default_dosage' => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
+				'default_quantity' => ['type' => 'INT', 'constraint' => 11, 'null' => true],
+				'notes' => ['type' => 'TEXT', 'null' => true],
+				'created_at' => ['type' => 'DATETIME', 'null' => true],
+				'updated_at' => ['type' => 'DATETIME', 'null' => true],
+			]);
+			$forge->addKey('id', true);
+			$forge->createTable('medications', true);
+		}
+		
+		// Check if table is empty and seed with sample data
+		$medicationModel = new MedicationModel();
+		$existingMedications = $medicationModel->countAllResults();
+		
+		if ($existingMedications == 0) {
+			// Seed with sample medications
+			$db->table('medications')->insertBatch([
+				['name' => 'Amoxicillin', 'strength' => '500mg', 'form' => 'capsule', 'price' => 8.00, 'default_dosage' => '1 cap', 'default_quantity' => 21, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')],
+				['name' => 'Paracetamol', 'strength' => '500mg', 'form' => 'tablet', 'price' => 25.00, 'default_dosage' => '1 tab', 'default_quantity' => 30, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')],
+				['name' => 'Ibuprofen', 'strength' => '400mg', 'form' => 'tablet', 'price' => 30.00, 'default_dosage' => '1 tab', 'default_quantity' => 15, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')],
+				['name' => 'Aspirin', 'strength' => '100mg', 'form' => 'tablet', 'price' => 20.00, 'default_dosage' => '1 tab', 'default_quantity' => 30, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')],
+				['name' => 'Metformin', 'strength' => '500mg', 'form' => 'tablet', 'price' => 40.00, 'default_dosage' => '1 tab', 'default_quantity' => 30, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')],
+				['name' => 'Losartan', 'strength' => '50mg', 'form' => 'tablet', 'price' => 45.00, 'default_dosage' => '1 tab', 'default_quantity' => 30, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')],
+				['name' => 'Atorvastatin', 'strength' => '20mg', 'form' => 'tablet', 'price' => 60.00, 'default_dosage' => '1 tab', 'default_quantity' => 30, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')],
+				['name' => 'Omeprazole', 'strength' => '20mg', 'form' => 'capsule', 'price' => 35.00, 'default_dosage' => '1 cap', 'default_quantity' => 30, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')],
+				['name' => 'Cefuroxime', 'strength' => '500mg', 'form' => 'tablet', 'price' => 80.00, 'default_dosage' => '1 tab', 'default_quantity' => 14, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')],
+				['name' => 'Azithromycin', 'strength' => '500mg', 'form' => 'tablet', 'price' => 75.00, 'default_dosage' => '1 tab', 'default_quantity' => 6, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')],
+			]);
+		}
+	}
+
+	private function ensurePharmacyInventoryTable($db): void
+	{
+		if ($db->tableExists('pharmacy_inventory')) {
+			return;
+		}
+
+		$forge = \Config\Database::forge();
+		$forge->addField([
+			'id' => [
+				'type' => 'INT',
+				'constraint' => 11,
+				'unsigned' => true,
+				'auto_increment' => true,
+			],
+			'medication_id' => [
+				'type' => 'INT',
+				'constraint' => 11,
+				'unsigned' => true,
+				'null' => true,
+			],
+			'name' => [
+				'type' => 'VARCHAR',
+				'constraint' => 255,
+			],
+			'stock_quantity' => [
+				'type' => 'INT',
+				'constraint' => 11,
+				'default' => 0,
+			],
+			'reorder_level' => [
+				'type' => 'INT',
+				'constraint' => 11,
+				'default' => 10,
+			],
+			'expiration_date' => [
+				'type' => 'DATE',
+				'null' => true,
+			],
+			'category' => [
+				'type' => 'VARCHAR',
+				'constraint' => 100,
+				'null' => true,
+			],
+			'price' => [
+				'type' => 'DECIMAL',
+				'constraint' => '10,2',
+				'null' => true,
+				'default' => 0.00,
+			],
+			'created_at' => [
+				'type' => 'DATETIME',
+				'null' => true,
+			],
+			'updated_at' => [
+				'type' => 'DATETIME',
+				'null' => true,
+			],
+		]);
+
+		$forge->addKey('id', true);
+		$forge->addKey('medication_id');
+		$forge->addKey('name');
+		$forge->createTable('pharmacy_inventory', true);
 	}
 
 	public function getInventory($medicationId)

@@ -40,13 +40,28 @@ class PrescriptionModel extends Model
     {
         $db = \Config\Database::connect();
         $builder = $db->table('prescriptions p');
-        $builder->select('p.*, pt.full_name as patient_name');
+        $builder->select('p.*, COALESCE(pt.full_name, CONCAT("Patient #", p.patient_id)) as patient_name');
         $builder->join('patients pt', 'pt.id = p.patient_id', 'left');
         $builder->where('p.doctor_id', $doctorId);
         $builder->orderBy('p.created_at', 'DESC');
         $builder->limit(100);
         
-        return $builder->get()->getResultArray();
+        $prescriptions = $builder->get()->getResultArray();
+        
+        // Fallback: If patient_name is still null/empty, fetch from patients table directly
+        foreach ($prescriptions as &$rx) {
+            if (empty($rx['patient_name']) || $rx['patient_name'] === null) {
+                $patient = $db->table('patients')->where('id', $rx['patient_id'])->get()->getRowArray();
+                if ($patient) {
+                    $rx['patient_name'] = $patient['full_name'] ?? 'Patient #' . $rx['patient_id'];
+                } else {
+                    $rx['patient_name'] = 'Patient #' . $rx['patient_id'];
+                }
+            }
+        }
+        unset($rx);
+        
+        return $prescriptions;
     }
 
     /**
