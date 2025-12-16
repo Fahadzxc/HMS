@@ -181,20 +181,18 @@ $readyList = isset($ready_for_discharge) && is_array($ready_for_discharge) ? $re
     </header>
     
     <div class="stack">
-        <!-- Table Container -->
-        <div class="table-wrapper" style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
-            <!-- Table Header (matches patients table schema) -->
-            <div class="card table-header" style="margin: 0; border-radius: 0;">
-                <div class="row patients-grid">
-                    <div class="col-id">Patient ID</div>
-                    <div class="col-name">Name</div>
-                    <div class="col-age">AGE/GENDER</div>
-                    <div class="col-contact">CONTACT</div>
-                    <div class="col-status">Status</div>
-                    <div class="col-room">ROOM</div>
-                    <div class="col-doctor">DOCTOR</div>
-                </div>
+        <div class="card table-header">
+            <div class="row between">
+                <div class="col-id">Patient ID</div>
+                <div class="col-name">Name</div>
+                <div class="col-age">AGE/GENDER</div>
+                <div class="col-contact">CONTACT</div>
+                <div class="col-status">Status</div>
+                <div class="col-type">TYPE</div>
+                <div class="col-room">ROOM</div>
+                <div class="col-doctor">DOCTOR</div>
             </div>
+        </div>
 
         <!-- Patient Rows (from database) -->
         <?php if (!empty($patientsList)): ?>
@@ -236,102 +234,121 @@ $readyList = isset($ready_for_discharge) && is_array($ready_for_discharge) ? $re
                     // Get blood type or default to O+
                     $bloodType = !empty($p['blood_type']) ? $p['blood_type'] : 'O+';
                 ?>
-        <div class="card table-row" style="margin: 0; border-radius: 0;">
-            <div class="row patients-grid">
-                        <div class="col-id patient-id"><?= esc($pid) ?></div>
-                        <div class="col-name">
-                            <div class="patient-info">
-                                <div class="patient-avatar">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="#3B82F6"/>
-                                        <path d="M12 14C7.58172 14 4 17.5817 4 22H20C20 17.5817 16.4183 14 12 14Z" fill="#3B82F6"/>
-                                    </svg>
-                                </div>
-                                <div class="patient-details">
-                                    <strong><?= esc($p['full_name']) ?></strong>
-                                    <p class="blood-type">Blood: <?= esc($bloodType) ?></p>
-                                </div>
-                            </div>
+        <div class="card table-row">
+            <div class="row between">
+                <div class="col-id patient-id"><?= esc($pid) ?></div>
+                <div class="col-name">
+                    <div class="patient-info">
+                        <div class="patient-avatar">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="#3B82F6"/>
+                                <path d="M12 14C7.58172 14 4 17.5817 4 22H20C20 17.5817 16.4183 14 12 14Z" fill="#3B82F6"/>
+                            </svg>
                         </div>
-                        <div class="col-age">
-                            <div style="margin-bottom: 0.25rem; color: #1e293b;"><?= esc($age) ?><?= (is_numeric($age) && $age > 0) ? ' years' : '' ?></div>
-                            <div style="color: #64748b; font-size: 0.8125rem;"><?= esc($p['gender']) ?></div>
+                        <div class="patient-details">
+                            <strong><?= esc($p['full_name']) ?></strong>
+                            <p class="blood-type">Blood: <?= esc($bloodType) ?></p>
                         </div>
-                        <div class="col-contact">
-                            <div style="margin-bottom: 0.25rem; color: #1e293b;"><?= esc($p['contact']) ?></div>
-                            <div style="color: #64748b; font-size: 0.8125rem;"><?= esc($p['email'] ?? 'patient@email.com') ?></div>
-                        </div>
-                        <div class="col-status">
-                            <?php 
-                            $statusClass = 'badge-green';
-                            $statusText = 'Active';
-                            if (isset($p['status'])) {
-                                switch($p['status']) {
-                                    case 'discharged':
-                                        $statusClass = 'badge-gray';
-                                        $statusText = 'Discharged';
-                                        break;
-                                    case 'transferred':
-                                        $statusClass = 'badge-yellow';
-                                        $statusText = 'Transferred';
-                                        break;
-                                }
-                            }
-                            ?>
-                            <div style="margin-bottom: 0.25rem;">
-                                <span class="badge <?= $statusClass ?>"><?= $statusText ?></span>
-                            </div>
-                            <?php if (isset($p['patient_type'])): ?>
-                                <div style="color: #64748b; font-size: 0.8125rem;"><?= ucfirst($p['patient_type']) ?></div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="col-room">
-                            <?php 
-                                $displayRoom = !empty($p['appointment_room_number']) 
-                                    ? $p['appointment_room_number'] 
-                                    : (!empty($p['room_number']) ? $p['room_number'] : null);
-                            ?>
-                            <?php if (!empty($displayRoom)): ?>
-                                <div class="room-info">
-                                    <div style="margin-bottom: 0.25rem;">
-                                        <span class="room-number"><?= esc($displayRoom) ?></span>
-                                    </div>
-                                    <?php if (isset($p['patient_type']) && $p['patient_type'] === 'inpatient'): ?>
-                                        <div style="color: #64748b; font-size: 0.8125rem;">Inpatient</div>
-                                    <?php else: ?>
-                                        <div style="color: #64748b; font-size: 0.8125rem;">Outpatient</div>
-                                    <?php endif; ?>
-                                </div>
-                            <?php else: ?>
-                                <span class="text-muted">No room assigned</span>
-                            <?php endif; ?>
-                        </div>
-                        <div class="col-doctor">
-                            <?php if (!empty($p['assigned_doctor_name'])): ?>
-                                <div style="margin-bottom: 0.25rem; color: #1e293b; font-weight: 600;"><?= esc($p['assigned_doctor_name']) ?></div>
-                                <?php if (!empty($p['last_appointment_date'])): ?>
-                                    <div style="color: #64748b; font-size: 0.8125rem;">Last: <?= date('M j, Y', strtotime($p['last_appointment_date'])) ?></div>
-                                <?php endif; ?>
-                            <?php else: ?>
-                                <span class="text-muted">No appointments</span>
-                            <?php endif; ?>
-                        </div>
+                    </div>
+                </div>
+                <div class="col-age">
+                    <div><?= esc($age) ?><?= (is_numeric($age) && $age > 0) ? ' years' : '' ?></div>
+                    <div><?= esc($p['gender']) ?></div>
+                </div>
+                <div class="col-contact">
+                    <p class="phone"><?= esc($p['contact']) ?></p>
+                    <p class="email"><?= esc($p['email'] ?? 'patient@email.com') ?></p>
+                </div>
+                <div class="col-status">
+                    <?php 
+                    $statusClass = 'badge-green';
+                    $statusText = 'Active';
+                    if (isset($p['status'])) {
+                        switch(strtolower($p['status'])) {
+                            case 'discharged':
+                                $statusClass = 'badge-gray';
+                                $statusText = 'Discharged';
+                                break;
+                            case 'transferred':
+                                $statusClass = 'badge-yellow';
+                                $statusText = 'Transferred';
+                                break;
+                            case 'inactive':
+                                $statusClass = 'badge-red';
+                                $statusText = 'Inactive';
+                                break;
+                            case 'active':
+                                $statusClass = 'badge-green';
+                                $statusText = 'Active';
+                                break;
+                        }
+                    }
+                    ?>
+                    <span class="badge <?= $statusClass ?>"><?= $statusText ?></span>
+                    <?php if (isset($p['patient_type'])): ?>
+                        <br><small class="text-muted"><?= ucfirst($p['patient_type']) ?></small>
+                    <?php endif; ?>
+                </div>
+                <div class="col-type">
+                    <?php 
+                    $visitType = $p['visit_type'] ?? 'consultation';
+                    if (isset($p['patient_type']) && strtolower($p['patient_type']) === 'inpatient') {
+                        $visitType = 'inpatient';
+                    } elseif (empty($p['visit_type'])) {
+                        // Determine type if not set
+                        $hasConsultation = false;
+                        $hasDoctor = false;
+                        if (isset($p['assigned_doctor_name']) && !empty($p['assigned_doctor_name'])) {
+                            $hasDoctor = true;
+                        }
+                        $visitType = ($hasConsultation || $hasDoctor) ? 'consultation' : 'walk-in';
+                    }
+                    $typeClass = ($visitType === 'walk-in') ? 'badge-orange' : (($visitType === 'inpatient') ? 'badge-blue' : 'badge-purple');
+                    ?>
+                    <span class="badge <?= $typeClass ?>"><?= ucfirst($visitType) ?></span>
+                </div>
+                <div class="col-room">
+                    <?php 
+                        $displayRoom = !empty($p['appointment_room_number']) 
+                            ? $p['appointment_room_number'] 
+                            : (!empty($p['room_number']) ? $p['room_number'] : null);
+                    ?>
+                    <?php if (!empty($displayRoom)): ?>
+                        <div><?= esc($displayRoom) ?></div>
+                        <?php if (isset($p['patient_type']) && $p['patient_type'] === 'inpatient'): ?>
+                            <small class="text-muted">Inpatient</small>
+                        <?php else: ?>
+                            <small class="text-muted">Outpatient</small>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <span class="text-muted">No room assigned</span>
+                    <?php endif; ?>
+                </div>
+                <div class="col-doctor">
+                    <?php if (!empty($p['assigned_doctor_name'])): ?>
+                        <div><?= esc($p['assigned_doctor_name']) ?></div>
+                        <?php if (!empty($p['last_appointment_date'])): ?>
+                            <small class="text-muted">Last: <?= date('M j, Y', strtotime($p['last_appointment_date'])) ?></small>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <span class="text-muted">No appointments</span>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
             <?php endforeach; ?>
         <?php else: ?>
-        <div class="card table-row" style="margin: 0; border-radius: 0;">
-            <div class="row between" style="padding: 2rem; justify-content: center;">
-                    <div class="col-name" style="text-align: center; color: #64748b;">No patients found.</div>
-                </div>
+        <div class="card table-row">
+            <div class="row between">
+                <div class="col-name">No patients found.</div>
             </div>
-        <?php endif; ?>
-        </div><!-- end table-wrapper -->
         </div>
+        <?php endif; ?>
+    </div>
 </section>
 
 <style>
-/* Patient Records Section - Spacing and Alignment Fixes */
+/* Patient Records Section - Matching Reception Design */
 .panel-header {
     margin-bottom: 1.5rem;
 }
@@ -340,7 +357,7 @@ $readyList = isset($ready_for_discharge) && is_array($ready_for_discharge) ? $re
     margin-top: 0.75rem;
 }
 
-/* Table header styling */
+/* Table header styling - matching reception */
 .table-header {
     background: #f8fafc;
     border-bottom: 2px solid #e2e8f0;
@@ -349,224 +366,162 @@ $readyList = isset($ready_for_discharge) && is_array($ready_for_discharge) ? $re
     color: #475569;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    padding: 0;
-    margin: 0;
-    border-radius: 8px 8px 0 0;
 }
 
-/* Table row styling */
+/* Table row styling - matching reception */
 .table-row {
     border-bottom: 1px solid #f1f5f9;
-    padding: 0;
-    margin: 0;
-    background: white;
-}
-
-.table-row:last-child {
-    border-bottom: none;
-    border-radius: 0 0 8px 8px;
 }
 
 .table-row:hover {
     background: #f8fafc;
 }
 
-/* Grid layout to guarantee perfect alignment */
-.patients-grid {
-    display: grid;
-    grid-template-columns: 100px 280px 130px 220px 130px 160px 1fr; /* ID, Name, Age, Contact, Status, Room, Doctor */
-    align-items: center;
-    column-gap: 40px;
-    padding: 0 3rem;
-    min-height: 60px;
-}
-
-/* Header cells - consistent padding */
-.table-header .patients-grid > div {
-    padding: 1rem 0;
-    display: flex;
-    align-items: center;
-    line-height: 1.4;
-}
-
-/* Row cells - consistent padding and alignment */
-.table-row .patients-grid > div {
-    padding: 1rem 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 60px;
-}
-
-/* Column-specific adjustments */
+/* Column widths - matching reception layout */
 .col-id {
-    text-align: left;
-    padding-left: 0;
-}
-
-.col-id.patient-id {
-    font-weight: 600;
-    display: flex;
-    align-items: center;
+    width: 100px;
+    flex-shrink: 0;
 }
 
 .col-name {
-    text-align: left;
+    flex: 1;
+    min-width: 200px;
 }
 
+.col-age {
+    width: 130px;
+    flex-shrink: 0;
+}
+
+.col-contact {
+    width: 200px;
+    flex-shrink: 0;
+}
+
+.col-status {
+    width: 120px;
+    flex-shrink: 0;
+}
+
+.col-type {
+    width: 120px;
+    flex-shrink: 0;
+}
+
+.col-room {
+    width: 150px;
+    flex-shrink: 0;
+}
+
+.col-doctor {
+    flex: 1;
+    min-width: 150px;
+}
+
+/* Patient info styling - matching reception */
 .patient-info {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    width: 100%;
 }
 
 .patient-avatar {
-    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e0f2fe;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .patient-details {
     flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
 }
 
 .patient-details strong {
-    line-height: 1.4;
-    margin: 0;
+    display: block;
+    margin-bottom: 0.25rem;
 }
 
 .blood-type {
     margin: 0;
-    line-height: 1.4;
+    color: #64748b;
+    font-size: 0.9rem;
 }
 
-.col-age {
-    text-align: left;
-    gap: 0.25rem;
-}
-
-.col-age > div {
-    line-height: 1.5;
+/* Contact styling - matching reception */
+.phone {
     margin: 0;
 }
 
-.col-contact {
-    text-align: left;
-    gap: 0.25rem;
-}
-
-.col-contact > div {
-    line-height: 1.5;
+.email {
     margin: 0;
+    color: #64748b;
+    font-size: 0.9rem;
 }
 
-.col-status {
-    text-align: left;
-    gap: 0.25rem;
+/* Age/Gender styling - matching reception */
+.col-age div:first-child {
+    font-weight: 500;
+    color: #374151;
 }
 
-.col-status > div {
-    margin: 0;
+.col-age div:last-child {
+    color: #6b7280;
+    font-size: 0.9rem;
 }
 
-.col-status .badge {
+/* Badge styles - matching reception colors */
+.badge {
     display: inline-block;
-    margin: 0;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
 }
 
-.col-status .text-muted,
-.col-status > div:last-child {
-    margin-top: 0.25rem;
+.badge-green {
+    background: #dcfce7;
+    color: #166534;
 }
 
-.col-room {
-    text-align: left;
+.badge-red {
+    background: #fecaca;
+    color: #991b1b;
 }
 
-.room-info {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-    width: 100%;
+.badge-gray {
+    background: #f3f4f6;
+    color: #374151;
 }
 
-.room-number {
-    color: #1e293b;
-    font-weight: 600;
+.badge-yellow {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-orange {
+    background: #fed7aa;
+    color: #9a3412;
+}
+
+.badge-purple {
+    background: #e9d5ff;
+    color: #6b21a8;
+}
+
+.badge-blue {
     background: #dbeafe;
-    padding: 0.125rem 0.375rem;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
-    display: inline-block;
-}
-
-.col-room .text-muted {
-    color: #64748b;
-    font-size: 0.8125rem;
-    margin: 0;
-}
-
-.col-doctor {
-    text-align: left;
-    gap: 0.25rem;
-}
-
-.col-doctor > div {
-    line-height: 1.5;
-    margin: 0;
-}
-
-.col-doctor .text-muted {
-    color: #64748b;
-    font-size: 0.8125rem;
-    margin: 0;
+    color: #1e40af;
 }
 
 .text-muted {
     color: #64748b;
-    font-size: 0.75rem;
-    line-height: 1.4;
-}
-
-/* Prevent legacy flex widths from interfering */
-.patients-grid > div { 
-    flex: none; 
-    min-width: 0;
-}
-
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-    .patients-grid {
-        grid-template-columns: 90px 250px 120px 200px 120px 150px 1fr;
-        column-gap: 36px;
-        padding: 0 1rem;
-    }
-    
-    .room-number {
-        font-size: 0.75rem;
-        padding: 0.1rem 0.25rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .patients-grid {
-        grid-template-columns: 80px 200px 110px 180px 110px 140px 1fr;
-        column-gap: 32px;
-        font-size: 0.85rem;
-        padding: 0 2.5rem;
-    }
-    
-    .col-room {
-        display: none;
-    }
+    font-size: 0.875rem;
 }
 
 /* Discharge section styles */

@@ -373,9 +373,33 @@ class Lab extends Controller
 		$results = $resultModel->getAllWithRelations($filters);
 		
 		// Get pending requests that can have results entered
-		$pendingRequests = $requestModel->getAllWithRelations(['status' => 'pending']);
-		$inProgressRequests = $requestModel->getAllWithRelations(['status' => 'in_progress']);
-		$pendingRequests = array_merge($pendingRequests, $inProgressRequests);
+		// Exclude requests that already have results (even if status hasn't been updated yet)
+		$db = \Config\Database::connect();
+		
+		// Get all request IDs that already have results
+		$requestsWithResults = [];
+		if ($db->tableExists('lab_test_results')) {
+			$resultsQuery = $db->table('lab_test_results')
+				->select('request_id')
+				->distinct()
+				->get();
+			$requestsWithResults = array_column($resultsQuery->getResultArray(), 'request_id');
+		}
+		
+		// Get pending, sent_to_lab, and in_progress requests
+		$allPendingRequests = $requestModel->getAllWithRelations(['status' => 'pending']);
+		$allSentToLabRequests = $requestModel->getAllWithRelations(['status' => 'sent_to_lab']);
+		$allInProgressRequests = $requestModel->getAllWithRelations(['status' => 'in_progress']);
+		$allPendingRequests = array_merge($allPendingRequests, $allSentToLabRequests, $allInProgressRequests);
+		
+		// Filter out requests that already have results
+		$pendingRequests = array_filter($allPendingRequests, function($request) use ($requestsWithResults) {
+			$requestId = (int)($request['id'] ?? 0);
+			return !in_array($requestId, $requestsWithResults);
+		});
+		
+		// Re-index array after filtering
+		$pendingRequests = array_values($pendingRequests);
 		
 		// Get request_id from URL if coming from "Start Test"
 		$openRequestId = $this->request->getGet('request_id');
@@ -384,15 +408,15 @@ class Lab extends Controller
 		// Get full request details if opening from URL
 		$openRequestData = null;
 		if ($action === 'start' && $openRequestId) {
-			$allRequests = array_merge($pendingRequests, $inProgressRequests);
-			foreach ($allRequests as $req) {
+			// Search in pendingRequests (which already includes all pending, sent_to_lab, and in_progress)
+			foreach ($pendingRequests as $req) {
 				if ((int)($req['id'] ?? 0) === (int)$openRequestId) {
 					$openRequestData = $req;
 					break;
 				}
 			}
 			
-			// If not found in pending/in_progress, try to get it directly
+			// If not found in pending/sent_to_lab/in_progress, try to get it directly
 			if (!$openRequestData) {
 				$directRequest = $requestModel->getAllWithRelations(['id' => $openRequestId]);
 				if (!empty($directRequest)) {

@@ -91,17 +91,55 @@
                                 </td>
                                 <td>
                                     <?php
-                                    // Show "Consultation" or "Follow-up" for appointment bills based on appointment_type
+                                    $db = \Config\Database::connect();
+                                    $patientId = $bill['patient_id'] ?? null;
+                                    $patientType = strtolower($bill['patient_type'] ?? 'outpatient');
                                     $displayType = $bill['bill_type'] ?? 'N/A';
-                                    if ($displayType === 'appointment' && !empty($bill['appointment_type'])) {
+                                    
+                                    // Check if patient is inpatient
+                                    if ($patientType === 'inpatient') {
+                                        $displayType = 'Inpatient';
+                                    } 
+                                    // Check if it's an appointment bill
+                                    elseif ($displayType === 'appointment' && !empty($bill['appointment_type'])) {
                                         $appointmentType = strtolower($bill['appointment_type']);
                                         if ($appointmentType === 'follow-up' || $appointmentType === 'followup') {
                                             $displayType = 'Follow-up';
                                         } elseif ($appointmentType === 'consultation') {
                                             $displayType = 'Consultation';
                                         } else {
-                                            // For other appointment types, capitalize first letter
                                             $displayType = ucfirst($appointmentType);
+                                        }
+                                    }
+                                    // Check if it's a walk-in (no consultation, no doctor, not admitted, has lab test or other bill)
+                                    elseif ($patientId && $patientType === 'outpatient') {
+                                        // Check if patient has consultation appointments
+                                        $hasConsultation = $db->table('appointments')
+                                            ->where('patient_id', $patientId)
+                                            ->where('status !=', 'cancelled')
+                                            ->where('appointment_type', 'consultation')
+                                            ->countAllResults() > 0;
+                                        
+                                        // Check if patient has doctor assignments
+                                        $hasDoctor = $db->table('appointments')
+                                            ->where('patient_id', $patientId)
+                                            ->where('status !=', 'cancelled')
+                                            ->where('doctor_id IS NOT NULL', null, false)
+                                            ->countAllResults() > 0;
+                                        
+                                        // Check if patient is admitted
+                                        $isAdmitted = $db->table('admissions')
+                                            ->where('patient_id', $patientId)
+                                            ->where('status', 'Admitted')
+                                            ->countAllResults() > 0;
+                                        
+                                        // If no consultation, no doctor, and not admitted, it's a walk-in
+                                        if (!$hasConsultation && !$hasDoctor && !$isAdmitted && ($displayType === 'lab_test' || $displayType === 'other')) {
+                                            $displayType = 'Walk-in';
+                                        } elseif ($displayType === 'lab_test') {
+                                            $displayType = 'Lab Test';
+                                        } else {
+                                            $displayType = ucfirst($displayType);
                                         }
                                     } else {
                                         $displayType = ucfirst($displayType);

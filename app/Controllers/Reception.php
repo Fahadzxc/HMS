@@ -346,6 +346,115 @@ class Reception extends Controller
             ->get()
             ->getResultArray();
 
+        // Update outpatient status based on future follow-up appointments
+        $db = \Config\Database::connect();
+        $billingModel = new \App\Models\BillingModel();
+        $today = date('Y-m-d');
+        
+        foreach ($patients as &$patient) {
+            // Only check status for outpatients (inpatients keep their status)
+            if (isset($patient['patient_type']) && strtolower($patient['patient_type']) === 'outpatient') {
+                // Skip if patient is discharged or transferred (keep those statuses)
+                if (isset($patient['status']) && in_array(strtolower($patient['status']), ['discharged', 'transferred'])) {
+                    continue;
+                }
+                
+                // Check if patient has paid bills
+                $hasPaidBills = $billingModel->where('patient_id', $patient['id'])
+                    ->where('status', 'paid')
+                    ->countAllResults() > 0;
+                
+                // Check if patient is a walk-in (no consultation, no doctor, not admitted)
+                $hasConsultation = $db->table('appointments')
+                    ->where('patient_id', $patient['id'])
+                    ->where('status !=', 'cancelled')
+                    ->where('appointment_type', 'consultation')
+                    ->countAllResults() > 0;
+                
+                $hasDoctor = $db->table('appointments')
+                    ->where('patient_id', $patient['id'])
+                    ->where('status !=', 'cancelled')
+                    ->where('doctor_id IS NOT NULL', null, false)
+                    ->countAllResults() > 0;
+                
+                $isAdmitted = $db->table('admissions')
+                    ->where('patient_id', $patient['id'])
+                    ->where('status', 'Admitted')
+                    ->countAllResults() > 0;
+                
+                // If walk-in patient with paid bills → INACTIVE
+                if ($hasPaidBills && !$hasConsultation && !$hasDoctor && !$isAdmitted) {
+                    $patient['status'] = 'inactive';
+                    continue; // Skip the appointment-based logic below
+                }
+                
+                // Check if patient has any appointments at all (not cancelled)
+                $hasAnyAppointment = $db->table('appointments')
+                    ->where('patient_id', $patient['id'])
+                    ->where('status !=', 'cancelled')
+                    ->countAllResults() > 0;
+                
+                if ($hasAnyAppointment) {
+                    // Check for follow-up scheduled for today or in the future (priority check)
+                    $futureFollowUp = $db->table('appointments')
+                        ->where('patient_id', $patient['id'])
+                        ->where('appointment_type', 'follow-up')
+                        ->where('appointment_date >=', $today) // Today or future
+                        ->where('status !=', 'cancelled')
+                        ->where('status !=', 'completed')
+                        ->get()
+                        ->getRowArray();
+                    
+                    if ($futureFollowUp) {
+                        // Has follow-up scheduled (today or future) → ACTIVE
+                        // Patient remains active until follow-up is completed, prescription given, payment made, and no more follow-ups
+                        $patient['status'] = 'active';
+                    } else {
+                        // No future follow-up - check if has paid bills
+                        if ($hasPaidBills) {
+                            // Check for future appointments (consultation, etc.)
+                            $futureAppointment = $db->table('appointments')
+                                ->where('patient_id', $patient['id'])
+                                ->where('appointment_date >=', $today) // Today or future
+                                ->where('status !=', 'cancelled')
+                                ->where('status !=', 'completed')
+                                ->get()
+                                ->getRowArray();
+                            
+                            if ($futureAppointment) {
+                                // Has paid bills but has future appointments → ACTIVE
+                                $patient['status'] = 'active';
+                            } else {
+                                // Has paid bills and no future appointments → INACTIVE
+                                $patient['status'] = 'inactive';
+                            }
+                        } else {
+                            // No paid bills - check for future appointments
+                            $futureAppointment = $db->table('appointments')
+                                ->where('patient_id', $patient['id'])
+                                ->where('appointment_date >=', $today) // Today or future
+                                ->where('status !=', 'cancelled')
+                                ->where('status !=', 'completed')
+                                ->get()
+                                ->getRowArray();
+                            
+                            if ($futureAppointment) {
+                                // Has future appointment (consultation, etc.) → ACTIVE
+                                $patient['status'] = 'active';
+                            } else {
+                                // Has past appointments but no future appointments → INACTIVE
+                                $patient['status'] = 'inactive';
+                            }
+                        }
+                    }
+                } else {
+                    // No appointments at all (newly created patient) → ACTIVE
+                    $patient['status'] = 'active';
+                }
+            }
+        }
+        unset($patient);
+
         $data = [
             'title'       => 'Patient Registration - HMS',
             'user_role'   => 'receptionist',

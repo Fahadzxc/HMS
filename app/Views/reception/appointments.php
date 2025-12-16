@@ -168,7 +168,6 @@
                         <th>Time</th>
                         <th>Patient</th>
                         <th>Doctor</th>
-                        <th>Room</th>
                         <th>Type</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -181,7 +180,6 @@
                                 <td><?= date('g:i A', strtotime($appointment['appointment_time'])) ?></td>
                                 <td><?= htmlspecialchars($appointment['patient_name'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($appointment['doctor_name'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($appointment['room_number'] ?? '—') ?></td>
                                 <td>
                                     <?php
                                     $type = strtolower($appointment['appointment_type'] ?? 'consultation');

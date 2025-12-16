@@ -9,7 +9,6 @@ $menus = [
         ['label' => 'Nurses', 'url' => base_url('admin/nurses')],
         ['label' => 'Appointments', 'url' => base_url('admin/appointments')],
         ['label' => 'Admissions', 'url' => base_url('admin/admissions')],
-        ['label' => 'Walk In', 'url' => base_url('admin/walkin')],
         ['label' => 'Rooms', 'url' => base_url('admin/rooms')],
         ['label' => 'Billing & Payments', 'url' => base_url('admin/billing')],
         ['label' => 'Laboratory', 'url' => base_url('admin/lab')],

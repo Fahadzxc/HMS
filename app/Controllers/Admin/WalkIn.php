@@ -19,8 +19,21 @@ class WalkIn extends Controller
         $labRequestModel = new LabTestRequestModel();
         $appointmentModel = new AppointmentModel();
 
-        // Get all patients for dropdown
-        $patients = $patientModel->orderBy('full_name', 'ASC')->findAll();
+        // Get patients for dropdown - exclude those with ANY appointment (except cancelled) or who are inpatients
+        $db = \Config\Database::connect();
+        
+        // Use LEFT JOIN to exclude patients with appointments (except cancelled) or who are admitted
+        // Only show patients who have NO appointments OR only cancelled appointments, and are NOT admitted
+        $patients = $db->table('patients p')
+            ->select('p.*')
+            ->join('appointments a', "a.patient_id = p.id AND a.status != 'cancelled'", 'left')
+            ->join('admissions adm', "adm.patient_id = p.id AND adm.status = 'Admitted'", 'left')
+            ->where('a.id IS NULL', null, false) // No active appointments (only cancelled or no appointments)
+            ->where('adm.id IS NULL', null, false) // Not admitted
+            ->groupBy('p.id')
+            ->orderBy('p.full_name', 'ASC')
+            ->get()
+            ->getResultArray();
 
         // Get walk-in lab requests (requests without doctor_id)
         $walkInRequests = $labRequestModel->where('doctor_id IS NULL', null, false)
@@ -35,8 +48,42 @@ class WalkIn extends Controller
             ->orderBy('appointment_time', 'DESC')
             ->findAll();
 
-        // Get patient details for each request
+        // Check and update lab test request status if bill is paid
+        $billingModel = new \App\Models\BillingModel();
         foreach ($walkInRequests as &$request) {
+            // Check if there's a paid bill for this lab test request
+            $paidBill = $db->table('bills')
+                ->where('lab_test_id', $request['id'])
+                ->where('status', 'paid')
+                ->get()
+                ->getRowArray();
+            
+            // Also check bill_items for reference (by reference_id matching lab test request id)
+            if (!$paidBill && $db->tableExists('bill_items')) {
+                $billItem = $db->table('bill_items')
+                    ->select('bills.*')
+                    ->join('bills', 'bills.id = bill_items.bill_id', 'inner')
+                    ->where('bill_items.reference_id', $request['id'])
+                    ->where('bills.status', 'paid')
+                    ->get()
+                    ->getRowArray();
+                
+                if ($billItem) {
+                    $paidBill = $billItem;
+                }
+            }
+            
+            // If bill is paid and request is not completed, update it
+            if ($paidBill && $request['status'] !== 'completed') {
+                $labRequestModel->update($request['id'], [
+                    'status' => 'completed',
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]);
+                $request['status'] = 'completed';
+                log_message('info', "Updated walk-in lab test request #{$request['id']} to completed (has paid bill)");
+            }
+            
+            // Get patient details
             if (!empty($request['patient_id'])) {
                 $patient = $patientModel->find($request['patient_id']);
                 $request['patient_name'] = $patient['full_name'] ?? 'Unknown';
@@ -143,6 +190,48 @@ class WalkIn extends Controller
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Error creating request: ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    public function getTestInfo()
+    {
+        if (!session()->get('isLoggedIn') || session()->get('role') !== 'admin') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        $this->response->setContentType('application/json');
+        
+        $testType = $this->request->getGet('test_type');
+        
+        if (empty($testType)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Test type is required']);
+        }
+
+        try {
+            $labTestMasterModel = new \App\Models\LabTestMasterModel();
+            $testInfo = $labTestMasterModel->getTestByName($testType);
+            
+            if ($testInfo) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'test' => [
+                        'price' => (float)($testInfo['price'] ?? 0.00),
+                        'requires_specimen' => (int)($testInfo['requires_specimen'] ?? 0),
+                        'test_category' => $testInfo['test_category'] ?? '',
+                    ]
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Test information not found'
+                ]);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Error fetching test info: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
             ]);
         }
     }

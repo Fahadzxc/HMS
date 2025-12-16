@@ -366,19 +366,36 @@ document.getElementById('recordPaymentForm').addEventListener('submit', async fu
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
         });
+        
+        // Check if response is OK
+        if (!response.ok) {
+            const errorText = await response.text();
+            let errorMessage = 'Server error occurred';
+            try {
+                const errorJson = JSON.parse(errorText);
+                errorMessage = errorJson.message || errorMessage;
+            } catch (e) {
+                errorMessage = `Server error: ${response.status} ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
+        }
+        
         const result = await response.json();
         if (result.success) {
             alert('Payment recorded successfully!');
             location.reload();
         } else {
-            alert('Error: ' + result.message);
+            const errorMsg = result.message || 'Unknown error occurred';
+            alert('Error: ' + errorMsg);
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Record Payment';
             }
         }
     } catch (error) {
-        alert('Error recording payment: ' + error.message);
+        const errorMsg = error.message || 'Failed to record payment. Please try again.';
+        alert('Error recording payment: ' + errorMsg);
+        console.error('Payment recording error:', error);
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Record Payment';

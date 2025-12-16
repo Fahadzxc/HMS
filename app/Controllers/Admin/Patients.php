@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\ResponseInterface;
 use App\Models\PatientModel;
+use App\Models\BillingModel;
 
 class Patients extends Controller
 {
@@ -11,6 +12,7 @@ class Patients extends Controller
     {
         $model = new PatientModel();
         $db = \Config\Database::connect();
+        $billingModel = new BillingModel();
         
         // Get patients with doctor from appointments OR admissions
         // Using COALESCE to prefer admission doctor for inpatients
@@ -38,6 +40,117 @@ class Patients extends Controller
         ";
         
         $patients = $db->query($sql)->getResultArray();
+
+        // Mirror doctor/reception status logic so admin sees inactive correctly
+        $today = date('Y-m-d');
+        foreach ($patients as &$patient) {
+            if (isset($patient['patient_type']) && strtolower($patient['patient_type']) === 'outpatient') {
+                if (isset($patient['status']) && in_array(strtolower($patient['status']), ['discharged', 'transferred'])) {
+                    continue;
+                }
+
+                $hasPaidBills = $billingModel->where('patient_id', $patient['id'])
+                    ->where('status', 'paid')
+                    ->countAllResults() > 0;
+
+                $hasConsultation = $db->table('appointments')
+                    ->where('patient_id', $patient['id'])
+                    ->where('status !=', 'cancelled')
+                    ->where('appointment_type', 'consultation')
+                    ->countAllResults() > 0;
+
+                $hasDoctor = $db->table('appointments')
+                    ->where('patient_id', $patient['id'])
+                    ->where('status !=', 'cancelled')
+                    ->where('doctor_id IS NOT NULL', null, false)
+                    ->countAllResults() > 0;
+
+                $isAdmitted = $db->table('admissions')
+                    ->where('patient_id', $patient['id'])
+                    ->where('status', 'Admitted')
+                    ->countAllResults() > 0;
+
+                $hasAnyAppointment = $db->table('appointments')
+                    ->where('patient_id', $patient['id'])
+                    ->where('status !=', 'cancelled')
+                    ->countAllResults() > 0;
+
+                // If no appointments, check if patient has paid bills
+                // If walk-in with paid bills and no appointments, set to inactive
+                if (!$hasAnyAppointment) {
+                    if ($hasPaidBills && !$hasConsultation && !$hasDoctor && !$isAdmitted) {
+                        // Walk-in patient with paid bills and no appointments → INACTIVE
+                        $patient['status'] = 'inactive';
+                    } else {
+                        // Newly created patient or has consultation/doctor → ACTIVE
+                        $patient['status'] = 'active';
+                    }
+                    continue;
+                }
+
+                if ($hasPaidBills && !$hasConsultation && !$hasDoctor && !$isAdmitted) {
+                    $hasFutureAppointment = $db->table('appointments')
+                        ->where('patient_id', $patient['id'])
+                        ->where('appointment_date >=', $today)
+                        ->where('status !=', 'cancelled')
+                        ->where('status !=', 'completed')
+                        ->countAllResults() > 0;
+
+                    if (!$hasFutureAppointment) {
+                        $patient['status'] = 'inactive';
+                        continue;
+                    }
+                }
+
+                if ($hasAnyAppointment) {
+                    $futureFollowUp = $db->table('appointments')
+                        ->where('patient_id', $patient['id'])
+                        ->where('appointment_type', 'follow-up')
+                        ->where('appointment_date >=', $today)
+                        ->where('status !=', 'cancelled')
+                        ->where('status !=', 'completed')
+                        ->get()
+                        ->getRowArray();
+
+                    if ($futureFollowUp) {
+                        $patient['status'] = 'active';
+                    } else {
+                        if ($hasPaidBills) {
+                            $futureAppointment = $db->table('appointments')
+                                ->where('patient_id', $patient['id'])
+                                ->where('appointment_date >=', $today)
+                                ->where('status !=', 'cancelled')
+                                ->where('status !=', 'completed')
+                                ->get()
+                                ->getRowArray();
+
+                            if ($futureAppointment) {
+                                $patient['status'] = 'active';
+                            } else {
+                                $patient['status'] = 'inactive';
+                            }
+                        } else {
+                            $futureAppointment = $db->table('appointments')
+                                ->where('patient_id', $patient['id'])
+                                ->where('appointment_date >=', $today)
+                                ->where('status !=', 'cancelled')
+                                ->where('status !=', 'completed')
+                                ->get()
+                                ->getRowArray();
+
+                            if ($futureAppointment) {
+                                $patient['status'] = 'active';
+                            } else {
+                                $patient['status'] = 'inactive';
+                            }
+                        }
+                    }
+                } else {
+                    $patient['status'] = 'active';
+                }
+            }
+        }
+        unset($patient);
 
         $data = [
             'pageTitle' => 'Patients',

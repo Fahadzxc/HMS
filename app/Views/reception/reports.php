@@ -80,10 +80,17 @@
     <!-- New Patients Report -->
     <section class="panel panel-spaced">
         <header class="panel-header">
-            <h2>👥 New Patients Report</h2>
-            <p>Patient registrations from <?= date('M j, Y', strtotime($date_from ?? date('Y-m-01'))) ?> to <?= date('M j, Y', strtotime($date_to ?? date('Y-m-d'))) ?></p>
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div>
+                    <h2>👥 New Patients Report</h2>
+                    <p>Patient registrations from <?= date('M j, Y', strtotime($date_from ?? date('Y-m-01'))) ?> to <?= date('M j, Y', strtotime($date_to ?? date('Y-m-d'))) ?></p>
+                </div>
+                <button onclick="printReport('newPatientsReport')" style="padding: 0.5rem 1rem; background: #4299e1; color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>🖨️</span> Print Report
+                </button>
+            </div>
         </header>
-        <div class="table-container">
+        <div class="table-container" id="newPatientsReport">
             <table class="data-table">
                 <thead>
                     <tr>
@@ -134,10 +141,17 @@
     <!-- Appointments Report -->
     <section class="panel panel-spaced">
         <header class="panel-header">
-            <h2>📅 Appointments Report</h2>
-            <p>Appointments from <?= date('M j, Y', strtotime($date_from ?? date('Y-m-01'))) ?> to <?= date('M j, Y', strtotime($date_to ?? date('Y-m-d'))) ?></p>
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div>
+                    <h2>📅 Appointments Report</h2>
+                    <p>Appointments from <?= date('M j, Y', strtotime($date_from ?? date('Y-m-01'))) ?> to <?= date('M j, Y', strtotime($date_to ?? date('Y-m-d'))) ?></p>
+                </div>
+                <button onclick="printReport('appointmentsReport')" style="padding: 0.5rem 1rem; background: #4299e1; color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>🖨️</span> Print Report
+                </button>
+            </div>
         </header>
-        <div class="table-container">
+        <div class="table-container" id="appointmentsReport">
             <table class="data-table">
                 <thead>
                     <tr>
@@ -179,6 +193,158 @@
         </div>
     </section>
 <?php endif; ?>
+
+<script>
+function printReport(reportId) {
+    const reportElement = document.getElementById(reportId);
+    if (!reportElement) {
+        alert('Report not found');
+        return;
+    }
+
+    // Get report title from the header
+    const section = reportElement.closest('section');
+    const header = section.querySelector('header h2');
+    const subtitle = section.querySelector('header p');
+    const reportTitle = header ? header.textContent.trim() : 'Report';
+    const reportSubtitle = subtitle ? subtitle.textContent.trim() : '';
+
+    // Create print window
+    const printWindow = window.open('', '_blank');
+    const tableHTML = reportElement.innerHTML;
+
+    // Get current date/time
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>${reportTitle}</title>
+            <style>
+                @page {
+                    size: A4 landscape;
+                    margin: 1cm;
+                }
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 0;
+                    padding: 20px;
+                    color: #000;
+                }
+                .print-header {
+                    text-align: center;
+                    margin-bottom: 20px;
+                    border-bottom: 2px solid #000;
+                    padding-bottom: 10px;
+                }
+                .print-header h1 {
+                    margin: 0;
+                    font-size: 24px;
+                    color: #000;
+                }
+                .print-header .subtitle {
+                    margin: 5px 0;
+                    font-size: 14px;
+                    color: #666;
+                }
+                .print-header .date {
+                    margin-top: 5px;
+                    font-size: 12px;
+                    color: #666;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 20px;
+                    font-size: 11px;
+                }
+                th, td {
+                    border: 1px solid #000;
+                    padding: 8px;
+                    text-align: left;
+                }
+                th {
+                    background-color: #f0f0f0;
+                    font-weight: bold;
+                }
+                .badge {
+                    display: inline-block;
+                    padding: 2px 6px;
+                    border-radius: 3px;
+                    font-size: 10px;
+                    font-weight: 500;
+                }
+                .badge-info {
+                    background-color: #dbeafe;
+                    color: #1e40af;
+                }
+                .badge-pending {
+                    background-color: #fef3c7;
+                    color: #92400e;
+                }
+                .badge-completed {
+                    background-color: #d1fae5;
+                    color: #065f46;
+                }
+                .badge-cancelled {
+                    background-color: #fee2e2;
+                    color: #991b1b;
+                }
+                .badge-active {
+                    background-color: #d1fae5;
+                    color: #065f46;
+                }
+                .badge-discharged {
+                    background-color: #e0e7ff;
+                    color: #3730a3;
+                }
+                .text-center {
+                    text-align: center;
+                }
+                .text-muted {
+                    color: #666;
+                }
+                .print-footer {
+                    margin-top: 30px;
+                    text-align: center;
+                    font-size: 10px;
+                    color: #666;
+                    border-top: 1px solid #ccc;
+                    padding-top: 10px;
+                }
+                @media print {
+                    .no-print {
+                        display: none;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="print-header">
+                <h1>Hospital Management System</h1>
+                <div class="subtitle">${reportTitle}</div>
+                ${reportSubtitle ? `<div class="subtitle">${reportSubtitle}</div>` : ''}
+                <div class="date">Printed on ${dateStr} at ${timeStr}</div>
+            </div>
+            ${tableHTML}
+            <div class="print-footer">
+                <p>This is a computer-generated report.</p>
+            </div>
+        </body>
+        </html>
+    `);
+
+    printWindow.document.close();
+    
+    // Wait for content to load, then print
+    setTimeout(() => {
+        printWindow.print();
+    }, 250);
+}
+</script>
 
 <?= $this->endSection() ?>
 

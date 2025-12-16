@@ -90,6 +90,9 @@
                             <?php foreach (array_slice($dayAppointments, 0, 3) as $apt): ?>
                                 <?php 
                                 $appointmentType = ucfirst(str_replace('_', ' ', $apt['appointment_type'] ?? 'consultation'));
+                                $appointmentStatus = strtolower($apt['status'] ?? 'scheduled');
+                                $isCompleted = ($appointmentStatus === 'completed');
+                                
                                 $typeBadge = 'primary';
                                 if (strtolower($appointmentType) === 'follow-up') {
                                     $typeBadge = 'info';
@@ -98,10 +101,18 @@
                                 } elseif (strtolower($appointmentType) === 'laboratory_test') {
                                     $typeBadge = 'success';
                                 }
+                                
+                                // Add completed class if appointment is completed
+                                $appointmentClass = $isCompleted ? 'calendar-appointment-item completed' : 'calendar-appointment-item';
                                 ?>
-                                <div class="calendar-appointment-item" title="<?= esc($apt['patient_name'] ?? 'Patient') ?> - <?= date('g:i A', strtotime($apt['appointment_time'])) ?> - <?= esc($appointmentType) ?>">
+                                <div class="<?= $appointmentClass ?>" title="<?= esc($apt['patient_name'] ?? 'Patient') ?> - <?= date('g:i A', strtotime($apt['appointment_time'])) ?> - <?= esc($appointmentType) ?> - <?= esc(ucfirst($appointmentStatus)) ?>">
                                     <div class="appointment-patient">
-                                        👤 <?= esc(substr($apt['patient_name'] ?? 'Patient', 0, 15)) ?><?= strlen($apt['patient_name'] ?? '') > 15 ? '...' : '' ?>
+                                        <?php if ($isCompleted): ?>
+                                            <span style="text-decoration: line-through; opacity: 0.8;">👤 <?= esc(substr($apt['patient_name'] ?? 'Patient', 0, 15)) ?><?= strlen($apt['patient_name'] ?? '') > 15 ? '...' : '' ?></span>
+                                            <span style="margin-left: 0.25rem; font-size: 0.6rem; font-weight: 700;">✓ DONE</span>
+                                        <?php else: ?>
+                                            👤 <?= esc(substr($apt['patient_name'] ?? 'Patient', 0, 15)) ?><?= strlen($apt['patient_name'] ?? '') > 15 ? '...' : '' ?>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="appointment-type">
                                         <span class="appointment-type-badge appointment-type-<?= $typeBadge ?>">
@@ -320,6 +331,15 @@
     gap: 0.1rem;
 }
 
+.calendar-appointment-item.completed {
+    background: #fecaca !important;
+    color: #7f1d1d !important;
+    border-left: 4px solid #dc2626 !important;
+    border: 2px solid #dc2626 !important;
+    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+    font-weight: 500;
+}
+
 .appointment-patient {
     font-weight: 600;
     margin-bottom: 0.15rem;
@@ -366,6 +386,17 @@
     font-size: 0.65rem;
     color: #1e3a8a;
     font-weight: 500;
+}
+
+.calendar-appointment-item.completed .appointment-time {
+    color: #7f1d1d !important;
+    font-weight: 600;
+}
+
+.calendar-appointment-item.completed .appointment-type-badge {
+    background: #dc2626 !important;
+    color: white !important;
+    font-weight: 700;
 }
 
 .calendar-appointment-more {

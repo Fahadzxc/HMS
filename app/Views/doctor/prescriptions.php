@@ -80,7 +80,7 @@
                                 <th style="min-width: 100px;">Quantity</th>
                                 <th style="min-width: 150px;">Notes</th>
                                 <th style="min-width: 100px;">Follow-up</th>
-                                <th class="buy-from-hospital-header" style="min-width: 120px; display: none;">Buy from Hospital</th>
+                                <th class="buy-from-hospital-header" style="min-width: 120px;">Buy from Hospital</th>
                                 <th style="width: 60px;">Actions</th>
                             </tr>
                         </thead>
@@ -218,33 +218,29 @@ document.getElementById('rx_patient').addEventListener('change', function() {
         document.getElementById('patient_age').value = selectedOption.dataset.age || '—';
         document.getElementById('patient_gender').value = selectedOption.dataset.gender || '—';
         
-        // Show/hide "Buy from Hospital" column based on patient type
-        const patientType = selectedOption.dataset.type || 'outpatient';
-        const isOutpatient = patientType === 'outpatient';
-        
-        // Show/hide header
+        // Always show "Buy from Hospital" column for all patients (inpatients and outpatients)
         const headerCells = document.querySelectorAll('.buy-from-hospital-header');
         headerCells.forEach(cell => {
-            cell.style.display = isOutpatient ? 'table-cell' : 'none';
+            cell.style.display = 'table-cell';
         });
         
-        // Show/hide cells in existing rows
+        // Show cells in existing rows
         const rowCells = document.querySelectorAll('.buy-from-hospital-cell');
         rowCells.forEach(cell => {
-            cell.style.display = isOutpatient ? 'table-cell' : 'none';
+            cell.style.display = 'table-cell';
         });
     } else {
         document.getElementById('patient_age').value = '';
         document.getElementById('patient_gender').value = '';
         
-        // Hide "Buy from Hospital" column when no patient selected
+        // Show "Buy from Hospital" column by default (assume outpatient until patient is selected)
         const headerCells = document.querySelectorAll('.buy-from-hospital-header');
         headerCells.forEach(cell => {
-            cell.style.display = 'none';
+            cell.style.display = 'table-cell';
         });
         const rowCells = document.querySelectorAll('.buy-from-hospital-cell');
         rowCells.forEach(cell => {
-            cell.style.display = 'none';
+            cell.style.display = 'table-cell';
         });
     }
 });
@@ -255,12 +251,8 @@ function addRxItem() {
     const row = document.createElement('tr');
     row.className = 'medication-row';
     
-    // Check if current patient is outpatient to show/hide "Buy from Hospital" column
-    const patientSelect = document.getElementById('rx_patient');
-    const selectedOption = patientSelect ? patientSelect.options[patientSelect.selectedIndex] : null;
-    const patientType = selectedOption ? selectedOption.dataset.type : 'outpatient';
-    const isOutpatient = patientType === 'outpatient';
-    const buyFromHospitalDisplay = isOutpatient ? 'table-cell' : 'none';
+    // Always show "Buy from Hospital" column for all patients (inpatients and outpatients)
+    const buyFromHospitalDisplay = 'table-cell';
     
     row.innerHTML = `
         <td style="position: relative;">

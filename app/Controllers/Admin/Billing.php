@@ -53,9 +53,130 @@ class Billing extends Controller
             ->like('payment_date', $thisMonth, 'after')
             ->get()->getRowArray();
         
-        // Get patients for dropdown
+        // Get patients for dropdown - filter out fully paid outpatients unless they have future follow-ups
         $patientModel = new PatientModel();
-        $patients = $patientModel->select('id, full_name, patient_id, contact')->orderBy('full_name', 'ASC')->findAll();
+        $db = \Config\Database::connect();
+        $today = date('Y-m-d');
+        
+        $allPatients = $patientModel->select('id, full_name, patient_id, contact, patient_type, status')->orderBy('full_name', 'ASC')->findAll();
+        $patients = [];
+        
+        foreach ($allPatients as $patient) {
+            $patientType = strtolower($patient['patient_type'] ?? 'outpatient');
+            
+            // Always include inpatients (they may have ongoing bills)
+            if ($patientType === 'inpatient') {
+                $patients[] = $patient;
+                continue;
+            }
+            
+            // For outpatients: check if they have future follow-up appointments
+            $hasFutureFollowUp = $db->table('appointments')
+                ->where('patient_id', $patient['id'])
+                ->where('appointment_type', 'follow-up')
+                ->where('appointment_date >=', $today)
+                ->where('status !=', 'cancelled')
+                ->where('status !=', 'completed')
+                ->countAllResults() > 0;
+            
+            // If has future follow-up, always include
+            if ($hasFutureFollowUp) {
+                $patients[] = $patient;
+                continue;
+            }
+            
+            // Check if patient has any unpaid bills
+            $hasUnpaidBills = $billingModel->where('patient_id', $patient['id'])
+                ->where('status !=', 'paid')
+                ->where('balance >', 0)
+                ->countAllResults() > 0;
+            
+            // Include if has unpaid bills
+            if ($hasUnpaidBills) {
+                $patients[] = $patient;
+                continue;
+            }
+
+            // If no future follow-up and no unpaid bills, hide fully-settled outpatients
+            continue;
+            
+            // Check if patient has unbilled items (appointments, prescriptions, lab tests)
+            $hasUnbilledItems = false;
+            
+            // Check unbilled appointments
+            $billedAppointmentIds = $db->table('bills')
+                ->select('appointment_id')
+                ->where('appointment_id IS NOT NULL')
+                ->get()->getResultArray();
+            $billedAppointmentIds = array_column($billedAppointmentIds, 'appointment_id');
+            
+            $appointmentModel = new \App\Models\AppointmentModel();
+            $unbilledAppointments = $appointmentModel->where('patient_id', $patient['id'])
+                ->where('status', 'completed')
+                ->where('appointment_type !=', 'laboratory_test')
+                ->where('doctor_id IS NOT NULL', null, false);
+            
+            if (!empty($billedAppointmentIds)) {
+                $unbilledAppointments->whereNotIn('id', $billedAppointmentIds);
+            }
+            
+            if ($unbilledAppointments->countAllResults() > 0) {
+                $hasUnbilledItems = true;
+            }
+            
+            // Check unbilled prescriptions (only those with buy_from_hospital = true)
+            if (!$hasUnbilledItems && $db->tableExists('prescriptions')) {
+                $prescriptionModel = new \App\Models\PrescriptionModel();
+                $billedPrescriptionIds = $db->table('bills')
+                    ->select('prescription_id')
+                    ->where('prescription_id IS NOT NULL')
+                    ->get()->getResultArray();
+                $billedPrescriptionIds = array_column($billedPrescriptionIds, 'prescription_id');
+                
+                $unbilledPrescriptions = $prescriptionModel->where('patient_id', $patient['id'])
+                    ->whereNotIn('status', ['cancelled']);
+                
+                if (!empty($billedPrescriptionIds)) {
+                    $unbilledPrescriptions->whereNotIn('id', $billedPrescriptionIds);
+                }
+                
+                $prescriptions = $unbilledPrescriptions->findAll();
+                foreach ($prescriptions as $prescription) {
+                    $itemsJson = $prescription['items_json'] ?? '[]';
+                    $items = json_decode($itemsJson, true);
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($items)) {
+                        foreach ($items as $item) {
+                            if (isset($item['buy_from_hospital']) && (bool)$item['buy_from_hospital']) {
+                                $hasUnbilledItems = true;
+                                break 2;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Check unbilled lab tests
+            if (!$hasUnbilledItems && $db->tableExists('lab_test_requests')) {
+                $unbilledLabRequests = $db->table('lab_test_requests')
+                    ->where('patient_id', $patient['id'])
+                    ->groupStart()
+                        ->where('billing_status', 'unbilled')
+                        ->orWhere('billing_status IS NULL')
+                        ->orWhere('billing_status', '')
+                    ->groupEnd()
+                    ->countAllResults();
+                
+                if ($unbilledLabRequests > 0) {
+                    $hasUnbilledItems = true;
+                }
+            }
+            
+            // Include if has unbilled items
+            if ($hasUnbilledItems) {
+                $patients[] = $patient;
+            }
+            // Otherwise exclude (fully paid outpatient with no future follow-ups and no unbilled items)
+        }
 
         $data = [
             'pageTitle' => 'Billing & Payments',

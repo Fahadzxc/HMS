@@ -11,6 +11,8 @@ use App\Models\MedicationModel;
 use App\Models\LabTestRequestModel;
 use App\Models\LabTestResultModel;
 use App\Models\SettingModel;
+use App\Models\BillingModel;
+use App\Models\BillItemModel;
 
 class Doctor extends Controller
 {
@@ -175,6 +177,137 @@ class Doctor extends Controller
 		
 		// Sort by ID descending
 		usort($patients, fn($a, $b) => $b['id'] - $a['id']);
+		
+		// Update outpatient status based on future follow-up appointments (same logic as Receptionist)
+		$db = \Config\Database::connect();
+		$billingModel = new \App\Models\BillingModel();
+		$today = date('Y-m-d');
+		
+		foreach ($patients as &$patient) {
+			// Only check status for outpatients (inpatients keep their status)
+			if (isset($patient['patient_type']) && strtolower($patient['patient_type']) === 'outpatient') {
+				// Skip if patient is discharged or transferred (keep those statuses)
+				if (isset($patient['status']) && in_array(strtolower($patient['status']), ['discharged', 'transferred'])) {
+					continue;
+				}
+				
+				// Check if patient has paid bills
+				$hasPaidBills = $billingModel->where('patient_id', $patient['id'])
+					->where('status', 'paid')
+					->countAllResults() > 0;
+				
+				// Check if patient is a walk-in (no consultation, no doctor, not admitted)
+				$hasConsultation = $db->table('appointments')
+					->where('patient_id', $patient['id'])
+					->where('status !=', 'cancelled')
+					->where('appointment_type', 'consultation')
+					->countAllResults() > 0;
+				
+				$hasDoctor = $db->table('appointments')
+					->where('patient_id', $patient['id'])
+					->where('status !=', 'cancelled')
+					->where('doctor_id IS NOT NULL', null, false)
+					->countAllResults() > 0;
+				
+				$isAdmitted = $db->table('admissions')
+					->where('patient_id', $patient['id'])
+					->where('status', 'Admitted')
+					->countAllResults() > 0;
+				
+				// Check if patient has any appointments at all (not cancelled)
+				$hasAnyAppointment = $db->table('appointments')
+					->where('patient_id', $patient['id'])
+					->where('status !=', 'cancelled')
+					->countAllResults() > 0;
+				
+				// If patient has no appointments at all, they are newly created → ACTIVE
+				if (!$hasAnyAppointment) {
+					$patient['status'] = 'active';
+					continue; // Skip the rest of the logic for newly created patients
+				}
+				
+				// If walk-in patient with paid bills AND no future appointments → INACTIVE
+				// But only if they have appointments (not newly created)
+				if ($hasPaidBills && !$hasConsultation && !$hasDoctor && !$isAdmitted) {
+					// Check if there are any future appointments first
+					// Exclude completed appointments - only count pending/scheduled ones
+					$hasFutureAppointment = $db->table('appointments')
+						->where('patient_id', $patient['id'])
+						->where('appointment_date >=', $today)
+						->where('status !=', 'cancelled')
+						->where('status !=', 'completed') // Exclude completed appointments
+						->countAllResults() > 0;
+					
+					if (!$hasFutureAppointment) {
+						// No future appointments and has paid bills → INACTIVE
+						$patient['status'] = 'inactive';
+						continue; // Skip the appointment-based logic below
+					}
+				}
+				
+				if ($hasAnyAppointment) {
+					// Check for follow-up scheduled for today or in the future (priority check)
+					// Exclude completed follow-ups - only count pending/scheduled ones
+					$futureFollowUp = $db->table('appointments')
+						->where('patient_id', $patient['id'])
+						->where('appointment_type', 'follow-up')
+						->where('appointment_date >=', $today) // Today or future
+						->where('status !=', 'cancelled')
+						->where('status !=', 'completed') // Exclude completed follow-ups
+						->get()
+						->getRowArray();
+					
+					if ($futureFollowUp) {
+						// Has follow-up scheduled (today or future) that is NOT completed → ACTIVE
+						// Patient remains active until follow-up is completed, prescription given, payment made, and no more follow-ups
+						$patient['status'] = 'active';
+					} else {
+						// No future follow-up - check if has paid bills
+						if ($hasPaidBills) {
+							// Check if there are any future appointments (consultation, etc.)
+							// Exclude completed appointments - only count pending/scheduled ones
+							$futureAppointment = $db->table('appointments')
+								->where('patient_id', $patient['id'])
+								->where('appointment_date >=', $today) // Today or future
+								->where('status !=', 'cancelled')
+								->where('status !=', 'completed') // Exclude completed appointments
+								->get()
+								->getRowArray();
+							
+							if ($futureAppointment) {
+								// Has future appointment (consultation, etc.) → ACTIVE
+								$patient['status'] = 'active';
+							} else {
+								// Has paid bills, no future follow-up, and no future appointments → INACTIVE
+								$patient['status'] = 'inactive';
+							}
+						} else {
+							// No paid bills - check for future appointments
+							// Exclude completed appointments - only count pending/scheduled ones
+							$futureAppointment = $db->table('appointments')
+								->where('patient_id', $patient['id'])
+								->where('appointment_date >=', $today) // Today or future
+								->where('status !=', 'cancelled')
+								->where('status !=', 'completed') // Exclude completed appointments
+								->get()
+								->getRowArray();
+							
+							if ($futureAppointment) {
+								// Has future appointment (consultation, etc.) → ACTIVE
+								$patient['status'] = 'active';
+							} else {
+								// Has past appointments but no future appointments → INACTIVE
+								$patient['status'] = 'inactive';
+							}
+						}
+					}
+				} else {
+					// No appointments at all (newly created patient) → ACTIVE
+					$patient['status'] = 'active';
+				}
+			}
+		}
+		unset($patient);
 
 		$data = [
 			'title' => 'Patient Records - HMS',
@@ -400,12 +533,33 @@ class Doctor extends Controller
 				}
 				
 				if ($paidBill) {
-					// Auto-update appointment status to completed
-					$appointmentModel->update($appointment['id'], [
-						'status' => 'completed',
-						'updated_at' => date('Y-m-d H:i:s')
-					]);
-					$appointment['status'] = 'completed';
+					// For follow-up appointments, check if prescription exists before completing
+					$appointmentType = strtolower($appointment['appointment_type'] ?? '');
+					if ($appointmentType === 'follow-up') {
+						// Check if there's a prescription for this follow-up appointment
+						$prescription = $db->table('prescriptions')
+							->where('appointment_id', $appointment['id'])
+							->where('status !=', 'cancelled')
+							->get()
+							->getRowArray();
+						
+						if ($prescription) {
+							// Prescription exists and payment is made - can complete
+							$appointmentModel->update($appointment['id'], [
+								'status' => 'completed',
+								'updated_at' => date('Y-m-d H:i:s')
+							]);
+							$appointment['status'] = 'completed';
+						}
+						// If no prescription, don't complete - doctor must provide prescription first
+					} else {
+						// For non-follow-up appointments, complete as before
+						$appointmentModel->update($appointment['id'], [
+							'status' => 'completed',
+							'updated_at' => date('Y-m-d H:i:s')
+						]);
+						$appointment['status'] = 'completed';
+					}
 				}
 			}
 		}
@@ -456,11 +610,32 @@ class Doctor extends Controller
 				if ($paidBill) {
 					// Auto-update appointment status to completed (only if date is today or past)
 					if ($appointmentDate && $appointmentDate <= $today) {
-						$appointmentModel->update($appointment['id'], [
-							'status' => 'completed',
-							'updated_at' => date('Y-m-d H:i:s')
-						]);
-						$appointment['status'] = 'completed';
+						// For follow-up appointments, check if prescription exists before completing
+						if ($appointmentType === 'follow-up') {
+							// Check if there's a prescription for this follow-up appointment
+							$prescription = $db->table('prescriptions')
+								->where('appointment_id', $appointment['id'])
+								->where('status !=', 'cancelled')
+								->get()
+								->getRowArray();
+							
+							if ($prescription) {
+								// Prescription exists and payment is made - can complete
+								$appointmentModel->update($appointment['id'], [
+									'status' => 'completed',
+									'updated_at' => date('Y-m-d H:i:s')
+								]);
+								$appointment['status'] = 'completed';
+							}
+							// If no prescription, don't complete - doctor must provide prescription first
+						} else {
+							// For non-follow-up appointments, complete as before
+							$appointmentModel->update($appointment['id'], [
+								'status' => 'completed',
+								'updated_at' => date('Y-m-d H:i:s')
+							]);
+							$appointment['status'] = 'completed';
+						}
 					}
 				}
 			}
@@ -976,186 +1151,130 @@ class Doctor extends Controller
         // Re-fetch prescriptions to get updated statuses
         $prescriptions = $rxModel->getDoctorPrescriptions((int) $doctorId);
 
-        // Patients assigned to this doctor for selection - from BOTH appointments AND admissions
+        // Get ALL patients (same as Receptionist) - not just those with appointments
         $db = \Config\Database::connect();
+        $patientModel = new PatientModel();
         
-        // Get patients from appointments (outpatients)
-        $appointmentPatients = $db->table('patients p')
-            ->select('p.id, p.full_name, p.date_of_birth, p.gender, p.patient_type')
-            ->join('(SELECT patient_id, doctor_id, appointment_date,
-                            ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
-                     FROM appointments WHERE status != "cancelled" AND doctor_id = ' . (int) $doctorId . ') a', 'a.patient_id = p.id AND a.rn = 1', 'inner')
-            ->get()->getResultArray();
+        // Get all patients first
+        $patientsRaw = $patientModel->orderBy('id', 'DESC')->findAll();
         
-        // Get patients from admissions (inpatients)
-        $admissionPatients = $db->table('patients p')
-            ->select('p.id, p.full_name, p.date_of_birth, p.gender, p.patient_type')
-            ->join('admissions adm', 'adm.patient_id = p.id AND adm.doctor_id = ' . (int) $doctorId, 'inner')
-            ->where('adm.status', 'Admitted')
-            ->get()->getResultArray();
-        
-        // Merge and remove duplicates
-        $patientIds = [];
-        $patientsRaw = [];
-        
-        // Add admission patients first (inpatients)
-        foreach ($admissionPatients as $p) {
-            if (!in_array($p['id'], $patientIds)) {
-                $patientIds[] = $p['id'];
-                $patientsRaw[] = $p;
-            }
-        }
-        
-        // Add appointment patients
-        foreach ($appointmentPatients as $p) {
-            if (!in_array($p['id'], $patientIds)) {
-                $patientIds[] = $p['id'];
-                $patientsRaw[] = $p;
-            }
-        }
-        
-        // Filter out patients with future follow-up appointments OR completed+paid prescriptions/lab tests
+        // Apply same inactive status logic as Receptionist
         $today = date('Y-m-d');
+        $billingModel = new \App\Models\BillingModel();
         $filteredPatients = [];
         
         foreach ($patientsRaw as $patient) {
             $patientId = $patient['id'];
             $shouldInclude = true;
             
-            // Check if patient has any future follow-up appointments
-            if ($db->tableExists('appointments')) {
-                $futureFollowUp = $db->table('appointments')
+            // Exclude discharged or transferred patients (both inpatients and outpatients)
+            if (isset($patient['status']) && in_array(strtolower($patient['status']), ['discharged', 'transferred'])) {
+                continue; // Skip discharged/transferred patients
+            }
+            
+            // Only check status for outpatients (inpatients keep their status)
+            $patientType = strtolower($patient['patient_type'] ?? 'outpatient');
+            if ($patientType === 'outpatient') {
+                // Check if patient has paid bills
+                $hasPaidBills = $billingModel->where('patient_id', $patientId)
+                    ->where('status', 'paid')
+                    ->countAllResults() > 0;
+                
+                // Check if patient is a walk-in (no consultation, no doctor, not admitted)
+                $hasConsultation = $db->table('appointments')
                     ->where('patient_id', $patientId)
-                    ->where('doctor_id', $doctorId)
-                    ->where('appointment_type', 'follow-up')
                     ->where('status !=', 'cancelled')
-                    ->where('appointment_date >', $today) // Future follow-up
+                    ->where('appointment_type', 'consultation')
+                    ->countAllResults() > 0;
+                
+                $hasDoctor = $db->table('appointments')
+                    ->where('patient_id', $patientId)
+                    ->where('status !=', 'cancelled')
+                    ->where('doctor_id IS NOT NULL', null, false)
+                    ->countAllResults() > 0;
+                
+                $isAdmitted = $db->table('admissions')
+                    ->where('patient_id', $patientId)
+                    ->where('status', 'Admitted')
+                    ->countAllResults() > 0;
+                
+                // PRIORITY: Check if patient has follow-up appointment scheduled for TODAY (not completed)
+                // These patients MUST be included regardless of paid bills status
+                $todayFollowUp = $db->table('appointments')
+                    ->where('patient_id', $patientId)
+                    ->where('appointment_type', 'follow-up')
+                    ->where('appointment_date', $today) // Today
+                    ->where('status !=', 'completed')
+                    ->where('status !=', 'cancelled')
                     ->get()
                     ->getRowArray();
                 
-                if ($futureFollowUp) {
-                    // Patient has a future follow-up - lock them (don't show in dropdown)
-                    $shouldInclude = false;
+                if ($todayFollowUp) {
+                    // Patient has follow-up appointment TODAY that is not completed → ALWAYS INCLUDE
+                    // This allows doctor to provide prescription for the follow-up
+                    $shouldInclude = true;
                 } else {
-                    // Check if patient has completed follow-up appointments that are paid
-                    $completedFollowUps = $db->table('appointments')
-                        ->where('patient_id', $patientId)
-                        ->where('doctor_id', $doctorId)
-                        ->where('appointment_type', 'follow-up')
-                        ->where('status', 'completed')
-                        ->where('appointment_date <=', $today) // Today or past
-                        ->get()
-                        ->getResultArray();
+                    // If walk-in patient with paid bills → INACTIVE (exclude)
+                    if ($hasPaidBills && !$hasConsultation && !$hasDoctor && !$isAdmitted) {
+                        $shouldInclude = false;
+                    }
                     
-                    if (!empty($completedFollowUps)) {
-                        // Check if all completed follow-up appointments have been paid
-                        $allPaid = true;
-                        foreach ($completedFollowUps as $followUp) {
-                            $bill = $db->table('bills')
-                                ->where('appointment_id', $followUp['id'])
-                                ->where('status', 'paid')
+                    // If still included, check if patient has appointments
+                    if ($shouldInclude) {
+                        $hasAnyAppointment = $db->table('appointments')
+                            ->where('patient_id', $patientId)
+                            ->where('status !=', 'cancelled')
+                            ->countAllResults() > 0;
+                        
+                        if ($hasAnyAppointment) {
+                            // Check for follow-up appointment scheduled for TOMORROW or later WITH THIS DOCTOR
+                            $futureFollowUp = $db->table('appointments')
+                                ->where('patient_id', $patientId)
+                                ->where('doctor_id', $doctorId) // Must be assigned to this doctor
+                                ->where('appointment_type', 'follow-up')
+                                ->where('appointment_date >', $today) // Tomorrow or later
+                                ->where('status !=', 'cancelled')
                                 ->get()
                                 ->getRowArray();
                             
-                            // If no direct link, check by patient_id and appointment date
-                            if (!$bill && $db->tableExists('bills')) {
-                                $followUpDate = $followUp['appointment_date'] ?? null;
-                                if ($followUpDate) {
-                                    $startDate = date('Y-m-d', strtotime($followUpDate . ' -1 day'));
-                                    $endDate = date('Y-m-d', strtotime($followUpDate . ' +1 day'));
-                                    
-                                    $bill = $db->table('bills')
+                            if ($futureFollowUp) {
+                                // Has follow-up scheduled for tomorrow or later → EXCLUDE from dropdown
+                                // Patient should only appear on the day of their follow-up appointment
+                                $shouldInclude = false;
+                            } else {
+                                // No future follow-up (or follow-up is today) - check if has paid bills
+                                if ($hasPaidBills) {
+                                    // Has paid bills and no future follow-up → INACTIVE (exclude)
+                                    $shouldInclude = false;
+                                } else {
+                                    // No paid bills - check for appointments TODAY or in the past WITH THIS DOCTOR
+                                    $todayOrPastAppointment = $db->table('appointments')
                                         ->where('patient_id', $patientId)
-                                        ->where('status', 'paid')
-                                        ->where('created_at >=', $startDate . ' 00:00:00')
-                                        ->where('created_at <=', $endDate . ' 23:59:59')
-                                        ->orderBy('created_at', 'DESC')
+                                        ->where('doctor_id', $doctorId) // Must be assigned to this doctor
+                                        ->where('appointment_date <=', $today) // Today or past
+                                        ->where('status !=', 'cancelled')
                                         ->get()
                                         ->getRowArray();
+                                    
+                                    if ($todayOrPastAppointment) {
+                                        // Has appointment today or in the past WITH THIS DOCTOR → ACTIVE (include)
+                                        // Don't set shouldInclude = false, keep it true
+                                    } else {
+                                        // No appointments with this doctor → INACTIVE (exclude)
+                                        $shouldInclude = false;
+                                    }
                                 }
                             }
-                            
-                            if (!$bill) {
-                                // This follow-up is not paid yet - patient can still be selected
-                                $allPaid = false;
-                                break;
-                            }
-                        }
-                        
-                        if ($allPaid && !empty($completedFollowUps)) {
-                            // All completed follow-ups are paid - hide patient
+                        } else {
+                            // No appointments at all - EXCLUDE from dropdown
+                            // Patient must have an appointment with this doctor to appear
                             $shouldInclude = false;
                         }
                     }
                 }
             }
             
-            // Check if patient has completed prescriptions that are paid
-            if ($shouldInclude && $db->tableExists('prescriptions') && $db->tableExists('bills')) {
-                $completedPrescriptions = $db->table('prescriptions')
-                    ->where('patient_id', $patientId)
-                    ->where('doctor_id', $doctorId)
-                    ->where('status', 'completed')
-                    ->get()
-                    ->getResultArray();
-                
-                if (!empty($completedPrescriptions)) {
-                    // Check if all completed prescriptions have been paid
-                    $allPaid = true;
-                    foreach ($completedPrescriptions as $rx) {
-                        $bill = $db->table('bills')
-                            ->where('prescription_id', $rx['id'])
-                            ->where('status', 'paid')
-                            ->get()
-                            ->getRowArray();
-                        
-                        if (!$bill) {
-                            // This prescription is not paid yet - patient can still be selected
-                            $allPaid = false;
-                            break;
-                        }
-                    }
-                    
-                    if ($allPaid && !empty($completedPrescriptions)) {
-                        // All completed prescriptions are paid - hide patient
-                        $shouldInclude = false;
-                    }
-                }
-            }
-            
-            // Check if patient has completed lab tests that are paid
-            if ($shouldInclude && $db->tableExists('lab_test_requests') && $db->tableExists('bills')) {
-                $completedLabTests = $db->table('lab_test_requests')
-                    ->where('patient_id', $patientId)
-                    ->where('doctor_id', $doctorId)
-                    ->where('status', 'completed')
-                    ->get()
-                    ->getResultArray();
-                
-                if (!empty($completedLabTests)) {
-                    // Check if all completed lab tests have been paid
-                    $allPaid = true;
-                    foreach ($completedLabTests as $lab) {
-                        $bill = $db->table('bills')
-                            ->where('lab_test_id', $lab['id'])
-                            ->where('status', 'paid')
-                            ->get()
-                            ->getRowArray();
-                        
-                        if (!$bill) {
-                            // This lab test is not paid yet - patient can still be selected
-                            $allPaid = false;
-                            break;
-                        }
-                    }
-                    
-                    if ($allPaid && !empty($completedLabTests)) {
-                        // All completed lab tests are paid - hide patient
-                        $shouldInclude = false;
-                    }
-                }
-            }
-            
+            // If patient is inactive, exclude from dropdown
             if ($shouldInclude) {
                 $filteredPatients[] = $patient;
             }
@@ -1340,6 +1459,11 @@ class Doctor extends Controller
         // Check if any medication requires follow-up and create appointment immediately
         if ($savedPrescription) {
             $this->createFollowUpAppointment($savedPrescription);
+        }
+        
+        // Auto-create bill for consultation appointment if appointment_id exists and no bill exists yet
+        if ($savedPrescription && !empty($appointmentId)) {
+            $this->autoCreateConsultationBill($appointmentId, $patientId, $doctorId);
         }
 
         return $this->response->setJSON([
@@ -1722,6 +1846,102 @@ class Doctor extends Controller
     }
 
     /**
+     * Auto-create bill for consultation appointment if it doesn't exist yet
+     */
+    private function autoCreateConsultationBill($appointmentId, $patientId, $doctorId)
+    {
+        try {
+            $db = \Config\Database::connect();
+            
+            // Check if bill already exists for this appointment
+            if ($db->tableExists('bills')) {
+                $existingBill = $db->table('bills')
+                    ->where('appointment_id', $appointmentId)
+                    ->where('status !=', 'cancelled')
+                    ->get()
+                    ->getRowArray();
+                
+                if ($existingBill) {
+                    log_message('debug', "Bill already exists for appointment #{$appointmentId}");
+                    return; // Bill already exists
+                }
+            }
+            
+            // Ensure billing tables exist
+            $this->ensureBillingTables();
+            
+            $billingModel = new BillingModel();
+            $billItemModel = new BillItemModel();
+            
+            // Get doctor name
+            $doctorName = 'Doctor';
+            if ($db->tableExists('users')) {
+                $doctor = $db->table('users')->where('id', $doctorId)->get()->getRowArray();
+                $doctorName = $doctor ? ($doctor['name'] ?? 'Doctor') : 'Doctor';
+            }
+            
+            // Get appointment date
+            $appointmentModel = new AppointmentModel();
+            $appointment = $appointmentModel->find($appointmentId);
+            $appointmentDate = $appointment['appointment_date'] ?? date('Y-m-d');
+            
+            // Consultation fee (default 500.00)
+            $consultationFee = 500.00;
+            $subtotal = $consultationFee;
+            $tax = 0; // No tax for consultation
+            $totalAmount = $subtotal;
+            
+            // Generate bill number
+            $billNumber = $billingModel->generateBillNumber();
+            
+            // Create bill
+            $billData = [
+                'bill_number' => $billNumber,
+                'patient_id' => $patientId,
+                'appointment_id' => $appointmentId,
+                'bill_type' => 'consultation',
+                'subtotal' => $subtotal,
+                'discount' => 0,
+                'tax' => $tax,
+                'total_amount' => $totalAmount,
+                'paid_amount' => 0,
+                'balance' => $totalAmount,
+                'status' => 'pending',
+                'due_date' => date('Y-m-d', strtotime('+7 days')),
+                'notes' => 'Auto-generated consultation bill for appointment #' . $appointmentId,
+                'created_by' => session()->get('user_id') ?? $doctorId,
+            ];
+            
+            $billId = $billingModel->insert($billData);
+            
+            if (!$billId) {
+                log_message('error', "Failed to create consultation bill for appointment #{$appointmentId}: " . json_encode($billingModel->errors()));
+                return;
+            }
+            
+            // Create bill item for consultation
+            $billItemData = [
+                'bill_id' => $billId,
+                'item_type' => 'professional',
+                'item_name' => 'Dr. ' . $doctorName . ' - Consultation',
+                'description' => 'Consultation fee for appointment on ' . date('M d, Y', strtotime($appointmentDate)),
+                'quantity' => 1,
+                'unit_price' => $consultationFee,
+                'total_price' => $consultationFee,
+                'reference_id' => $appointmentId,
+                'reference_type' => 'appointment'
+            ];
+            
+            $billItemModel->insert($billItemData);
+            
+            log_message('info', "Auto-created consultation bill #{$billId} for appointment #{$appointmentId}");
+            
+        } catch (\Exception $e) {
+            log_message('error', "Error auto-creating consultation bill for appointment #{$appointmentId}: " . $e->getMessage());
+        }
+    }
+    
+    /**
      * Create prescriptions table if it does not exist yet.
      */
     private function ensurePrescriptionsTable(): void
@@ -1913,186 +2133,133 @@ class Doctor extends Controller
             unset($req);
         }
         
-        // Get patients assigned to this doctor for selection - from BOTH appointments AND admissions
+        // Get patients with appointments only - required for lab requests
         $db = \Config\Database::connect();
+        $patientModel = new PatientModel();
         
-        // Get patients from appointments (outpatients)
-        $appointmentPatients = $db->table('patients p')
-            ->select('p.id, p.full_name, p.date_of_birth, p.gender, p.patient_id, p.patient_type')
-            ->join('(SELECT patient_id, doctor_id, appointment_date,
-                            ROW_NUMBER() OVER (PARTITION BY patient_id ORDER BY appointment_date DESC, created_at DESC) as rn
-                     FROM appointments WHERE status != "cancelled" AND doctor_id = ' . (int) $doctorId . ') a', 'a.patient_id = p.id AND a.rn = 1', 'inner')
-            ->get()->getResultArray();
+        // Get all patients first
+        $patientsRaw = $patientModel->orderBy('id', 'DESC')->findAll();
         
-        // Get patients from admissions (inpatients)
-        $admissionPatients = $db->table('patients p')
-            ->select('p.id, p.full_name, p.date_of_birth, p.gender, p.patient_id, p.patient_type')
-            ->join('admissions adm', 'adm.patient_id = p.id AND adm.doctor_id = ' . (int) $doctorId, 'inner')
-            ->where('adm.status', 'Admitted')
-            ->get()->getResultArray();
-        
-        // Merge and remove duplicates
-        $patientIds = [];
-        $patientsRaw = [];
-        
-        // Add admission patients first (inpatients)
-        foreach ($admissionPatients as $p) {
-            if (!in_array($p['id'], $patientIds)) {
-                $patientIds[] = $p['id'];
-                $patientsRaw[] = $p;
-            }
-        }
-        
-        // Add appointment patients
-        foreach ($appointmentPatients as $p) {
-            if (!in_array($p['id'], $patientIds)) {
-                $patientIds[] = $p['id'];
-                $patientsRaw[] = $p;
-            }
-        }
-        
-        // Filter out patients with future follow-up appointments
+        // Apply same inactive status logic as Receptionist
         $today = date('Y-m-d');
+        $billingModel = new \App\Models\BillingModel();
         $filteredPatients = [];
         
         foreach ($patientsRaw as $patient) {
             $patientId = $patient['id'];
             $shouldInclude = true;
             
-            // Check if patient has any future follow-up appointments
-            if ($db->tableExists('appointments')) {
-                $futureFollowUp = $db->table('appointments')
+            // Exclude discharged or transferred patients (both inpatients and outpatients)
+            if (isset($patient['status']) && in_array(strtolower($patient['status']), ['discharged', 'transferred'])) {
+                continue; // Skip discharged/transferred patients
+            }
+            
+            // Check if patient has at least one appointment (not cancelled) - REQUIRED for lab requests
+            $hasAnyAppointment = $db->table('appointments')
+                ->where('patient_id', $patientId)
+                ->where('status !=', 'cancelled')
+                ->countAllResults() > 0;
+            
+            // If patient has no appointments at all, exclude them from lab request dropdown
+            if (!$hasAnyAppointment) {
+                continue; // Skip patients without appointments
+            }
+            
+            // Only check status for outpatients (inpatients keep their status)
+            $patientType = strtolower($patient['patient_type'] ?? 'outpatient');
+            if ($patientType === 'outpatient') {
+                // Check if patient has paid bills
+                $hasPaidBills = $billingModel->where('patient_id', $patientId)
+                    ->where('status', 'paid')
+                    ->countAllResults() > 0;
+                
+                // Check if patient is a walk-in (no consultation, no doctor, not admitted)
+                $hasConsultation = $db->table('appointments')
                     ->where('patient_id', $patientId)
-                    ->where('doctor_id', $doctorId)
-                    ->where('appointment_type', 'follow-up')
                     ->where('status !=', 'cancelled')
-                    ->where('appointment_date >', $today) // Future follow-up
+                    ->where('appointment_type', 'consultation')
+                    ->countAllResults() > 0;
+                
+                $hasDoctor = $db->table('appointments')
+                    ->where('patient_id', $patientId)
+                    ->where('status !=', 'cancelled')
+                    ->where('doctor_id IS NOT NULL', null, false)
+                    ->countAllResults() > 0;
+                
+                $isAdmitted = $db->table('admissions')
+                    ->where('patient_id', $patientId)
+                    ->where('status', 'Admitted')
+                    ->countAllResults() > 0;
+                
+                // PRIORITY: Check if patient has follow-up appointment scheduled for TODAY (not completed)
+                // These patients MUST be included regardless of paid bills status
+                $todayFollowUp = $db->table('appointments')
+                    ->where('patient_id', $patientId)
+                    ->where('appointment_type', 'follow-up')
+                    ->where('appointment_date', $today) // Today
+                    ->where('status !=', 'completed')
+                    ->where('status !=', 'cancelled')
                     ->get()
                     ->getRowArray();
                 
-                if ($futureFollowUp) {
-                    // Patient has a future follow-up - lock them (don't show in dropdown)
-                    $shouldInclude = false;
+                if ($todayFollowUp) {
+                    // Patient has follow-up appointment TODAY that is not completed → ALWAYS INCLUDE
+                    // This allows doctor to provide lab request for the follow-up
+                    $shouldInclude = true;
                 } else {
-                    // Check if patient has completed follow-up appointments that are paid
-                    $completedFollowUps = $db->table('appointments')
-                        ->where('patient_id', $patientId)
-                        ->where('doctor_id', $doctorId)
-                        ->where('appointment_type', 'follow-up')
-                        ->where('status', 'completed')
-                        ->where('appointment_date <=', $today) // Today or past
-                        ->get()
-                        ->getResultArray();
+                    // If walk-in patient with paid bills → INACTIVE (exclude)
+                    if ($hasPaidBills && !$hasConsultation && !$hasDoctor && !$isAdmitted) {
+                        $shouldInclude = false;
+                    }
                     
-                    if (!empty($completedFollowUps)) {
-                        // Check if all completed follow-up appointments have been paid
-                        $allPaid = true;
-                        foreach ($completedFollowUps as $followUp) {
-                            $bill = $db->table('bills')
-                                ->where('appointment_id', $followUp['id'])
-                                ->where('status', 'paid')
-                                ->get()
-                                ->getRowArray();
-                            
-                            // If no direct link, check by patient_id and appointment date
-                            if (!$bill && $db->tableExists('bills')) {
-                                $followUpDate = $followUp['appointment_date'] ?? null;
-                                if ($followUpDate) {
-                                    $startDate = date('Y-m-d', strtotime($followUpDate . ' -1 day'));
-                                    $endDate = date('Y-m-d', strtotime($followUpDate . ' +1 day'));
-                                    
-                                    $bill = $db->table('bills')
-                                        ->where('patient_id', $patientId)
-                                        ->where('status', 'paid')
-                                        ->where('created_at >=', $startDate . ' 00:00:00')
-                                        ->where('created_at <=', $endDate . ' 23:59:59')
-                                        ->orderBy('created_at', 'DESC')
-                                        ->get()
-                                        ->getRowArray();
+                    // If still included, check if patient has appointments (already checked above, but keep for consistency)
+                    if ($shouldInclude) {
+                        if ($hasAnyAppointment) {
+                        // Check for follow-up appointment scheduled for TOMORROW or later
+                        $futureFollowUp = $db->table('appointments')
+                            ->where('patient_id', $patientId)
+                            ->where('appointment_type', 'follow-up')
+                            ->where('appointment_date >', $today) // Tomorrow or later
+                            ->where('status !=', 'cancelled')
+                            ->get()
+                            ->getRowArray();
+                        
+                        if ($futureFollowUp) {
+                            // Has follow-up scheduled for tomorrow or later → EXCLUDE from dropdown
+                            // Patient should only appear on the day of their follow-up appointment
+                            $shouldInclude = false;
+                        } else {
+                            // No future follow-up (or follow-up is today) - check if has paid bills
+                            if ($hasPaidBills) {
+                                // Has paid bills and no future follow-up → INACTIVE (exclude)
+                                $shouldInclude = false;
+                            } else {
+                                // No paid bills - check for appointments TODAY or in the past
+                                $todayOrPastAppointment = $db->table('appointments')
+                                    ->where('patient_id', $patientId)
+                                    ->where('appointment_date <=', $today) // Today or past
+                                    ->where('status !=', 'cancelled')
+                                    ->get()
+                                    ->getRowArray();
+                                
+                                if ($todayOrPastAppointment) {
+                                    // Has appointment today or in the past → ACTIVE (include)
+                                    // Don't set shouldInclude = false, keep it true
+                                } else {
+                                    // Has past appointments but no future appointments → INACTIVE (exclude)
+                                    $shouldInclude = false;
                                 }
                             }
-                            
-                            if (!$bill) {
-                                // This follow-up is not paid yet - patient can still be selected
-                                $allPaid = false;
-                                break;
-                            }
                         }
-                        
-                        if ($allPaid && !empty($completedFollowUps)) {
-                            // All completed follow-ups are paid - hide patient
-                            $shouldInclude = false;
-                        }
+                    } else {
+                        // No appointments - if has paid bills and is walk-in → already excluded above
+                        // If no paid bills → ACTIVE (newly created)
+                    }
                     }
                 }
             }
             
-            // Check if patient has completed prescriptions that are paid
-            if ($shouldInclude && $db->tableExists('prescriptions') && $db->tableExists('bills')) {
-                $completedPrescriptions = $db->table('prescriptions')
-                    ->where('patient_id', $patientId)
-                    ->where('doctor_id', $doctorId)
-                    ->where('status', 'completed')
-                    ->get()
-                    ->getResultArray();
-                
-                if (!empty($completedPrescriptions)) {
-                    // Check if all completed prescriptions have been paid
-                    $allPaid = true;
-                    foreach ($completedPrescriptions as $rx) {
-                        $bill = $db->table('bills')
-                            ->where('prescription_id', $rx['id'])
-                            ->where('status', 'paid')
-                            ->get()
-                            ->getRowArray();
-                        
-                        if (!$bill) {
-                            // This prescription is not paid yet - patient can still be selected
-                            $allPaid = false;
-                            break;
-                        }
-                    }
-                    
-                    if ($allPaid && !empty($completedPrescriptions)) {
-                        // All completed prescriptions are paid - hide patient
-                        $shouldInclude = false;
-                    }
-                }
-            }
-            
-            // Check if patient has completed lab tests that are paid
-            if ($shouldInclude && $db->tableExists('lab_test_requests') && $db->tableExists('bills')) {
-                $completedLabTests = $db->table('lab_test_requests')
-                    ->where('patient_id', $patientId)
-                    ->where('doctor_id', $doctorId)
-                    ->where('status', 'completed')
-                    ->get()
-                    ->getResultArray();
-                
-                if (!empty($completedLabTests)) {
-                    // Check if all completed lab tests have been paid
-                    $allPaid = true;
-                    foreach ($completedLabTests as $lab) {
-                        $bill = $db->table('bills')
-                            ->where('lab_test_id', $lab['id'])
-                            ->where('status', 'paid')
-                            ->get()
-                            ->getRowArray();
-                        
-                        if (!$bill) {
-                            // This lab test is not paid yet - patient can still be selected
-                            $allPaid = false;
-                            break;
-                        }
-                    }
-                    
-                    if ($allPaid && !empty($completedLabTests)) {
-                        // All completed lab tests are paid - hide patient
-                        $shouldInclude = false;
-                    }
-                }
-            }
-            
+            // If patient is inactive, exclude from dropdown
             if ($shouldInclude) {
                 $filteredPatients[] = $patient;
             }
@@ -2487,6 +2654,68 @@ class Doctor extends Controller
 			} catch (\Exception $e) {
 				log_message('debug', 'ensureLabBillingColumn skip: ' . $e->getMessage());
 			}
+		}
+	}
+	
+	/**
+	 * Ensure billing tables exist
+	 */
+	private function ensureBillingTables()
+	{
+		$db = \Config\Database::connect();
+		
+		// Create bills table if not exists
+		if (!$db->tableExists('bills')) {
+			$forge = \Config\Database::forge();
+			$forge->addField([
+				'id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'auto_increment' => true],
+				'bill_number' => ['type' => 'VARCHAR', 'constraint' => 50],
+				'patient_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true],
+				'appointment_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
+				'prescription_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
+				'lab_test_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
+				'room_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
+				'bill_type' => ['type' => 'ENUM', 'constraint' => ['appointment', 'prescription', 'lab_test', 'room', 'consultation', 'procedure', 'other'], 'default' => 'other'],
+				'subtotal' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'default' => 0],
+				'discount' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'default' => 0],
+				'tax' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'default' => 0],
+				'total_amount' => ['type' => 'DECIMAL', 'constraint' => '10,2'],
+				'paid_amount' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'default' => 0],
+				'balance' => ['type' => 'DECIMAL', 'constraint' => '10,2'],
+				'status' => ['type' => 'ENUM', 'constraint' => ['pending', 'partial', 'paid', 'overdue', 'cancelled'], 'default' => 'pending'],
+				'due_date' => ['type' => 'DATE', 'null' => true],
+				'payment_method' => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => true],
+				'notes' => ['type' => 'TEXT', 'null' => true],
+				'created_by' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
+				'created_at' => ['type' => 'DATETIME', 'null' => true],
+				'updated_at' => ['type' => 'DATETIME', 'null' => true],
+			]);
+			$forge->addKey('id', true);
+			$forge->addKey('patient_id');
+			$forge->addKey('bill_number');
+			$forge->createTable('bills', true);
+		}
+		
+		// Create bill_items table if not exists
+		if (!$db->tableExists('bill_items')) {
+			$forge = \Config\Database::forge();
+			$forge->addField([
+				'id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'auto_increment' => true],
+				'bill_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true],
+				'item_type' => ['type' => 'VARCHAR', 'constraint' => 50],
+				'item_name' => ['type' => 'VARCHAR', 'constraint' => 255],
+				'description' => ['type' => 'TEXT', 'null' => true],
+				'quantity' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'default' => 1],
+				'unit_price' => ['type' => 'DECIMAL', 'constraint' => '10,2'],
+				'total_price' => ['type' => 'DECIMAL', 'constraint' => '10,2'],
+				'reference_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
+				'reference_type' => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => true],
+				'created_at' => ['type' => 'DATETIME', 'null' => true],
+				'updated_at' => ['type' => 'DATETIME', 'null' => true],
+			]);
+			$forge->addKey('id', true);
+			$forge->addKey('bill_id');
+			$forge->createTable('bill_items', true);
 		}
 	}
 }

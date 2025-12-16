@@ -101,50 +101,6 @@
     </div>
 </section>
 
-<!-- Statistics Cards -->
-<section class="panel panel-spaced">
-    <div class="kpi-grid">
-        <?php
-        $totalResults = count($results ?? []);
-        $pendingCount = count($pending_requests ?? []);
-        $completedCount = 0;
-        $criticalCount = 0;
-        
-        foreach ($results ?? [] as $result) {
-            if (($result['status'] ?? 'pending') === 'completed') $completedCount++;
-            if (($result['critical_flag'] ?? 0) == 1) $criticalCount++;
-        }
-        ?>
-        <div class="kpi-card">
-            <div class="kpi-content">
-                <div class="kpi-label">Total Results</div>
-                <div class="kpi-value"><?= $totalResults ?></div>
-                <div class="kpi-change kpi-positive">All results</div>
-            </div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-content">
-                <div class="kpi-label">Pending Entry</div>
-                <div class="kpi-value"><?= $pendingCount ?></div>
-                <div class="kpi-change kpi-warning">Awaiting entry</div>
-            </div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-content">
-                <div class="kpi-label">Completed</div>
-                <div class="kpi-value"><?= $completedCount ?></div>
-                <div class="kpi-change kpi-positive">Finalized</div>
-            </div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-content">
-                <div class="kpi-label">Critical Results</div>
-                <div class="kpi-value"><?= $criticalCount ?></div>
-                <div class="kpi-change kpi-negative">Requires attention</div>
-            </div>
-        </div>
-    </div>
-</section>
 
 <!-- Enter Results Section -->
 <?php if (!empty($pending_requests)): ?>

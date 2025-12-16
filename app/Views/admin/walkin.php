@@ -152,22 +152,52 @@
                 <div class="form-field">
                     <label>Test Type <span class="req">*</span></label>
                     <select name="test_type" id="walkInTestType" required>
-                        <option value="">Select Test Type</option>
-                        <option value="Complete Blood Count (CBC)">Complete Blood Count (CBC)</option>
-                        <option value="Blood Chemistry">Blood Chemistry</option>
-                        <option value="Urinalysis">Urinalysis</option>
-                        <option value="X-Ray">X-Ray</option>
-                        <option value="Ultrasound">Ultrasound</option>
-                        <option value="CT Scan">CT Scan</option>
-                        <option value="MRI">MRI</option>
-                        <option value="ECG">ECG</option>
-                        <option value="Blood Sugar">Blood Sugar</option>
-                        <option value="Lipid Profile">Lipid Profile</option>
-                        <option value="Liver Function Test">Liver Function Test</option>
-                        <option value="Kidney Function Test">Kidney Function Test</option>
-                        <option value="Thyroid Function Test">Thyroid Function Test</option>
-                        <option value="Other">Other</option>
+                        <option value="">Select test type...</option>
+                        <optgroup label="Blood Tests">
+                            <option value="Complete Blood Count (CBC)">Complete Blood Count (CBC)</option>
+                            <option value="Blood Glucose">Blood Glucose</option>
+                            <option value="Lipid Profile">Lipid Profile</option>
+                            <option value="Liver Function Test (LFT)">Liver Function Test (LFT)</option>
+                            <option value="Kidney Function Test (KFT)">Kidney Function Test (KFT)</option>
+                            <option value="Thyroid Function Test">Thyroid Function Test</option>
+                            <option value="Hemoglobin A1C">Hemoglobin A1C</option>
+                            <option value="Blood Culture">Blood Culture</option>
+                            <option value="Blood Typing">Blood Typing</option>
+                            <option value="Coagulation Profile">Coagulation Profile</option>
+                        </optgroup>
+                        <optgroup label="Urine Tests">
+                            <option value="Urine Analysis">Urine Analysis</option>
+                            <option value="Urine Culture">Urine Culture</option>
+                            <option value="24-Hour Urine Collection">24-Hour Urine Collection</option>
+                            <option value="Urine Pregnancy Test">Urine Pregnancy Test</option>
+                        </optgroup>
+                        <optgroup label="Imaging Tests">
+                            <option value="X-Ray">X-Ray</option>
+                            <option value="CT Scan">CT Scan</option>
+                            <option value="MRI">MRI</option>
+                            <option value="Ultrasound">Ultrasound</option>
+                            <option value="Echocardiogram">Echocardiogram</option>
+                            <option value="Mammography">Mammography</option>
+                        </optgroup>
+                        <optgroup label="Microbiology">
+                            <option value="Sputum Culture">Sputum Culture</option>
+                            <option value="Stool Culture">Stool Culture</option>
+                            <option value="Throat Swab">Throat Swab</option>
+                            <option value="Wound Culture">Wound Culture</option>
+                        </optgroup>
+                        <optgroup label="Other Tests">
+                            <option value="ECG (Electrocardiogram)">ECG (Electrocardiogram)</option>
+                            <option value="Pulmonary Function Test">Pulmonary Function Test</option>
+                            <option value="Bone Density Scan">Bone Density Scan</option>
+                            <option value="Pap Smear">Pap Smear</option>
+                            <option value="Biopsy">Biopsy</option>
+                            <option value="Other">Other (Specify in Notes)</option>
+                        </optgroup>
                     </select>
+                    <div id="walkInTestInfo" style="margin-top: 8px; padding: 8px; background: #f0f9ff; border-radius: 4px; display: none;">
+                        <div id="walkInTestPrice" style="font-weight: 600; color: #10b981; margin-bottom: 4px;"></div>
+                        <div id="walkInTestSpecimen" style="font-size: 12px; color: #666;"></div>
+                    </div>
                     <div class="error" data-error-for="test_type"></div>
                 </div>
                 <div class="form-field">
@@ -208,11 +238,53 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.style.display = 'none';
         document.body.style.overflow = '';
         form.reset();
+        // Reset test info display
+        const testInfoDiv = document.getElementById('walkInTestInfo');
+        if (testInfoDiv) {
+            testInfoDiv.style.display = 'none';
+        }
     }
 
     if (openBtn) openBtn.addEventListener('click', openModal);
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
     if (backdrop) backdrop.addEventListener('click', closeModal);
+
+    // Update test info when test type is selected
+    const testTypeSelect = document.getElementById('walkInTestType');
+    const testInfoDiv = document.getElementById('walkInTestInfo');
+    const testPriceDiv = document.getElementById('walkInTestPrice');
+    const testSpecimenDiv = document.getElementById('walkInTestSpecimen');
+    
+    if (testTypeSelect && testInfoDiv) {
+        testTypeSelect.addEventListener('change', async function() {
+            const testType = this.value;
+            if (!testType) {
+                testInfoDiv.style.display = 'none';
+                return;
+            }
+            
+            // Fetch test info from server
+            try {
+                const response = await fetch('<?= base_url('admin/walkin/getTestInfo') ?>?test_type=' + encodeURIComponent(testType));
+                const data = await response.json();
+                
+                if (data.success && data.test) {
+                    testPriceDiv.textContent = 'Price: ₱' + parseFloat(data.test.price || 0).toFixed(2);
+                    if (data.test.requires_specimen == 1) {
+                        testSpecimenDiv.innerHTML = '<span style="color: #f59e0b;">⚠️ Requires specimen collection by nurse</span>';
+                    } else {
+                        testSpecimenDiv.innerHTML = '<span style="color: #10b981;">✓ No specimen required</span>';
+                    }
+                    testInfoDiv.style.display = 'block';
+                } else {
+                    testInfoDiv.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error fetching test info:', error);
+                testInfoDiv.style.display = 'none';
+            }
+        });
+    }
 
     // Form submission
     if (form) {

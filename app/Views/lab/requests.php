@@ -33,39 +33,6 @@
 </section>
 <?php endif; ?>
 
-<!-- Statistics Cards -->
-<section class="panel panel-spaced">
-    <div class="kpi-grid">
-        <div class="kpi-card">
-            <div class="kpi-content">
-                <div class="kpi-label">Total Requests</div>
-                <div class="kpi-value"><?= $totalRequests ?? count($requests ?? []) ?></div>
-                <div class="kpi-change kpi-positive">All requests</div>
-            </div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-content">
-                <div class="kpi-label">Pending</div>
-                <div class="kpi-value" style="color: #f59e0b;"><?= $pendingCount ?? 0 ?></div>
-                <div class="kpi-change kpi-warning">Awaiting processing</div>
-            </div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-content">
-                <div class="kpi-label">In Progress</div>
-                <div class="kpi-value" style="color: #6366f1;"><?= $inProgressCount ?? 0 ?></div>
-                <div class="kpi-change kpi-positive">Being processed</div>
-            </div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-content">
-                <div class="kpi-label">Completed</div>
-                <div class="kpi-value" style="color: #10b981;"><?= $completedCount ?? 0 ?></div>
-                <div class="kpi-change kpi-positive">Tests completed</div>
-            </div>
-        </div>
-    </div>
-</section>
 
 <!-- Filter Tabs -->
 <section class="panel panel-spaced">
@@ -76,18 +43,6 @@
                 <button class="filter-tab <?= ($status_filter ?? '') === '' ? 'active' : '' ?>" 
                         onclick="filterByStatus('')" style="padding: 6px 12px; border: 1px solid #ddd; background: <?= ($status_filter ?? '') === '' ? '#3b82f6' : '#fff' ?>; color: <?= ($status_filter ?? '') === '' ? '#fff' : '#333' ?>; border-radius: 4px; cursor: pointer;">
                     All (<?= $totalRequests ?>)
-                </button>
-                <button class="filter-tab <?= ($status_filter ?? '') === 'sent_to_lab' ? 'active' : '' ?>" 
-                        onclick="filterByStatus('sent_to_lab')" style="padding: 6px 12px; border: 1px solid #ddd; background: <?= ($status_filter ?? '') === 'sent_to_lab' ? '#3b82f6' : '#fff' ?>; color: <?= ($status_filter ?? '') === 'sent_to_lab' ? '#fff' : '#333' ?>; border-radius: 4px; cursor: pointer;">
-                    Sent to Lab (<?= $sentToLabCount ?? 0 ?>)
-                </button>
-                <button class="filter-tab <?= ($status_filter ?? '') === 'pending' ? 'active' : '' ?>" 
-                        onclick="filterByStatus('pending')" style="padding: 6px 12px; border: 1px solid #ddd; background: <?= ($status_filter ?? '') === 'pending' ? '#f59e0b' : '#fff' ?>; color: <?= ($status_filter ?? '') === 'pending' ? '#fff' : '#333' ?>; border-radius: 4px; cursor: pointer;">
-                    Pending (<?= $pendingCount ?>)
-                </button>
-                <button class="filter-tab <?= ($status_filter ?? '') === 'in_progress' ? 'active' : '' ?>" 
-                        onclick="filterByStatus('in_progress')" style="padding: 6px 12px; border: 1px solid #ddd; background: <?= ($status_filter ?? '') === 'in_progress' ? '#6366f1' : '#fff' ?>; color: <?= ($status_filter ?? '') === 'in_progress' ? '#fff' : '#333' ?>; border-radius: 4px; cursor: pointer;">
-                    In Progress (<?= $inProgressCount ?>)
                 </button>
                 <button class="filter-tab <?= ($status_filter ?? '') === 'completed' ? 'active' : '' ?>" 
                         onclick="filterByStatus('completed')" style="padding: 6px 12px; border: 1px solid #ddd; background: <?= ($status_filter ?? '') === 'completed' ? '#10b981' : '#fff' ?>; color: <?= ($status_filter ?? '') === 'completed' ? '#fff' : '#333' ?>; border-radius: 4px; cursor: pointer;">

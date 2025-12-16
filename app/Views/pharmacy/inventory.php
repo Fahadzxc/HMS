@@ -15,9 +15,6 @@
                     <span class="date-text"> • Date: <?= date('F j, Y') ?></span>
                 </p>
             </div>
-            <button class="btn-primary" onclick="openAddMedicineModal()" style="padding: 0.6rem 1.2rem; background: #3b82f6; color: white; border: none; border-radius: 0.5rem; font-weight: 500; cursor: pointer;">
-                <span>➕</span> Add Medicine
-            </button>
         </div>
     </header>
 </section>

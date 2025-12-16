@@ -49,7 +49,7 @@ class BillingModel extends Model
     public function getBillsWithPatient($filters = [])
     {
         $builder = $this->db->table('bills b');
-        $builder->select('b.*, p.full_name as patient_name, p.patient_id as patient_code, p.contact, p.email,
+        $builder->select('b.*, p.full_name as patient_name, p.patient_id as patient_code, p.contact, p.email, p.patient_type,
             a.appointment_type,
             (SELECT payment_method FROM payments WHERE bill_id = b.id AND status = "completed" ORDER BY created_at DESC LIMIT 1) as payment_method');
         $builder->join('patients p', 'p.id = b.patient_id', 'left');

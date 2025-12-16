@@ -49,10 +49,15 @@
 
 <!-- Dispensing Report -->
 <?php if (($reportType ?? 'daily') !== 'expiring'): ?>
-<section class="panel panel-spaced">
-    <header class="panel-header">
-        <h2><?= ($reportType ?? 'daily') === 'daily' ? 'Daily' : 'Monthly' ?> Dispensing Report</h2>
-        <p>Prescriptions dispensed from <?= date('M j, Y', strtotime($dateFrom ?? date('Y-m-01'))) ?> to <?= date('M j, Y', strtotime($dateTo ?? date('Y-m-d'))) ?></p>
+<section class="panel panel-spaced" id="dispensingReport">
+    <header class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2><?= ($reportType ?? 'daily') === 'daily' ? 'Daily' : 'Monthly' ?> Dispensing Report</h2>
+            <p>Prescriptions dispensed from <?= date('M j, Y', strtotime($dateFrom ?? date('Y-m-01'))) ?> to <?= date('M j, Y', strtotime($dateTo ?? date('Y-m-d'))) ?></p>
+        </div>
+        <button onclick="printReport('dispensingReport')" class="btn-print" style="padding: 0.5rem 1rem; background: #3b82f6; color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+            🖨️ Print Report
+        </button>
     </header>
     <div class="stack">
         <div class="table-container">
@@ -131,10 +136,15 @@
 
 <!-- Expiring Medicines Report -->
 <?php if (($reportType ?? 'daily') === 'expiring'): ?>
-<section class="panel panel-spaced">
-    <header class="panel-header">
-        <h2>Expiring Medicines Report</h2>
-        <p>Medicines expiring within the next 90 days</p>
+<section class="panel panel-spaced" id="expiringMedicinesReport">
+    <header class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2>Expiring Medicines Report</h2>
+            <p>Medicines expiring within the next 90 days</p>
+        </div>
+        <button onclick="printReport('expiringMedicinesReport')" class="btn-print" style="padding: 0.5rem 1rem; background: #3b82f6; color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+            🖨️ Print Report
+        </button>
     </header>
     <div class="stack">
         <div class="table-container">
@@ -252,7 +262,172 @@ function viewMedicine(medicineId) {
 document.addEventListener('DOMContentLoaded', function() {
     updateReportType();
 });
+
+function printReport(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (!section) {
+        alert('Report section not found');
+        return;
+    }
+    
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    
+    // Get the report title and date range
+    const title = section.querySelector('h2')?.textContent || 'Pharmacy Report';
+    const subtitle = section.querySelector('p')?.textContent || '';
+    const printDate = new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    // Get table HTML
+    const table = section.querySelector('table');
+    if (!table) {
+        alert('No data to print');
+        return;
+    }
+    
+    // Create print-friendly HTML
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>${title} - HMS</title>
+            <style>
+                @media print {
+                    @page {
+                        size: A4 landscape;
+                        margin: 1cm;
+                    }
+                    body {
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .no-print {
+                        display: none !important;
+                    }
+                }
+                body {
+                    font-family: Arial, sans-serif;
+                    font-size: 11px;
+                    line-height: 1.4;
+                    color: #000;
+                    margin: 0;
+                    padding: 20px;
+                }
+                .print-header {
+                    text-align: center;
+                    border-bottom: 3px solid #000;
+                    padding-bottom: 15px;
+                    margin-bottom: 20px;
+                }
+                .print-header h1 {
+                    margin: 0;
+                    font-size: 24px;
+                    color: #000;
+                    font-weight: bold;
+                }
+                .print-header p {
+                    margin: 5px 0;
+                    font-size: 12px;
+                    color: #666;
+                }
+                .print-date {
+                    text-align: right;
+                    margin-bottom: 10px;
+                    font-size: 10px;
+                    color: #666;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 15px 0;
+                }
+                table th {
+                    background: #f0f0f0;
+                    padding: 8px;
+                    text-align: left;
+                    border: 1px solid #000;
+                    font-weight: 600;
+                    font-size: 10px;
+                }
+                table td {
+                    padding: 6px 8px;
+                    border: 1px solid #ccc;
+                    font-size: 10px;
+                }
+                .badge {
+                    padding: 2px 6px;
+                    border-radius: 3px;
+                    font-size: 9px;
+                    font-weight: 600;
+                    display: inline-block;
+                }
+                .badge-success {
+                    background: #d4edda;
+                    color: #155724;
+                }
+                .badge-danger {
+                    background: #f8d7da;
+                    color: #721c24;
+                }
+                .badge-warning {
+                    background: #fff3cd;
+                    color: #856404;
+                }
+                .badge-info {
+                    background: #d1ecf1;
+                    color: #0c5460;
+                }
+                .print-footer {
+                    margin-top: 30px;
+                    padding-top: 15px;
+                    border-top: 1px solid #ccc;
+                    text-align: center;
+                    font-size: 9px;
+                    color: #666;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="print-header">
+                <h1>HOSPITAL MANAGEMENT SYSTEM</h1>
+                <p>${title}</p>
+                ${subtitle ? `<p>${subtitle}</p>` : ''}
+            </div>
+            <div class="print-date">
+                Printed on: ${printDate}
+            </div>
+            ${table.outerHTML}
+            <div class="print-footer">
+                <p>This is a computer-generated document. No signature required.</p>
+                <p>For inquiries, please contact the pharmacy department.</p>
+            </div>
+        </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    
+    // Wait for content to load, then print
+    setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+    }, 250);
+}
 </script>
+
+<style>
+@media print {
+    .btn-print, .panel-header button, .no-print {
+        display: none !important;
+    }
+}
+</style>
 
 <?= $this->endSection() ?>
 

@@ -303,6 +303,7 @@
                         <th>Order Date</th>
                         <th>Status</th>
                         <th>Reference Code</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -337,11 +338,25 @@
                                         <span style="color: #94a3b8;">—</span>
                                     <?php endif; ?>
                                 </td>
+                                <td>
+                                    <?php if ($status === 'pending'): ?>
+                                        <button onclick="markAsDelivered(<?= $order['id'] ?>)" class="btn-xs btn-success" style="padding: 0.5rem 1rem; background: #10b981; color: white; border: none; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 600; cursor: pointer;">
+                                            Mark as Delivered
+                                        </button>
+                                    <?php elseif ($status === 'delivered'): ?>
+                                        <span style="color: #10b981; font-size: 0.875rem; font-weight: 600;">✓ Delivered</span>
+                                        <?php if (!empty($order['delivered_at'])): ?>
+                                            <br><small style="color: #64748b;"><?= date('M j, Y', strtotime($order['delivered_at'])) ?></small>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <span style="color: #64748b; font-size: 0.875rem;">—</span>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="7" style="padding: 2rem; text-align: center; color: #64748b;">
+                            <td colspan="8" style="padding: 2rem; text-align: center; color: #64748b;">
                                 No orders found
                             </td>
                         </tr>
@@ -773,6 +788,35 @@ function submitOrder(event) {
     .catch(error => {
         console.error('Error:', error);
         alert('Error creating order');
+    });
+}
+
+// Mark order as delivered
+function markAsDelivered(orderId) {
+    if (!confirm('Mark this order as delivered? This will update the inventory stock.')) {
+        return;
+    }
+    
+    fetch('<?= base_url('admin/pharmacy-inventory/mark-delivered') ?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ order_id: orderId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Order marked as delivered! Stock has been updated.');
+            location.reload();
+        } else {
+            alert('Error: ' + (data.message || 'Failed to mark order as delivered'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error marking order as delivered');
     });
 }
 </script>

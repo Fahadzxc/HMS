@@ -57,34 +57,32 @@
             </div>
         </div>
 
-        <div class="table-container">
-            <table class="data-table">
+        <div class="table-container" style="overflow-x: auto; width: 100%;">
+            <table class="data-table" style="width: 100%; table-layout: fixed;">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Patient</th>
-                        <th>Doctor</th>
-                        <th>Room</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                        <th>Notes</th>
-                        <th>Actions</th>
+                        <th style="width: 50px;">ID</th>
+                        <th style="width: 100px;">Date</th>
+                        <th style="width: 80px;">Time</th>
+                        <th style="width: 140px;">Patient</th>
+                        <th style="width: 140px;">Doctor</th>
+                        <th style="width: 100px;">Type</th>
+                        <th style="width: 100px;">Status</th>
+                        <th style="width: 100px; text-align: left;">Notes</th>
+                        <th style="width: 120px; text-align: center;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (!empty($appointments)): ?>
                         <?php foreach ($appointments as $appointment): ?>
                             <tr data-id="<?= $appointment['id'] ?>">
-                                <td><?= $appointment['id'] ?></td>
-                                <td><?= date('M j, Y', strtotime($appointment['appointment_date'])) ?></td>
-                                <td><?= date('g:i A', strtotime($appointment['appointment_time'])) ?></td>
-                                <td><?= htmlspecialchars($appointment['patient_name'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($appointment['doctor_name'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($appointment['room_number'] ?? '—') ?></td>
-                                <td><?= ucfirst($appointment['appointment_type']) ?></td>
-                                <td>
+                                <td style="width: 50px;"><?= $appointment['id'] ?></td>
+                                <td style="width: 100px;"><?= date('M j, Y', strtotime($appointment['appointment_date'])) ?></td>
+                                <td style="width: 80px;"><?= date('g:i A', strtotime($appointment['appointment_time'])) ?></td>
+                                <td style="width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<?= htmlspecialchars($appointment['patient_name'] ?? 'N/A') ?>"><?= htmlspecialchars($appointment['patient_name'] ?? 'N/A') ?></td>
+                                <td style="width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<?= htmlspecialchars($appointment['doctor_name'] ?? 'N/A') ?>"><?= htmlspecialchars($appointment['doctor_name'] ?? 'N/A') ?></td>
+                                <td style="width: 100px;"><?= ucfirst($appointment['appointment_type']) ?></td>
+                                <td style="width: 100px;">
                                     <span class="badge badge<?= 
                                         $appointment['status'] === 'confirmed' ? '-success' : 
                                         ($appointment['status'] === 'scheduled' ? '-warning' : 
@@ -93,8 +91,8 @@
                                         <?= ucfirst($appointment['status']) ?>
                                     </span>
                                 </td>
-                                <td><?= htmlspecialchars($appointment['notes'] ?? '—') ?></td>
-                                <td class="actions-cell">
+                                <td style="width: 100px; word-wrap: break-word; text-align: left; font-size: 0.875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<?= htmlspecialchars($appointment['notes'] ?? '—') ?>"><?= htmlspecialchars($appointment['notes'] ?? '—') ?></td>
+                                <td class="actions-cell" style="width: 120px; white-space: nowrap; text-align: center;">
                                     <a href="#" class="action-link" onclick="viewAppointment(<?= $appointment['id'] ?>); return false;">View</a>
                                     <a href="#" class="action-link" onclick="editAppointment(<?= $appointment['id'] ?>); return false;">Edit</a>
                                     <a href="#" class="action-link action-delete" onclick="deleteAppointment(<?= $appointment['id'] ?>); return false;">Delete</a>
@@ -166,16 +164,16 @@
     padding: 0;
     border-radius: 8px;
     width: 90%;
-    max-width: 600px;
-    max-height: 85vh;
-    overflow-y: auto;
+    max-width: 500px;
+    max-height: fit-content;
+    overflow: visible;
 }
 
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1.25rem;
     border-bottom: 1px solid #e2e8f0;
     background: #f8fafc;
 }
@@ -183,6 +181,7 @@
 .modal-header h3 {
     margin: 0;
     color: #1e293b;
+    font-size: 1rem;
 }
 
 .modal-close {
@@ -199,7 +198,7 @@
 }
 
 .modal-body {
-    padding: 1.5rem;
+    padding: 1rem 1.5rem;
 }
 
 .modal-footer {
@@ -274,20 +273,22 @@
 
 .view-row {
     display: flex;
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
     border-bottom: 1px solid #f1f5f9;
 }
 
 .view-label {
     font-weight: 600;
     color: #64748b;
-    width: 120px;
+    min-width: 80px;
     flex-shrink: 0;
+    font-size: 0.8125rem;
 }
 
 .view-value {
     color: #1e293b;
+    font-size: 0.8125rem;
 }
 </style>
 
@@ -368,15 +369,6 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Room</label>
-                    <select id="editRoom" name="room_id">
-                        <option value="">Select Room (Optional)</option>
-                        <?php foreach (($rooms ?? []) as $room): ?>
-                            <option value="<?= $room['id'] ?>"><?= esc($room['room_number']) ?> - <?= esc($room['room_type']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group">
                     <label>Notes</label>
                     <textarea id="editNotes" name="notes" rows="3" placeholder="Additional notes..."></textarea>
                 </div>
@@ -440,45 +432,39 @@ function viewAppointment(id) {
     };
     
     const html = `
-        <div class="view-row">
-            <span class="view-label">ID:</span>
-            <span class="view-value">#${apt.id}</span>
-        </div>
-        <div class="view-row">
-            <span class="view-label">Date:</span>
-            <span class="view-value">${formatDate(apt.appointment_date)}</span>
-        </div>
-        <div class="view-row">
-            <span class="view-label">Time:</span>
-            <span class="view-value">${formatTime(apt.appointment_time)}</span>
-        </div>
-        <div class="view-row">
-            <span class="view-label">Patient:</span>
-            <span class="view-value">${apt.patient_name || 'N/A'}</span>
-        </div>
-        <div class="view-row">
-            <span class="view-label">Doctor:</span>
-            <span class="view-value">${apt.doctor_name || 'N/A'}</span>
-        </div>
-        <div class="view-row">
-            <span class="view-label">Room:</span>
-            <span class="view-value">${apt.room_number || '—'}</span>
-        </div>
-        <div class="view-row">
-            <span class="view-label">Type:</span>
-            <span class="view-value">${apt.appointment_type ? apt.appointment_type.charAt(0).toUpperCase() + apt.appointment_type.slice(1) : '—'}</span>
-        </div>
-        <div class="view-row">
-            <span class="view-label">Status:</span>
-            <span class="view-value">${statusBadge[apt.status] || apt.status}</span>
-        </div>
-        <div class="view-row">
-            <span class="view-label">Notes:</span>
-            <span class="view-value">${apt.notes || '—'}</span>
-        </div>
-        <div class="view-row" style="border-bottom: none;">
-            <span class="view-label">Created:</span>
-            <span class="view-value">${apt.created_at ? formatDate(apt.created_at) : '—'}</span>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1rem; font-size: 0.8125rem;">
+            <div class="view-row" style="margin: 0; padding: 0.4rem 0; border-bottom: 1px solid #e2e8f0;">
+                <span class="view-label">ID:</span>
+                <span class="view-value">#${apt.id}</span>
+            </div>
+            <div class="view-row" style="margin: 0; padding: 0.4rem 0; border-bottom: 1px solid #e2e8f0;">
+                <span class="view-label">Date:</span>
+                <span class="view-value">${formatDate(apt.appointment_date)}</span>
+            </div>
+            <div class="view-row" style="margin: 0; padding: 0.4rem 0; border-bottom: 1px solid #e2e8f0;">
+                <span class="view-label">Time:</span>
+                <span class="view-value">${formatTime(apt.appointment_time)}</span>
+            </div>
+            <div class="view-row" style="margin: 0; padding: 0.4rem 0; border-bottom: 1px solid #e2e8f0;">
+                <span class="view-label">Type:</span>
+                <span class="view-value">${apt.appointment_type ? apt.appointment_type.charAt(0).toUpperCase() + apt.appointment_type.slice(1) : '—'}</span>
+            </div>
+            <div class="view-row" style="margin: 0; padding: 0.4rem 0; border-bottom: 1px solid #e2e8f0; grid-column: 1 / -1;">
+                <span class="view-label">Patient:</span>
+                <span class="view-value">${apt.patient_name || 'N/A'}</span>
+            </div>
+            <div class="view-row" style="margin: 0; padding: 0.4rem 0; border-bottom: 1px solid #e2e8f0; grid-column: 1 / -1;">
+                <span class="view-label">Doctor:</span>
+                <span class="view-value">${apt.doctor_name || 'N/A'}</span>
+            </div>
+            <div class="view-row" style="margin: 0; padding: 0.4rem 0; border-bottom: 1px solid #e2e8f0; grid-column: 1 / -1;">
+                <span class="view-label">Status:</span>
+                <span class="view-value">${statusBadge[apt.status] || apt.status}</span>
+            </div>
+            <div class="view-row" style="margin: 0; padding: 0.4rem 0; border-bottom: none; grid-column: 1 / -1;">
+                <span class="view-label">Notes:</span>
+                <span class="view-value">${apt.notes || '—'}</span>
+            </div>
         </div>
     `;
     
@@ -497,7 +483,6 @@ function editAppointment(id) {
     document.getElementById('editDoctor').value = apt.doctor_id;
     document.getElementById('editType').value = apt.appointment_type;
     document.getElementById('editStatus').value = apt.status;
-    document.getElementById('editRoom').value = apt.room_id || '';
     document.getElementById('editNotes').value = apt.notes || '';
     
     document.getElementById('editModal').style.display = 'block';

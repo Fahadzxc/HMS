@@ -27,9 +27,6 @@
             <p>Track and manage medicine orders from suppliers</p>
         </div>
         <div style="display: flex; gap: 0.75rem;">
-            <button onclick="processDeliveredOrders()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 0.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
-                <span>🔄</span> Update Stock from Delivered Orders
-            </button>
             <button onclick="openCreateOrderModal()" style="padding: 0.75rem 1.5rem; background: #3b82f6; color: white; border: none; border-radius: 0.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
                 <span>+</span> Create Order
             </button>

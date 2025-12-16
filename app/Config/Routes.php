@@ -151,6 +151,9 @@ $routes->get('admin/patients/edit/(:num)', 'Admin\\Patients::edit/$1');
 $routes->post('admin/patients/update/(:num)', 'Admin\\Patients::update/$1');
 $routes->post('admin/patients/delete/(:num)', 'Admin\\Patients::delete/$1');
 $routes->get('admin/doctors', 'Admin\\Doctors::index');
+$routes->get('admin/doctors/schedule/(:num)', 'Admin\\Doctors::schedule/$1');
+$routes->post('admin/doctors/saveSchedule', 'Admin\\Doctors::saveSchedule');
+$routes->get('admin/doctors/getRecurringSchedules/(:num)', 'Admin\\Doctors::getRecurringSchedules/$1');
 $routes->get('admin/nurses', 'Admin\\Nurses::index');
 $routes->post('admin/nurses/createSchedule', 'Admin\\Nurses::createSchedule');
 $routes->get('admin/nurses/getSchedule/(:num)', 'Admin\\Nurses::getSchedule/$1');
@@ -161,6 +164,7 @@ $routes->get('admin/lab/requests', 'Admin\\Lab\\Requests::index');
 $routes->get('admin/pharmacy-inventory', 'Admin\\Pharmacy::index');
 $routes->get('admin/pharmacy-inventory/details/(:num)', 'Admin\\Pharmacy::getMedicineDetails/$1');
 $routes->post('admin/pharmacy-inventory/create-order', 'Admin\\Pharmacy::createOrder');
+$routes->post('admin/pharmacy-inventory/mark-delivered', 'Admin\\Pharmacy::markAsDelivered');
 $routes->get('admin/lab/results', 'Admin\\Lab\\Results::index');
 $routes->get('admin/lab/staff', 'Admin\\Lab\\Staff::index');
 $routes->get('admin/lab/departments', 'Admin\\Lab\\Departments::index');
@@ -199,9 +203,12 @@ $routes->post('admin/admissions/update', 'Admin\\Admissions::update');
 $routes->post('admin/admissions/discharge/(:num)', 'Admin\\Admissions::discharge/$1');
 $routes->post('admin/admissions/delete/(:num)', 'Admin\\Admissions::delete/$1');
 
-// Admin Walk In (Lab tests without doctor consultation)
-$routes->get('admin/walkin', 'Admin\\WalkIn::index');
-$routes->post('admin/walkin/create', 'Admin\\WalkIn::create');
+// Admin Walk In (Lab tests without doctor consultation) - Moved to Laboratory section
+$routes->get('admin/lab/walkin', 'Admin\\Lab\\WalkIn::index');
+$routes->post('admin/lab/walkin/create', 'Admin\\Lab\\WalkIn::create');
+$routes->get('admin/lab/walkin/getTestInfo', 'Admin\\Lab\\WalkIn::getTestInfo');
+// Legacy route redirect for backward compatibility
+$routes->get('admin/walkin', 'Admin\\Lab\\WalkIn::index');
 
 // Admin Rooms
 $routes->get('admin/rooms', 'Admin\\Rooms::index');

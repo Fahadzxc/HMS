@@ -60,9 +60,7 @@
                         <th>Time</th>
                         <th>Patient</th>
                         <th>Doctor</th>
-                        <th>Room</th>
                         <th>Status</th>
-                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -72,7 +70,6 @@
                                 <td><?= date('g:i A', strtotime($followup['appointment_time'])) ?></td>
                                 <td><?= htmlspecialchars($followup['patient_name'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($followup['doctor_name'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($followup['room_number'] ?? '—') ?></td>
                                 <td>
                                     <span class="badge badge-<?= 
                                         $followup['status'] === 'confirmed' ? 'success' : 
@@ -82,18 +79,11 @@
                                         <?= strtoupper($followup['status']) ?>
                                     </span>
                                 </td>
-                                <td>
-                                    <?php if ($followup['status'] === 'scheduled'): ?>
-                                        <a href="#" class="link-primary" onclick="checkIn(<?= $followup['id'] ?>)">Check In</a>
-                                    <?php else: ?>
-                                        <span class="text-muted">—</span>
-                                    <?php endif; ?>
-                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" class="text-center text-muted">No follow-up appointments scheduled for today</td>
+                            <td colspan="4" class="text-center text-muted">No follow-up appointments scheduled for today</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -127,7 +117,6 @@
                         <th>Patient</th>
                         <th>Doctor</th>
                         <th>Status</th>
-                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -148,18 +137,11 @@
                                         <?= strtoupper($followup['status']) ?>
                                     </span>
                                 </td>
-                                <td>
-                                    <?php if ($followup['status'] === 'scheduled'): ?>
-                                        <a href="#" class="link-primary" onclick="checkIn(<?= $followup['id'] ?>)">Check In</a>
-                                    <?php else: ?>
-                                        <a href="#" class="link-primary" onclick="editFollowup(<?= $followup['id'] ?>)">Edit</a>
-                                    <?php endif; ?>
-                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="7" class="text-center text-muted">No upcoming follow-up appointments</td>
+                            <td colspan="6" class="text-center text-muted">No upcoming follow-up appointments</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

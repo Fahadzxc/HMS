@@ -14,6 +14,12 @@
                     <span class="date-text"> • Date: <?= date('F j, Y') ?></span>
                 </p>
             </div>
+            <div>
+                <button id="btnOpenWalkInModal" class="btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <span>➕</span>
+                    Create Walk-In Request
+                </button>
+            </div>
         </div>
     </header>
     <div class="stack">
@@ -58,6 +64,93 @@
     </div>
 </section>
 
+<!-- Walk-In Lab Tests Section -->
+<section class="panel panel-spaced">
+    <header class="panel-header">
+        <h2>Walk In - Lab Tests</h2>
+        <p style="margin-top: 0.5rem; color: #64748b;">Manage lab test requests for walk-in patients (without doctor consultation)</p>
+    </header>
+    <div class="stack">
+        <div class="card table-header">
+            <div class="row between">
+                <span>Walk-In Lab Requests</span>
+                <span><?= count($walkInRequests ?? []) ?> total</span>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date</th>
+                        <th>Patient</th>
+                        <th>Contact</th>
+                        <th>Test Type</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php 
+                        $hasData = !empty($walkInRequests) || !empty($labAppointments);
+                    ?>
+                    <?php if (!empty($walkInRequests)): ?>
+                        <?php foreach ($walkInRequests as $request): ?>
+                            <tr>
+                                <td>REQ-<?= str_pad((string)($request['id'] ?? 0), 6, '0', STR_PAD_LEFT) ?></td>
+                                <td><?= !empty($request['requested_at']) ? date('M d, Y H:i', strtotime($request['requested_at'])) : '—' ?></td>
+                                <td><?= esc($request['patient_name'] ?? 'Unknown') ?></td>
+                                <td><?= esc($request['patient_contact'] ?? '—') ?></td>
+                                <td><?= esc($request['test_type'] ?? '—') ?></td>
+                                <td>
+                                    <span class="badge badge-<?= ($request['priority'] ?? 'normal') === 'critical' ? 'danger' : (($request['priority'] ?? 'normal') === 'high' ? 'warning' : 'info') ?>">
+                                        <?= ucfirst($request['priority'] ?? 'normal') ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-<?= ($request['status'] ?? 'pending') === 'completed' ? 'success' : (($request['status'] ?? 'pending') === 'in_progress' ? 'warning' : 'secondary') ?>">
+                                        <?= ucfirst(str_replace('_', ' ', $request['status'] ?? 'pending')) ?>
+                                    </span>
+                                </td>
+                                <td><?= esc($request['notes'] ?? '—') ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    <?php if (!empty($labAppointments)): ?>
+                        <?php foreach ($labAppointments as $appointment): ?>
+                            <tr>
+                                <td>APT-<?= str_pad((string)($appointment['id'] ?? 0), 6, '0', STR_PAD_LEFT) ?></td>
+                                <td><?= !empty($appointment['appointment_date']) ? date('M d, Y', strtotime($appointment['appointment_date'])) . ' ' . (!empty($appointment['appointment_time']) ? date('H:i', strtotime($appointment['appointment_time'])) : '') : '—' ?></td>
+                                <td><?= esc($appointment['patient_name'] ?? 'Unknown') ?></td>
+                                <td><?= esc($appointment['patient_contact'] ?? '—') ?></td>
+                                <td><?= esc($appointment['notes'] ?? 'Lab Test Appointment') ?></td>
+                                <td>
+                                    <span class="badge badge-info">Normal</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-<?= ($appointment['status'] ?? 'scheduled') === 'completed' ? 'success' : (($appointment['status'] ?? 'scheduled') === 'confirmed' ? 'warning' : 'secondary') ?>">
+                                        <?= ucfirst($appointment['status'] ?? 'scheduled') ?>
+                                    </span>
+                                </td>
+                                <td><?= esc($appointment['notes'] ?? '—') ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    <?php if (!$hasData): ?>
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 2rem;">
+                                <p>No walk-in lab requests found.</p>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
 <section class="panel panel-spaced">
     <header class="panel-header">
         <h2>Recent Test Requests</h2>
@@ -73,7 +166,6 @@
                     <th>Priority</th>
                     <th>Status</th>
                     <th>Date Requested</th>
-                    <th>Branch</th>
                 </tr>
             </thead>
             <tbody>
@@ -86,12 +178,11 @@
                             <td><span class="badge badge-priority badge-<?= esc($request['priority']) ?>"><?= ucfirst($request['priority'] ?? 'normal') ?></span></td>
                             <td><span class="badge badge-status badge-<?= esc($request['status']) ?>"><?= ucfirst(str_replace('_', ' ', $request['status'] ?? 'pending')) ?></span></td>
                             <td><?= !empty($request['requested_at']) ? date('M j, Y g:i A', strtotime($request['requested_at'])) : '—' ?></td>
-                            <td><?= esc($request['branch_name'] ?? '—') ?></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="7" class="text-center text-muted">No recent requests.</td>
+                        <td colspan="6" class="text-center text-muted">No recent requests.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -111,9 +202,7 @@
                     <th>Patient</th>
                     <th>Test Type</th>
                     <th>Result Summary</th>
-                    <th>Released By</th>
                     <th>Released</th>
-                    <th>Status</th>
                     <th>Critical</th>
                 </tr>
             </thead>
@@ -124,15 +213,13 @@
                             <td><?= esc($result['patient_name'] ?? 'N/A') ?></td>
                             <td><?= esc($result['test_type'] ?? '—') ?></td>
                             <td><?= esc($result['result_summary'] ?? '—') ?></td>
-                            <td><?= esc($result['released_by_name'] ?? '—') ?></td>
                             <td><?= !empty($result['released_at']) ? date('M j, Y g:i A', strtotime($result['released_at'])) : '—' ?></td>
-                            <td><span class="badge badge-status badge-<?= esc($result['status']) ?>"><?= ucfirst(str_replace('_', ' ', $result['status'] ?? 'draft')) ?></span></td>
                             <td><?= !empty($result['critical_flag']) ? '<span class="badge badge-critical">Yes</span>' : 'No' ?></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="7" class="text-center text-muted">No recent results.</td>
+                        <td colspan="5" class="text-center text-muted">No recent results.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -159,7 +246,6 @@
                             <th>Priority</th>
                             <th>Status</th>
                             <th>Date Requested</th>
-                            <th>Branch</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -172,12 +258,11 @@
                                     <td><span class="badge badge-priority badge-<?= esc($request['priority']) ?>"><?= ucfirst($request['priority'] ?? 'normal') ?></span></td>
                                     <td><span class="badge badge-status badge-<?= esc($request['status']) ?>"><?= ucfirst(str_replace('_', ' ', $request['status'] ?? 'pending')) ?></span></td>
                                     <td><?= !empty($request['requested_at']) ? date('M j, Y g:i A', strtotime($request['requested_at'])) : '—' ?></td>
-                                    <td><?= esc($request['branch_name'] ?? '—') ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="7" class="text-center text-muted">No requests found.</td>
+                                <td colspan="6" class="text-center text-muted">No requests found.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -246,10 +331,6 @@
 
                             <footer class="lab-result-detail-footer">
                                 <div>
-                                    <span class="lab-result-detail-label">Released By</span>
-                                    <p class="lab-result-detail-text mb-0"><?= esc($result['released_by_name'] ?? 'Not assigned') ?></p>
-                                </div>
-                                <div>
                                     <span class="lab-result-detail-label">Last Updated</span>
                                     <p class="lab-result-detail-text mb-0">
                                         <?= !empty($result['updated_at']) ? date('M j, Y g:i A', strtotime($result['updated_at'])) : '—' ?>
@@ -304,6 +385,213 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeAllRequestsModal();
         closeAllResultsModal();
+        closeWalkInModal();
+    }
+});
+</script>
+
+<!-- Walk-In Request Modal -->
+<div id="walkInModal" class="modal" aria-hidden="true" style="display:none;">
+    <div class="modal-backdrop" id="walkInModalBackdrop"></div>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="walkInModalTitle">
+        <header class="panel-header modal-header">
+            <h2 id="walkInModalTitle">New Walk-In Lab Request</h2>
+            <button id="btnCloseWalkInModal" class="icon-button" aria-label="Close">×</button>
+        </header>
+        <form id="walkInForm" class="modal-body" method="post" action="<?= site_url('admin/lab/walkin/create') ?>">
+            <?= csrf_field() ?>
+            <div class="form-grid">
+                <div class="form-field">
+                    <label>Patient <span class="req">*</span></label>
+                    <select name="patient_id" id="walkInPatient" required>
+                        <option value="">Select Patient</option>
+                        <?php if (!empty($patients)): ?>
+                            <?php foreach ($patients as $patient): ?>
+                                <option value="<?= $patient['id'] ?>"><?= esc($patient['full_name']) ?> - <?= esc($patient['contact'] ?? '') ?></option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                    <div class="error" data-error-for="patient_id"></div>
+                </div>
+                <div class="form-field">
+                    <label>Test Type <span class="req">*</span></label>
+                    <select name="test_type" id="walkInTestType" required>
+                        <option value="">Select test type...</option>
+                        <optgroup label="Blood Tests">
+                            <option value="Complete Blood Count (CBC)">Complete Blood Count (CBC)</option>
+                            <option value="Blood Glucose">Blood Glucose</option>
+                            <option value="Lipid Profile">Lipid Profile</option>
+                            <option value="Liver Function Test (LFT)">Liver Function Test (LFT)</option>
+                            <option value="Kidney Function Test (KFT)">Kidney Function Test (KFT)</option>
+                            <option value="Thyroid Function Test">Thyroid Function Test</option>
+                            <option value="Hemoglobin A1C">Hemoglobin A1C</option>
+                            <option value="Blood Culture">Blood Culture</option>
+                            <option value="Blood Typing">Blood Typing</option>
+                            <option value="Coagulation Profile">Coagulation Profile</option>
+                        </optgroup>
+                        <optgroup label="Urine Tests">
+                            <option value="Urine Analysis">Urine Analysis</option>
+                            <option value="Urine Culture">Urine Culture</option>
+                            <option value="24-Hour Urine Collection">24-Hour Urine Collection</option>
+                            <option value="Urine Pregnancy Test">Urine Pregnancy Test</option>
+                        </optgroup>
+                        <optgroup label="Imaging Tests">
+                            <option value="X-Ray">X-Ray</option>
+                            <option value="CT Scan">CT Scan</option>
+                            <option value="MRI">MRI</option>
+                            <option value="Ultrasound">Ultrasound</option>
+                            <option value="Echocardiogram">Echocardiogram</option>
+                            <option value="Mammography">Mammography</option>
+                        </optgroup>
+                        <optgroup label="Microbiology">
+                            <option value="Sputum Culture">Sputum Culture</option>
+                            <option value="Stool Culture">Stool Culture</option>
+                            <option value="Throat Swab">Throat Swab</option>
+                            <option value="Wound Culture">Wound Culture</option>
+                        </optgroup>
+                        <optgroup label="Other Tests">
+                            <option value="ECG (Electrocardiogram)">ECG (Electrocardiogram)</option>
+                            <option value="Pulmonary Function Test">Pulmonary Function Test</option>
+                            <option value="Bone Density Scan">Bone Density Scan</option>
+                            <option value="Pap Smear">Pap Smear</option>
+                            <option value="Biopsy">Biopsy</option>
+                            <option value="Other">Other (Specify in Notes)</option>
+                        </optgroup>
+                    </select>
+                    <div id="walkInTestInfo" style="margin-top: 8px; padding: 8px; background: #f0f9ff; border-radius: 4px; display: none;">
+                        <div id="walkInTestPrice" style="font-weight: 600; color: #10b981; margin-bottom: 4px;"></div>
+                        <div id="walkInTestSpecimen" style="font-size: 12px; color: #666;"></div>
+                    </div>
+                    <div class="error" data-error-for="test_type"></div>
+                </div>
+                <div class="form-field">
+                    <label>Priority</label>
+                    <select name="priority" id="walkInPriority">
+                        <option value="normal">Normal</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+                <div class="form-field form-field--full">
+                    <label>Notes</label>
+                    <textarea name="notes" id="walkInNotes" rows="3" placeholder="Additional notes or instructions..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnCancelWalkIn" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary">Create Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Walk-In Modal Functions
+document.addEventListener('DOMContentLoaded', function() {
+    const walkInModal = document.getElementById('walkInModal');
+    const openWalkInBtn = document.getElementById('btnOpenWalkInModal');
+    const closeWalkInBtn = document.getElementById('btnCloseWalkInModal');
+    const walkInBackdrop = document.getElementById('walkInModalBackdrop');
+    const walkInForm = document.getElementById('walkInForm');
+
+    function openWalkInModal() {
+        if (walkInModal) {
+            walkInModal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeWalkInModal() {
+        if (walkInModal) {
+            walkInModal.style.display = 'none';
+            document.body.style.overflow = '';
+            if (walkInForm) {
+                walkInForm.reset();
+                // Reset test info display
+                const testInfoDiv = document.getElementById('walkInTestInfo');
+                if (testInfoDiv) {
+                    testInfoDiv.style.display = 'none';
+                }
+            }
+        }
+    }
+
+    if (openWalkInBtn) openWalkInBtn.addEventListener('click', openWalkInModal);
+    if (closeWalkInBtn) closeWalkInBtn.addEventListener('click', closeWalkInModal);
+    if (walkInBackdrop) walkInBackdrop.addEventListener('click', closeWalkInModal);
+
+    // Update test info when test type is selected
+    const testTypeSelect = document.getElementById('walkInTestType');
+    const testInfoDiv = document.getElementById('walkInTestInfo');
+    const testPriceDiv = document.getElementById('walkInTestPrice');
+    const testSpecimenDiv = document.getElementById('walkInTestSpecimen');
+    
+    if (testTypeSelect && testInfoDiv) {
+        testTypeSelect.addEventListener('change', async function() {
+            const testType = this.value;
+            if (!testType) {
+                testInfoDiv.style.display = 'none';
+                return;
+            }
+            
+            // Fetch test info from server
+            try {
+                const response = await fetch('<?= base_url('admin/lab/walkin/getTestInfo') ?>?test_type=' + encodeURIComponent(testType));
+                const data = await response.json();
+                
+                if (data.success && data.test) {
+                    testPriceDiv.textContent = 'Price: ₱' + parseFloat(data.test.price || 0).toFixed(2);
+                    if (data.test.requires_specimen == 1) {
+                        testSpecimenDiv.innerHTML = '<span style="color: #f59e0b;">⚠️ Requires specimen collection by nurse</span>';
+                    } else {
+                        testSpecimenDiv.innerHTML = '<span style="color: #10b981;">✓ No specimen required</span>';
+                    }
+                    testInfoDiv.style.display = 'block';
+                } else {
+                    testInfoDiv.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error fetching test info:', error);
+                testInfoDiv.style.display = 'none';
+            }
+        });
+    }
+
+    // Form submission
+    if (walkInForm) {
+        walkInForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitBtn = walkInForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating...';
+
+            try {
+                const formData = new FormData(walkInForm);
+                const response = await fetch(walkInForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(data.message || 'Walk-in lab request created successfully!');
+                    closeWalkInModal();
+                    location.reload();
+                } else {
+                    alert(data.message || 'Error creating request. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Network error. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Request';
+            }
+        });
     }
 });
 </script>

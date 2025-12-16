@@ -111,7 +111,7 @@
                     $statusClass = 'badge-green';
                     $statusText = 'Active';
                     if (isset($p['status'])) {
-                        switch($p['status']) {
+                        switch(strtolower($p['status'])) {
                             case 'discharged':
                                 $statusClass = 'badge-gray';
                                 $statusText = 'Discharged';
@@ -119,6 +119,14 @@
                             case 'transferred':
                                 $statusClass = 'badge-yellow';
                                 $statusText = 'Transferred';
+                                break;
+                            case 'inactive':
+                                $statusClass = 'badge-red';
+                                $statusText = 'Inactive';
+                                break;
+                            case 'active':
+                                $statusClass = 'badge-green';
+                                $statusText = 'Active';
                                 break;
                         }
                     }

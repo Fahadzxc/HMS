@@ -145,6 +145,126 @@ class Nurse extends Controller
         
         $patients = $db->query($sql)->getResultArray();
         
+        // Update patient status and determine type (walk-in vs consultation) - same logic as reception
+        $billingModel = new \App\Models\BillingModel();
+        $today = date('Y-m-d');
+        
+        foreach ($patients as &$patient) {
+            // Only check status for outpatients (inpatients keep their status)
+            if (isset($patient['patient_type']) && strtolower($patient['patient_type']) === 'outpatient') {
+                // Skip if patient is discharged or transferred (keep those statuses)
+                if (isset($patient['status']) && in_array(strtolower($patient['status']), ['discharged', 'transferred'])) {
+                    continue;
+                }
+                
+                // Determine patient type: walk-in or consultation
+                $hasConsultation = $db->table('appointments')
+                    ->where('patient_id', $patient['id'])
+                    ->where('status !=', 'cancelled')
+                    ->where('appointment_type', 'consultation')
+                    ->countAllResults() > 0;
+                
+                $hasDoctor = $db->table('appointments')
+                    ->where('patient_id', $patient['id'])
+                    ->where('status !=', 'cancelled')
+                    ->where('doctor_id IS NOT NULL', null, false)
+                    ->countAllResults() > 0;
+                
+                $isAdmitted = $db->table('admissions')
+                    ->where('patient_id', $patient['id'])
+                    ->where('status', 'Admitted')
+                    ->countAllResults() > 0;
+                
+                // Set patient type: walk-in if no consultation/doctor, consultation if has consultation/doctor
+                if ($hasConsultation || $hasDoctor) {
+                    $patient['visit_type'] = 'consultation';
+                } else {
+                    $patient['visit_type'] = 'walk-in';
+                }
+                
+                // Check if patient has paid bills and is a walk-in - keep as inactive
+                $hasPaidBills = $billingModel->where('patient_id', $patient['id'])
+                    ->where('status', 'paid')
+                    ->countAllResults() > 0;
+                
+                if ($hasPaidBills && !$hasConsultation && !$hasDoctor && !$isAdmitted) {
+                    // Walk-in patient with paid bills → INACTIVE
+                    $patient['status'] = 'inactive';
+                    continue; // Skip the appointment-based logic below
+                }
+                
+                // Check if patient has any appointments at all (not cancelled)
+                $hasAnyAppointment = $db->table('appointments')
+                    ->where('patient_id', $patient['id'])
+                    ->where('status !=', 'cancelled')
+                    ->countAllResults() > 0;
+                
+                if ($hasAnyAppointment) {
+                    // Patient has appointments - check for future follow-up
+                    $futureFollowUp = $db->table('appointments')
+                        ->where('patient_id', $patient['id'])
+                        ->where('appointment_type', 'follow-up')
+                        ->where('appointment_date >=', $today)
+                        ->where('status !=', 'cancelled')
+                        ->where('status !=', 'completed')
+                        ->get()
+                        ->getRowArray();
+                    
+                    if ($futureFollowUp) {
+                        // Has future follow-up → ACTIVE
+                        $patient['status'] = 'active';
+                    } else {
+                        // No future follow-up - check if has paid bills
+                        if ($hasPaidBills) {
+                            // Check for future appointments (consultation, etc.)
+                            $futureAppointment = $db->table('appointments')
+                                ->where('patient_id', $patient['id'])
+                                ->where('appointment_date >=', $today)
+                                ->where('status !=', 'cancelled')
+                                ->where('status !=', 'completed')
+                                ->get()
+                                ->getRowArray();
+                            
+                            if ($futureAppointment) {
+                                // Has paid bills but has future appointments → ACTIVE
+                                $patient['status'] = 'active';
+                            } else {
+                                // Has paid bills and no future appointments → INACTIVE
+                                $patient['status'] = 'inactive';
+                            }
+                        } else {
+                            // No paid bills - check for future appointments
+                            $futureAppointment = $db->table('appointments')
+                                ->where('patient_id', $patient['id'])
+                                ->where('appointment_date >=', $today)
+                                ->where('status !=', 'cancelled')
+                                ->where('status !=', 'completed')
+                                ->get()
+                                ->getRowArray();
+                            
+                            if ($futureAppointment) {
+                                // Has future appointment → ACTIVE
+                                $patient['status'] = 'active';
+                            } else {
+                                // Has past appointments but no future appointments → INACTIVE
+                                $patient['status'] = 'inactive';
+                            }
+                        }
+                    }
+                } else {
+                    // No appointments at all (newly created patient) → ACTIVE
+                    $patient['status'] = 'active';
+                }
+            } else {
+                // For inpatients, determine type based on admission
+                $patient['visit_type'] = 'inpatient';
+                
+                // Inpatients keep their status (active, discharged, etc.)
+                // Don't modify their status
+            }
+        }
+        unset($patient);
+        
         // Get pending discharge orders (inpatients with discharge ordered but not ready)
         $dischargeOrders = $db->table('admissions a')
             ->select('a.*, p.full_name as patient_name, p.contact, r.room_number, r.room_type, u.name as doctor_name, ord.name as ordered_by_name')
@@ -425,6 +545,75 @@ class Nurse extends Controller
         ";
         
         $patients = $db->query($sql)->getResultArray();
+        
+        // Apply same status logic as patients() method - filter out inactive patients
+        $billingModel = new \App\Models\BillingModel();
+        $today = date('Y-m-d');
+        
+        $activePatients = [];
+        foreach ($patients as $patient) {
+            // Only check status for outpatients (inpatients keep their status)
+            if (isset($patient['patient_type']) && strtolower($patient['patient_type']) === 'outpatient') {
+                // Skip if patient is discharged or transferred (keep those statuses)
+                if (isset($patient['status']) && in_array(strtolower($patient['status']), ['discharged', 'transferred'])) {
+                    continue; // Don't show discharged/transferred in treatment updates
+                }
+                
+                // Check if patient has paid bills and is a walk-in - keep as inactive
+                $hasPaidBills = $billingModel->where('patient_id', $patient['id'])
+                    ->where('status', 'paid')
+                    ->countAllResults() > 0;
+                
+                $hasConsultation = $db->table('appointments')
+                    ->where('patient_id', $patient['id'])
+                    ->where('status !=', 'cancelled')
+                    ->where('appointment_type', 'consultation')
+                    ->countAllResults() > 0;
+                
+                $hasDoctor = $db->table('appointments')
+                    ->where('patient_id', $patient['id'])
+                    ->where('status !=', 'cancelled')
+                    ->where('doctor_id IS NOT NULL', null, false)
+                    ->countAllResults() > 0;
+                
+                $isAdmitted = $db->table('admissions')
+                    ->where('patient_id', $patient['id'])
+                    ->where('status', 'Admitted')
+                    ->countAllResults() > 0;
+                
+                // If walk-in patient with paid bills, exclude from treatment updates
+                if ($hasPaidBills && !$hasConsultation && !$hasDoctor && !$isAdmitted) {
+                    continue; // Skip inactive walk-in patients
+                }
+                
+                // Check if patient has any appointments at all (not cancelled)
+                $hasAnyAppointment = $db->table('appointments')
+                    ->where('patient_id', $patient['id'])
+                    ->where('status !=', 'cancelled')
+                    ->countAllResults() > 0;
+                
+                if ($hasAnyAppointment) {
+                    // Patient has appointments - check for future follow-up
+                    $futureFollowUp = $db->table('appointments')
+                        ->where('patient_id', $patient['id'])
+                        ->where('appointment_type', 'follow-up')
+                        ->where('appointment_date >', $today)
+                        ->where('status !=', 'cancelled')
+                        ->get()
+                        ->getRowArray();
+                    
+                    if (!$futureFollowUp) {
+                        // Has appointments but no future follow-up → INACTIVE, exclude from treatment updates
+                        continue;
+                    }
+                }
+            }
+            
+            // Include this patient (active inpatient or active outpatient with follow-up)
+            $activePatients[] = $patient;
+        }
+        
+        $patients = $activePatients; // Replace with filtered list
 
         // Fetch prescriptions for these patients (latest first)
         $prescriptionsByPatient = [];
@@ -454,13 +643,45 @@ class Nurse extends Controller
                     }
                     
                     // Get pending and completed prescriptions for display sections
+                    // Only show prescriptions for INPATIENTS
                     $builder = $db->table('prescriptions p');
-                    $builder->select('p.*, pt.full_name as patient_name, u.name as doctor_name');
+                    $builder->select('p.*, pt.full_name as patient_name, pt.patient_type, u.name as doctor_name');
                     $builder->join('patients pt', 'pt.id = p.patient_id', 'left');
                     $builder->join('users u', 'u.id = p.doctor_id', 'left');
                     $builder->whereIn('p.patient_id', $patientIds);
+                    // Filter to only inpatients: patient_type = 'inpatient' OR has active admission
+                    $builder->groupStart();
+                    $builder->where('LOWER(pt.patient_type)', 'inpatient');
+                    $builder->orWhere('EXISTS(SELECT 1 FROM admissions a WHERE a.patient_id = pt.id AND a.status = "Admitted")', null, false);
+                    $builder->groupEnd();
                     $builder->orderBy('p.created_at', 'DESC');
                     $allPrescriptions = $builder->get()->getResultArray();
+                    
+                    // Additional filter: ensure we only show prescriptions for inpatients
+                    // (double-check in case patient_type is not set correctly)
+                    $allPrescriptions = array_filter($allPrescriptions, function($rx) use ($db) {
+                        $patientId = $rx['patient_id'] ?? 0;
+                        if (empty($patientId)) {
+                            return false;
+                        }
+                        
+                        // Check if patient is inpatient by type
+                        $patientType = strtolower($rx['patient_type'] ?? '');
+                        if ($patientType === 'inpatient') {
+                            return true;
+                        }
+                        
+                        // Check if patient has active admission
+                        $hasActiveAdmission = $db->table('admissions')
+                            ->where('patient_id', $patientId)
+                            ->where('status', 'Admitted')
+                            ->countAllResults() > 0;
+                        
+                        return $hasActiveAdmission;
+                    });
+                    
+                    // Re-index array after filtering
+                    $allPrescriptions = array_values($allPrescriptions);
                     
                     // Separate pending and completed, calculate duration progress
                     $pendingPrescriptions = [];
@@ -821,22 +1042,77 @@ class Nurse extends Controller
 
         if (!empty($medicationNames)) {
             $remainingNames = array_filter($medicationNames, function ($name) use ($stockMap) {
-                return !isset($stockMap['name:' . strtolower($name)]);
+                return !isset($stockMap['name:' . strtolower(trim($name))]);
             });
 
             if (!empty($remainingNames)) {
+                // Use case-insensitive matching for medication names
                 $nameRecords = $db->table('pharmacy_inventory')
-                    ->whereIn('name', $remainingNames)
                     ->get()
                     ->getResultArray();
 
+                // Build a lowercase lookup map
+                $inventoryMap = [];
                 foreach ($nameRecords as $record) {
-                    if (empty($record['name'])) {
-                        continue;
+                    if (!empty($record['name'])) {
+                        $normalized = strtolower(trim($record['name']));
+                        if (!isset($inventoryMap[$normalized])) {
+                            $inventoryMap[$normalized] = $record;
+                        }
                     }
-                    $key = 'name:' . strtolower(trim($record['name']));
-                    if (!isset($stockMap[$key])) {
-                        $stockMap[$key] = $this->formatStockRecord($record);
+                }
+
+                // Match prescription names to inventory (case-insensitive + partial matching)
+                foreach ($remainingNames as $prescriptionName) {
+                    $normalizedPrescription = strtolower(trim($prescriptionName));
+                    $matched = false;
+                    
+                    // Try exact match first
+                    if (isset($inventoryMap[$normalizedPrescription])) {
+                        $record = $inventoryMap[$normalizedPrescription];
+                        $key = 'name:' . $normalizedPrescription;
+                        if (!isset($stockMap[$key])) {
+                            $stockMap[$key] = $this->formatStockRecord($record);
+                        }
+                        $matched = true;
+                    } else {
+                        // Try partial matching - check if prescription name contains inventory name or vice versa
+                        foreach ($inventoryMap as $inventoryName => $record) {
+                            // Extract base name (remove dosage/strength info like "400mg", "500mg", etc.)
+                            $prescriptionBase = preg_replace('/\s*\d+\s*(mg|ml|g|tablet|tab|cap|capsule)\s*/i', '', $normalizedPrescription);
+                            $inventoryBase = preg_replace('/\s*\d+\s*(mg|ml|g|tablet|tab|cap|capsule)\s*/i', '', $inventoryName);
+                            
+                            // Check if base names match
+                            if ($prescriptionBase === $inventoryBase || 
+                                strpos($normalizedPrescription, $inventoryBase) !== false ||
+                                strpos($inventoryName, $prescriptionBase) !== false) {
+                                $key = 'name:' . $normalizedPrescription;
+                                if (!isset($stockMap[$key])) {
+                                    $stockMap[$key] = $this->formatStockRecord($record);
+                                }
+                                $matched = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // If still no match, try word-by-word matching
+                    if (!$matched) {
+                        $prescriptionWords = array_filter(explode(' ', $normalizedPrescription));
+                        foreach ($inventoryMap as $inventoryName => $record) {
+                            $inventoryWords = array_filter(explode(' ', $inventoryName));
+                            $commonWords = array_intersect($prescriptionWords, $inventoryWords);
+                            
+                            // If at least 2 words match or main word matches, consider it a match
+                            if (count($commonWords) >= 2 || 
+                                (count($prescriptionWords) > 0 && in_array($prescriptionWords[0], $inventoryWords))) {
+                                $key = 'name:' . $normalizedPrescription;
+                                if (!isset($stockMap[$key])) {
+                                    $stockMap[$key] = $this->formatStockRecord($record);
+                                }
+                                break;
+                            }
+                        }
                     }
                 }
             }

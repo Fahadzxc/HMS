@@ -37,7 +37,33 @@ class Accounts extends Controller
 				->where('status', 'active')
 				->findAll();
 			
+			$today = date('Y-m-d');
+			
 			foreach ($activeOutpatients as $patient) {
+				// First check if patient has any appointments at all
+				// If no appointments, they are newly created → keep as ACTIVE
+				$hasAnyAppointment = $db->table('appointments')
+					->where('patient_id', $patient['id'])
+					->where('status !=', 'cancelled')
+					->countAllResults() > 0;
+				
+				if (!$hasAnyAppointment) {
+					// Newly created patient with no appointments → keep ACTIVE
+					continue;
+				}
+				
+				// Check if patient has any future appointments (including follow-ups)
+				$hasFutureAppointment = $db->table('appointments')
+					->where('patient_id', $patient['id'])
+					->where('appointment_date >=', $today)
+					->where('status !=', 'cancelled')
+					->countAllResults() > 0;
+				
+				// If patient has future appointments, keep them active
+				if ($hasFutureAppointment) {
+					continue;
+				}
+				
 				// Check if patient has any paid bills
 				$paidBills = $billingModel->where('patient_id', $patient['id'])
 					->where('status', 'paid')
@@ -62,13 +88,13 @@ class Accounts extends Controller
 						->where('status', 'Admitted')
 						->countAllResults() > 0;
 					
-					// If walk-in patient with paid bills, set to inactive
+					// If walk-in patient with paid bills and no future appointments, set to inactive
 					if (!$hasConsultation && !$hasDoctor && !$isAdmitted) {
 						$patientModel->update($patient['id'], [
 							'status' => 'inactive',
 							'updated_at' => date('Y-m-d H:i:s')
 						]);
-						log_message('info', "Updated walk-in patient #{$patient['id']} to inactive (has paid bills)");
+						log_message('info', "Updated walk-in patient #{$patient['id']} to inactive (has paid bills and no future appointments)");
 					}
 				}
 			}
@@ -193,8 +219,148 @@ class Accounts extends Controller
 		$pendingAmount = $billingModel->selectSum('balance')->where('status', 'pending')->get()->getRowArray();
 		$overdueAmount = $billingModel->selectSum('balance')->where('status', 'overdue')->get()->getRowArray();
 		
-		// Get patients for dropdown
-		$patients = $patientModel->select('id, full_name, patient_id')->orderBy('full_name', 'ASC')->findAll();
+		// Get patients for dropdown - filter out fully paid outpatients unless they have future follow-ups
+		$db = \Config\Database::connect();
+		$today = date('Y-m-d');
+		
+		$allPatients = $patientModel->select('id, full_name, patient_id, patient_type, status')->orderBy('full_name', 'ASC')->findAll();
+		$patients = [];
+		
+		foreach ($allPatients as $patient) {
+			$patientType = strtolower($patient['patient_type'] ?? 'outpatient');
+			
+			// Always include inpatients (they may have ongoing bills)
+			if ($patientType === 'inpatient') {
+				$patients[] = $patient;
+				continue;
+			}
+			
+            // For outpatients: check if they have future follow-up appointments
+            $hasFutureFollowUp = $db->table('appointments')
+				->where('patient_id', $patient['id'])
+				->where('appointment_type', 'follow-up')
+				->where('appointment_date >=', $today)
+				->where('status !=', 'cancelled')
+				->where('status !=', 'completed')
+				->countAllResults() > 0;
+			
+			// If has future follow-up, always include
+			if ($hasFutureFollowUp) {
+				$patients[] = $patient;
+				continue;
+			}
+			
+			// Check if patient has any unpaid bills
+			$hasUnpaidBills = $billingModel->where('patient_id', $patient['id'])
+				->where('status !=', 'paid')
+				->where('balance >', 0)
+				->countAllResults() > 0;
+			
+			// Include if has unpaid bills
+			if ($hasUnpaidBills) {
+				$patients[] = $patient;
+				continue;
+			}
+
+			// Check if patient has unbilled items (appointments, prescriptions, lab tests)
+			// This includes completed walk-in lab tests that haven't been billed yet
+			$hasUnbilledItems = false;
+			
+			// Check unbilled appointments
+			$billedAppointmentIds = $db->table('bills')
+				->select('appointment_id')
+				->where('appointment_id IS NOT NULL')
+				->get()->getResultArray();
+			$billedAppointmentIds = array_column($billedAppointmentIds, 'appointment_id');
+			
+			$unbilledAppointments = $appointmentModel->where('patient_id', $patient['id'])
+				->where('status', 'completed')
+				->where('appointment_type !=', 'laboratory_test')
+				->where('doctor_id IS NOT NULL', null, false);
+			
+			if (!empty($billedAppointmentIds)) {
+				$unbilledAppointments->whereNotIn('id', $billedAppointmentIds);
+			}
+			
+			if ($unbilledAppointments->countAllResults() > 0) {
+				$hasUnbilledItems = true;
+			}
+			
+			// Check unbilled prescriptions (only those with buy_from_hospital = true)
+			if (!$hasUnbilledItems && $db->tableExists('prescriptions')) {
+				$billedPrescriptionIds = $db->table('bills')
+					->select('prescription_id')
+					->where('prescription_id IS NOT NULL')
+					->get()->getResultArray();
+				$billedPrescriptionIds = array_column($billedPrescriptionIds, 'prescription_id');
+				
+				$unbilledPrescriptions = $prescriptionModel->where('patient_id', $patient['id'])
+					->whereNotIn('status', ['cancelled']);
+				
+				if (!empty($billedPrescriptionIds)) {
+					$unbilledPrescriptions->whereNotIn('id', $billedPrescriptionIds);
+				}
+				
+				$prescriptions = $unbilledPrescriptions->findAll();
+				foreach ($prescriptions as $prescription) {
+					$itemsJson = $prescription['items_json'] ?? '[]';
+					$items = json_decode($itemsJson, true);
+					if (json_last_error() === JSON_ERROR_NONE && is_array($items)) {
+						foreach ($items as $item) {
+							if (isset($item['buy_from_hospital']) && (bool)$item['buy_from_hospital']) {
+								$hasUnbilledItems = true;
+								break 2;
+							}
+						}
+					}
+				}
+			}
+			
+			// Check unbilled lab tests (including completed walk-in lab tests)
+			if (!$hasUnbilledItems && $db->tableExists('lab_test_requests')) {
+				// Get all lab test requests for this patient
+				$allLabRequests = $db->table('lab_test_requests')
+					->where('patient_id', $patient['id'])
+					->get()->getResultArray();
+				
+				// Filter in PHP to find completed/unbilled requests
+				$unbilledLabRequests = 0;
+				foreach ($allLabRequests as $req) {
+					$status = strtolower(trim($req['status'] ?? ''));
+					$billingStatus = $req['billing_status'] ?? null;
+					
+					// Check if request is completed and unbilled
+					$isCompleted = ($status === 'completed');
+					
+					// Also check if it has completed results
+					if (!$isCompleted && $db->tableExists('lab_test_results')) {
+						$hasCompletedResult = $db->table('lab_test_results')
+							->where('request_id', $req['id'])
+							->whereIn('status', ['completed', 'released', 'COMPLETED', 'RELEASED'])
+							->countAllResults() > 0;
+						$isCompleted = $hasCompletedResult;
+					}
+					
+					// Check if unbilled
+					$isUnbilled = ($billingStatus === null || $billingStatus === '' || $billingStatus === 'unbilled');
+					
+					if ($isCompleted && $isUnbilled) {
+						$unbilledLabRequests++;
+						break; // Found at least one, no need to continue
+					}
+				}
+				
+				if ($unbilledLabRequests > 0) {
+					$hasUnbilledItems = true;
+				}
+			}
+			
+			// Include if has unbilled items
+			if ($hasUnbilledItems) {
+				$patients[] = $patient;
+			}
+			// Otherwise exclude (fully paid outpatient with no future follow-ups and no unbilled items)
+		}
 		
 		// Get unbilled items
 		$db = \Config\Database::connect();
@@ -558,93 +724,134 @@ class Accounts extends Controller
 			return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(401);
 		}
 		
-		$paymentModel = new PaymentModel();
-		$billingModel = new BillingModel();
-		$insuranceModel = new InsuranceModel();
-		
-		$postData = $this->request->getJSON(true);
-		$billId = $postData['bill_id'];
-		$amount = floatval($postData['amount']);
-		$paymentMethod = $postData['payment_method'];
-		
-		$bill = $billingModel->find($billId);
-		if (!$bill) {
-			return $this->response->setJSON(['success' => false, 'message' => 'Bill not found']);
-		}
-		
-		// Check if there's already an insurance payment for this bill
-		if ($paymentMethod === 'cash' || $paymentMethod === 'credit_card' || $paymentMethod === 'debit_card') {
-			$existingInsurancePayment = $paymentModel->where('bill_id', $billId)
-				->where('payment_method', 'insurance')
-				->where('status', 'completed')
-				->first();
+		try {
+			$paymentModel = new PaymentModel();
+			$billingModel = new BillingModel();
+			$insuranceModel = new InsuranceModel();
 			
-			if ($existingInsurancePayment) {
-				// Check if there's an approved insurance claim
-				$approvedClaim = $insuranceModel->where('bill_id', $billId)
-					->where('status', 'approved')
+			$postData = $this->request->getJSON(true);
+			
+			// Validate required fields
+			if (!$postData) {
+				return $this->response->setJSON(['success' => false, 'message' => 'Invalid request data']);
+			}
+			
+			if (empty($postData['bill_id'])) {
+				return $this->response->setJSON(['success' => false, 'message' => 'Bill ID is required']);
+			}
+			
+			if (empty($postData['amount']) || floatval($postData['amount']) <= 0) {
+				return $this->response->setJSON(['success' => false, 'message' => 'Payment amount must be greater than zero']);
+			}
+			
+			if (empty($postData['payment_method'])) {
+				return $this->response->setJSON(['success' => false, 'message' => 'Payment method is required']);
+			}
+			
+			$billId = (int)$postData['bill_id'];
+			$amount = floatval($postData['amount']);
+			$paymentMethod = $postData['payment_method'];
+			
+			$bill = $billingModel->find($billId);
+			if (!$bill) {
+				return $this->response->setJSON(['success' => false, 'message' => 'Bill not found']);
+			}
+			
+			// Check if bill balance is already zero
+			$currentBalance = floatval($bill['balance'] ?? 0);
+			if ($currentBalance <= 0) {
+				return $this->response->setJSON([
+					'success' => false, 
+					'message' => 'This bill is already fully paid. Cannot record additional payment.'
+				]);
+			}
+			
+			// Check if there's already an insurance payment for this bill
+			if ($paymentMethod === 'cash' || $paymentMethod === 'credit_card' || $paymentMethod === 'debit_card') {
+				$existingInsurancePayment = $paymentModel->where('bill_id', $billId)
+					->where('payment_method', 'insurance')
+					->where('status', 'completed')
 					->first();
 				
-				if ($approvedClaim) {
-					$insuranceAmount = floatval($existingInsurancePayment['amount']);
-					$remainingBalance = $bill['total_amount'] - $bill['paid_amount'];
+				if ($existingInsurancePayment) {
+					// Check if there's an approved insurance claim
+					$approvedClaim = $insuranceModel->where('bill_id', $billId)
+						->where('status', 'approved')
+						->first();
 					
-					// If insurance already paid the full amount or more, don't allow cash payment
-					if ($insuranceAmount >= $bill['total_amount']) {
-						return $this->response->setJSON([
-							'success' => false, 
-							'message' => 'This bill is already fully paid by insurance. Cannot record additional cash payment.'
-						]);
-					}
-					
-					// If trying to pay more than remaining balance after insurance
-					if ($amount > $remainingBalance) {
-						return $this->response->setJSON([
-							'success' => false, 
-							'message' => 'Payment amount exceeds remaining balance. Remaining balance after insurance: ₱' . number_format($remainingBalance, 2)
-						]);
+					if ($approvedClaim) {
+						$insuranceAmount = floatval($existingInsurancePayment['amount']);
+						$remainingBalance = floatval($bill['total_amount'] ?? 0) - floatval($bill['paid_amount'] ?? 0);
+						
+						// If insurance already paid the full amount or more, don't allow cash payment
+						if ($insuranceAmount >= floatval($bill['total_amount'] ?? 0)) {
+							return $this->response->setJSON([
+								'success' => false, 
+								'message' => 'This bill is already fully paid by insurance. Cannot record additional cash payment.'
+							]);
+						}
+						
+						// If trying to pay more than remaining balance after insurance
+						if ($amount > $remainingBalance) {
+							return $this->response->setJSON([
+								'success' => false, 
+								'message' => 'Payment amount exceeds remaining balance. Remaining balance after insurance: ₱' . number_format($remainingBalance, 2)
+							]);
+						}
 					}
 				}
 			}
-		}
-		
-		// Validate amount doesn't exceed balance
-		if ($amount > $bill['balance']) {
-			return $this->response->setJSON([
-				'success' => false, 
-				'message' => 'Payment amount cannot exceed bill balance. Current balance: ₱' . number_format($bill['balance'], 2)
-			]);
-		}
-		
-		if ($amount <= 0) {
-			return $this->response->setJSON(['success' => false, 'message' => 'Payment amount must be greater than zero']);
-		}
-		
-		// Generate payment number
-		$paymentNumber = $paymentModel->generatePaymentNumber();
-		
-		// Create payment
-		$paymentData = [
-			'bill_id' => $billId,
-			'patient_id' => $bill['patient_id'],
-			'payment_number' => $paymentNumber,
-			'amount' => $amount,
-			'payment_method' => $paymentMethod,
-			'payment_date' => $postData['payment_date'] ?? date('Y-m-d'),
-			'transaction_id' => $postData['transaction_id'] ?? null,
-			'reference_number' => $postData['reference_number'] ?? null,
-			'notes' => $postData['notes'] ?? null,
-			'status' => 'completed',
-			'processed_by' => session()->get('user_id'),
-		];
-		
-		$paymentId = $paymentModel->insert($paymentData);
-		
-		if ($paymentId) {
+			
+			// Validate amount doesn't exceed balance
+			if ($amount > $currentBalance) {
+				return $this->response->setJSON([
+					'success' => false, 
+					'message' => 'Payment amount cannot exceed bill balance. Current balance: ₱' . number_format($currentBalance, 2)
+				]);
+			}
+			
+			if ($amount > $currentBalance) {
+				return $this->response->setJSON([
+					'success' => false, 
+					'message' => 'Payment amount cannot exceed bill balance. Current balance: ₱' . number_format($currentBalance, 2)
+				]);
+			}
+			
+			// Generate payment number
+			$paymentNumber = $paymentModel->generatePaymentNumber();
+			if (empty($paymentNumber)) {
+				return $this->response->setJSON(['success' => false, 'message' => 'Failed to generate payment number']);
+			}
+			
+			// Create payment
+			$paymentData = [
+				'bill_id' => $billId,
+				'patient_id' => $bill['patient_id'] ?? null,
+				'payment_number' => $paymentNumber,
+				'amount' => $amount,
+				'payment_method' => $paymentMethod,
+				'payment_date' => $postData['payment_date'] ?? date('Y-m-d'),
+				'transaction_id' => $postData['transaction_id'] ?? null,
+				'reference_number' => $postData['reference_number'] ?? null,
+				'notes' => $postData['notes'] ?? null,
+				'status' => 'completed',
+				'processed_by' => session()->get('user_id'),
+			];
+			
+			$paymentId = $paymentModel->insert($paymentData);
+			
+			if (!$paymentId) {
+				$errors = $paymentModel->errors();
+				return $this->response->setJSON([
+					'success' => false, 
+					'message' => 'Failed to create payment record. ' . (is_array($errors) ? implode(', ', $errors) : 'Database error')
+				]);
+			}
+			
 			// Update bill
-			$newPaidAmount = $bill['paid_amount'] + $amount;
-			$newBalance = $bill['total_amount'] - $newPaidAmount;
-			$newStatus = $newBalance <= 0 ? 'paid' : ($newBalance < $bill['total_amount'] ? 'partial' : 'pending');
+			$newPaidAmount = floatval($bill['paid_amount'] ?? 0) + $amount;
+			$newBalance = floatval($bill['total_amount'] ?? 0) - $newPaidAmount;
+			$newStatus = $newBalance <= 0 ? 'paid' : ($newBalance < floatval($bill['total_amount'] ?? 0) ? 'partial' : 'pending');
 			
 			$billingModel->update($billId, [
 				'paid_amount' => $newPaidAmount,
@@ -674,12 +881,34 @@ class Accounts extends Controller
 						if ($appointmentType === 'follow-up' && $appointmentDate && $appointmentDate > $today) {
 							log_message('info', "Skipping auto-complete for future follow-up appointment #{$updatedBill['appointment_id']} (date: {$appointmentDate})");
 						} elseif ($appointment['status'] !== 'completed' && (!$appointmentDate || $appointmentDate <= $today)) {
-							// Only complete if appointment date is today or in the past
-							$appointmentModel->update($updatedBill['appointment_id'], [
-								'status' => 'completed',
-								'updated_at' => date('Y-m-d H:i:s')
-							]);
-							log_message('info', "Auto-completed appointment #{$updatedBill['appointment_id']} after bill #{$billId} was fully paid");
+							// For follow-up appointments, check if prescription exists before completing
+							if ($appointmentType === 'follow-up') {
+								// Check if there's a prescription for this follow-up appointment
+								$prescription = $db->table('prescriptions')
+									->where('appointment_id', $updatedBill['appointment_id'])
+									->where('status !=', 'cancelled')
+									->get()
+									->getRowArray();
+								
+								if (!$prescription) {
+									log_message('info', "Skipping auto-complete for follow-up appointment #{$updatedBill['appointment_id']} - no prescription found. Doctor must provide prescription first.");
+									// Don't complete - prescription is required for follow-up appointments
+								} else {
+									// Prescription exists and payment is made - can complete
+									$appointmentModel->update($updatedBill['appointment_id'], [
+										'status' => 'completed',
+										'updated_at' => date('Y-m-d H:i:s')
+									]);
+									log_message('info', "Auto-completed follow-up appointment #{$updatedBill['appointment_id']} after prescription provided and bill #{$billId} was fully paid");
+								}
+							} else {
+								// For non-follow-up appointments, complete as before
+								$appointmentModel->update($updatedBill['appointment_id'], [
+									'status' => 'completed',
+									'updated_at' => date('Y-m-d H:i:s')
+								]);
+								log_message('info', "Auto-completed appointment #{$updatedBill['appointment_id']} after bill #{$billId} was fully paid");
+							}
 						}
 					}
 				} else {
@@ -710,49 +939,113 @@ class Accounts extends Controller
 					// Update the most recent appointment that matches
 					if (!empty($appointments)) {
 						$appointmentToUpdate = $appointments[0]; // Most recent
-						$appointmentModel->update($appointmentToUpdate['id'], [
-							'status' => 'completed',
-							'updated_at' => date('Y-m-d H:i:s')
-						]);
-						log_message('info', "Auto-completed appointment #{$appointmentToUpdate['id']} (matched by patient_id and date) after bill #{$billId} was fully paid");
+						$appointmentTypeToUpdate = strtolower($appointmentToUpdate['appointment_type'] ?? '');
 						
-						// Also update the bill to link it to this appointment for future reference
-						$billingModel->update($billId, [
-							'appointment_id' => $appointmentToUpdate['id']
-						]);
+						// For follow-up appointments, check if prescription exists before completing
+						if ($appointmentTypeToUpdate === 'follow-up') {
+							// Check if there's a prescription for this follow-up appointment
+							$prescription = $db->table('prescriptions')
+								->where('appointment_id', $appointmentToUpdate['id'])
+								->where('status !=', 'cancelled')
+								->get()
+								->getRowArray();
+							
+							if (!$prescription) {
+								log_message('info', "Skipping auto-complete for follow-up appointment #{$appointmentToUpdate['id']} (matched by patient_id and date) - no prescription found. Doctor must provide prescription first.");
+								// Don't complete - prescription is required for follow-up appointments
+							} else {
+								// Prescription exists and payment is made - can complete
+								$appointmentModel->update($appointmentToUpdate['id'], [
+									'status' => 'completed',
+									'updated_at' => date('Y-m-d H:i:s')
+								]);
+								log_message('info', "Auto-completed follow-up appointment #{$appointmentToUpdate['id']} (matched by patient_id and date) after prescription provided and bill #{$billId} was fully paid");
+								
+								// Also update the bill to link it to this appointment for future reference
+								$billingModel->update($billId, [
+									'appointment_id' => $appointmentToUpdate['id']
+								]);
+							}
+						} else {
+							// For non-follow-up appointments, complete as before
+							$appointmentModel->update($appointmentToUpdate['id'], [
+								'status' => 'completed',
+								'updated_at' => date('Y-m-d H:i:s')
+							]);
+							log_message('info', "Auto-completed appointment #{$appointmentToUpdate['id']} (matched by patient_id and date) after bill #{$billId} was fully paid");
+							
+							// Also update the bill to link it to this appointment for future reference
+							$billingModel->update($billId, [
+								'appointment_id' => $appointmentToUpdate['id']
+							]);
+						}
 					}
 				}
 				
-				// Check if patient is a walk-in (only has walk-in or lab test appointments, no consultation)
+				// Check if patient should be set to inactive
 				$patient = $patientModel->find($updatedBill['patient_id']);
 				if ($patient) {
-					// Check if patient has any consultation appointments
-					$hasConsultation = $db->table('appointments')
-						->where('patient_id', $updatedBill['patient_id'])
-						->where('status !=', 'cancelled')
-						->where('appointment_type', 'consultation')
-						->countAllResults() > 0;
+					// Check if this bill is for a completed follow-up appointment
+					$isFollowUpBill = false;
+					$completedFollowUpId = null;
 					
-					// Check if patient has any doctor assignments
-					$hasDoctor = $db->table('appointments')
-						->where('patient_id', $updatedBill['patient_id'])
-						->where('status !=', 'cancelled')
-						->where('doctor_id IS NOT NULL', null, false)
-						->countAllResults() > 0;
+					if (!empty($updatedBill['appointment_id'])) {
+						$appointmentForBill = $appointmentModel->find($updatedBill['appointment_id']);
+						if ($appointmentForBill && strtolower($appointmentForBill['appointment_type'] ?? '') === 'follow-up' && $appointmentForBill['status'] === 'completed') {
+							$isFollowUpBill = true;
+							$completedFollowUpId = $updatedBill['appointment_id'];
+						}
+					}
 					
-					// Check if patient is admitted
-					$isAdmitted = $db->table('admissions')
-						->where('patient_id', $updatedBill['patient_id'])
-						->where('status', 'Admitted')
-						->countAllResults() > 0;
-					
-					// If walk-in patient (no consultation, no doctor, not admitted) and bill is paid, set to inactive
-					if (!$hasConsultation && !$hasDoctor && !$isAdmitted && strtolower($patient['patient_type'] ?? '') === 'outpatient') {
-						$patientModel->update($updatedBill['patient_id'], [
-							'status' => 'inactive',
-							'updated_at' => date('Y-m-d H:i:s')
-						]);
-						log_message('info', "Set walk-in patient #{$updatedBill['patient_id']} to inactive after bill #{$billId} was fully paid");
+					// If this is a follow-up bill that was just paid and the appointment is completed
+					if ($isFollowUpBill && $completedFollowUpId) {
+						// Check if there are any other pending follow-up appointments
+						$hasPendingFollowUps = $db->table('appointments')
+							->where('patient_id', $updatedBill['patient_id'])
+							->where('appointment_type', 'follow-up')
+							->where('status !=', 'completed')
+							->where('status !=', 'cancelled')
+							->where('id !=', $completedFollowUpId)
+							->countAllResults() > 0;
+						
+						// If no pending follow-ups, set patient to inactive
+						if (!$hasPendingFollowUps) {
+							$patientModel->update($updatedBill['patient_id'], [
+								'status' => 'inactive',
+								'updated_at' => date('Y-m-d H:i:s')
+							]);
+							log_message('info', "Set patient #{$updatedBill['patient_id']} to inactive after follow-up appointment #{$completedFollowUpId} was completed and bill #{$billId} was fully paid");
+						}
+					} else {
+						// Original logic for walk-in patients
+						// Check if patient has any consultation appointments
+						$hasConsultation = $db->table('appointments')
+							->where('patient_id', $updatedBill['patient_id'])
+							->where('status !=', 'cancelled')
+							->where('appointment_type', 'consultation')
+							->countAllResults() > 0;
+						
+						// Check if patient has any doctor assignments
+						$hasDoctor = $db->table('appointments')
+							->where('patient_id', $updatedBill['patient_id'])
+							->where('status !=', 'cancelled')
+							->where('doctor_id IS NOT NULL', null, false)
+							->countAllResults() > 0;
+						
+						// Check if patient is admitted
+						$isAdmitted = $db->table('admissions')
+							->where('patient_id', $updatedBill['patient_id'])
+							->where('status', 'Admitted')
+							->countAllResults() > 0;
+						
+						// If walk-in patient (no consultation, no doctor, not admitted) and bill is paid, set to inactive
+						if (!$hasConsultation && !$hasDoctor && !$isAdmitted && strtolower($patient['patient_type'] ?? '') === 'outpatient') {
+							$patientModel->update($updatedBill['patient_id'], [
+								'status' => 'inactive',
+								'updated_at' => date('Y-m-d H:i:s')
+							]);
+							log_message('info', "Set walk-in patient #{$updatedBill['patient_id']} to inactive after bill #{$billId} was fully paid");
+						}
 					}
 				}
 				
@@ -766,6 +1059,114 @@ class Accounts extends Controller
 					$db->table('admissions')
 						->where('id', $admission['id'])
 						->update(['billing_cleared' => 1]);
+				}
+				
+				// Update lab test request status to completed if bill is linked to a lab test
+				$labTestRequestModel = new LabTestRequestModel();
+				$labRequestIdsToComplete = [];
+				
+				// Check if bill has lab_test_id directly
+				if (!empty($updatedBill['lab_test_id']) && $db->tableExists('lab_test_requests')) {
+					$labRequestIdsToComplete[] = (int)$updatedBill['lab_test_id'];
+				}
+				
+				// Also check bill_items for lab test requests
+				if ($db->tableExists('bill_items')) {
+					// Check if reference_type column exists
+					$columns = $db->getFieldNames('bill_items');
+					$hasReferenceType = in_array('reference_type', $columns);
+					
+					$builder = $db->table('bill_items')
+						->where('bill_id', $billId)
+						->where('reference_id IS NOT NULL', null, false);
+					
+					// Only filter by reference_type if the column exists
+					if ($hasReferenceType) {
+						$builder->where('reference_type', 'lab_request');
+					} else {
+						// Fallback: filter by item_type or item_name containing lab-related keywords
+						$builder->groupStart()
+							->like('item_type', 'lab', 'both')
+							->orLike('item_name', 'lab', 'both')
+							->orLike('item_name', 'test', 'both')
+							->orLike('item_name', 'urine', 'both')
+							->orLike('item_name', 'blood', 'both')
+							->groupEnd();
+					}
+					
+					$billItems = $builder->get()->getResultArray();
+					
+					foreach ($billItems as $item) {
+						if (!empty($item['reference_id'])) {
+							$labRequestIdsToComplete[] = (int)$item['reference_id'];
+						}
+					}
+					
+					// Fallback: Check bill_items by item_name containing lab test names
+					// This handles cases where reference_type might not be set correctly
+					if (empty($labRequestIdsToComplete)) {
+						$allBillItems = $db->table('bill_items')
+							->where('bill_id', $billId)
+							->get()
+							->getResultArray();
+						
+						foreach ($allBillItems as $item) {
+							$itemName = strtolower($item['item_name'] ?? '');
+							// If item name looks like a lab test, try to find matching lab test request
+							if (strpos($itemName, 'urine') !== false || 
+								strpos($itemName, 'blood') !== false || 
+								strpos($itemName, 'culture') !== false ||
+								strpos($itemName, 'x-ray') !== false ||
+								strpos($itemName, 'test') !== false) {
+								
+								// Find lab test request by patient_id and matching test_type
+								$matchingRequest = $labTestRequestModel
+									->where('patient_id', $updatedBill['patient_id'])
+									->where('status !=', 'completed')
+									->like('test_type', $item['item_name'])
+									->orderBy('requested_at', 'DESC')
+									->first();
+								
+								if ($matchingRequest) {
+									$labRequestIdsToComplete[] = (int)$matchingRequest['id'];
+								}
+							}
+						}
+					}
+				}
+				
+				// Final fallback: Find any incomplete lab test requests for this patient created around the bill date
+				if (empty($labRequestIdsToComplete) && $db->tableExists('lab_test_requests')) {
+					$billDate = $updatedBill['created_at'] ?? date('Y-m-d H:i:s');
+					$startDate = date('Y-m-d H:i:s', strtotime($billDate . ' -1 day'));
+					$endDate = date('Y-m-d H:i:s', strtotime($billDate . ' +1 day'));
+					
+					$matchingRequests = $db->table('lab_test_requests')
+						->where('patient_id', $updatedBill['patient_id'])
+						->where('status !=', 'completed')
+						->where('requested_at >=', $startDate)
+						->where('requested_at <=', $endDate)
+						->orderBy('requested_at', 'DESC')
+						->get()
+						->getResultArray();
+					
+					foreach ($matchingRequests as $req) {
+						$labRequestIdsToComplete[] = (int)$req['id'];
+					}
+				}
+				
+				// Update all lab test requests to completed
+				$labRequestIdsToComplete = array_unique($labRequestIdsToComplete);
+				foreach ($labRequestIdsToComplete as $labRequestId) {
+					$labTestRequest = $labTestRequestModel->find($labRequestId);
+					
+					if ($labTestRequest && $labTestRequest['status'] !== 'completed') {
+						$labTestRequestModel->update($labRequestId, [
+							'status' => 'completed',
+							'updated_at' => date('Y-m-d H:i:s')
+						]);
+						log_message('info', "Auto-completed lab test request #{$labRequestId} after bill #{$billId} was fully paid");
+					}
 				}
 				
 				// Update insurance claim status to paid
@@ -794,6 +1195,13 @@ class Accounts extends Controller
 				'payment_id' => $paymentId,
 				'payment_number' => $paymentNumber
 			]);
+		} catch (\Exception $e) {
+			log_message('error', 'Error recording payment: ' . $e->getMessage());
+			log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+			return $this->response->setJSON([
+				'success' => false, 
+				'message' => 'Error recording payment: ' . $e->getMessage()
+			])->setStatusCode(500);
 		}
 		
 		return $this->response->setJSON(['success' => false, 'message' => 'Failed to record payment']);
@@ -1165,11 +1573,38 @@ class Accounts extends Controller
 						$selectFields .= ', rq.appointment_id';
 					}
 					
-					$allRequests = $db->table('lab_test_requests rq')
+					// Get all lab test requests for this patient first
+					$allRequestsRaw = $db->table('lab_test_requests rq')
 						->select($selectFields)
 						->where('rq.patient_id', $patientId)
 						->orderBy('rq.requested_at', 'DESC')
 						->get()->getResultArray();
+					
+					// Filter in PHP to include:
+					// 1. Requests with status = 'completed' (case-insensitive)
+					// 2. Requests that have completed/released results (even if request status is not completed)
+					$allRequests = [];
+					foreach ($allRequestsRaw as $req) {
+						$status = strtolower(trim($req['status'] ?? ''));
+						
+						// Check if request status is completed
+						if ($status === 'completed') {
+							$allRequests[] = $req;
+							continue;
+						}
+						
+						// Check if request has completed/released results
+						if ($db->tableExists('lab_test_results')) {
+							$hasCompletedResult = $db->table('lab_test_results')
+								->where('request_id', $req['id'])
+								->whereIn('status', ['completed', 'released', 'COMPLETED', 'RELEASED'])
+								->countAllResults() > 0;
+							
+							if ($hasCompletedResult) {
+								$allRequests[] = $req;
+							}
+						}
+					}
 					
 					// Try to get billing_status if column exists
 					if (!empty($allRequests)) {
@@ -1421,15 +1856,30 @@ class Accounts extends Controller
 				}
 			}
 			
-			// Get billed prescription IDs (only if bills table exists)
+			// Get billed prescription IDs - check both bills table and bill_items table
 			$billedPrescriptionIds = [];
 			if ($db->tableExists('bills')) {
 				try {
+					// Check bills table for prescription_id
 					$billedPrescriptions = $db->table('bills')
 						->select('prescription_id')
 						->where('prescription_id IS NOT NULL')
 						->get()->getResultArray();
 					$billedPrescriptionIds = array_column($billedPrescriptions, 'prescription_id');
+					
+					// Also check bill_items for medications that reference prescriptions
+					if ($db->tableExists('bill_items')) {
+						$billedPrescriptionItems = $db->table('bill_items bi')
+							->select('bi.reference_id')
+							->join('bills b', 'b.id = bi.bill_id', 'inner')
+							->where('bi.reference_type', 'prescription')
+							->where('bi.reference_id IS NOT NULL')
+							->where('b.patient_id', $patientId)
+							->where('b.status', 'paid') // Only count paid bills
+							->get()->getResultArray();
+						$billedPrescriptionItemIds = array_column($billedPrescriptionItems, 'reference_id');
+						$billedPrescriptionIds = array_unique(array_merge($billedPrescriptionIds, $billedPrescriptionItemIds));
+					}
 				} catch (\Exception $e) {
 					log_message('warning', 'Error fetching billed prescriptions: ' . $e->getMessage());
 					$billedPrescriptionIds = [];
@@ -1504,6 +1954,63 @@ class Accounts extends Controller
 					$itemsJson = $prescription['items_json'] ?? '[]';
 					$items = json_decode($itemsJson, true);
 					
+					// Check if all medications from this prescription have been paid
+					// by checking if all buy_from_hospital medications exist in paid bill_items
+					if ($db->tableExists('bill_items') && $db->tableExists('bills') && 
+						json_last_error() === JSON_ERROR_NONE && is_array($items) && !empty($items)) {
+						
+						$prescriptionMedications = [];
+						foreach ($items as $item) {
+							if (!is_array($item)) continue;
+							$buyFromHospital = isset($item['buy_from_hospital']) ? (bool)$item['buy_from_hospital'] : true;
+							if ($buyFromHospital) {
+								$medName = $item['name'] ?? $item['medication'] ?? $item['med_name'] ?? '';
+								if (!empty($medName)) {
+									$prescriptionMedications[] = strtolower(trim($medName));
+								}
+							}
+						}
+						
+						// If prescription has medications, check if all are already paid
+						if (!empty($prescriptionMedications)) {
+							$paidMedications = $db->table('bill_items bi')
+								->join('bills b', 'b.id = bi.bill_id', 'inner')
+								->select('LOWER(bi.item_name) as item_name')
+								->where('b.patient_id', $patientId)
+								->where('b.status', 'paid')
+								->where('bi.item_type', 'medication')
+								->get()
+								->getResultArray();
+							
+							$paidMedNames = array_map(function($med) {
+								$name = strtolower(trim($med['item_name'] ?? ''));
+								// Remove dosage info for comparison
+								return preg_replace('/\s*\d+.*?(mg|ml|g|kg|mcg|iu|units?)\s*/i', '', $name);
+							}, $paidMedications);
+							
+							$allMedicationsPaid = true;
+							foreach ($prescriptionMedications as $presMed) {
+								$presMedClean = preg_replace('/\s*\d+.*?(mg|ml|g|kg|mcg|iu|units?)\s*/i', '', $presMed);
+								$found = false;
+								foreach ($paidMedNames as $paidMed) {
+									if (strpos($paidMed, $presMedClean) !== false || strpos($presMedClean, $paidMed) !== false) {
+										$found = true;
+										break;
+									}
+								}
+								if (!$found) {
+									$allMedicationsPaid = false;
+									break;
+								}
+							}
+							
+							// If all medications from this prescription are paid, skip the entire prescription
+							if ($allMedicationsPaid) {
+								continue; // Skip this prescription - all medications already paid
+							}
+						}
+					}
+					
 					// Get nurse name if prescription is completed
 					$nurseName = null;
 					if ($prescriptionStatus === 'completed' && $db->tableExists('treatment_updates')) {
@@ -1524,6 +2031,61 @@ class Accounts extends Controller
 					}
 					
 					if (json_last_error() === JSON_ERROR_NONE && is_array($items)) {
+						// Check if all medications from this prescription have been paid
+						// by checking if all buy_from_hospital medications exist in paid bill_items
+						if ($db->tableExists('bill_items') && $db->tableExists('bills') && !empty($items)) {
+							$prescriptionMedications = [];
+							foreach ($items as $item) {
+								if (!is_array($item)) continue;
+								$buyFromHospital = isset($item['buy_from_hospital']) ? (bool)$item['buy_from_hospital'] : true;
+								if ($buyFromHospital) {
+									$medName = $item['name'] ?? $item['medication'] ?? $item['med_name'] ?? '';
+									if (!empty($medName)) {
+										$prescriptionMedications[] = strtolower(trim($medName));
+									}
+								}
+							}
+							
+							// If prescription has medications, check if all are already paid
+							if (!empty($prescriptionMedications)) {
+								$paidMedications = $db->table('bill_items bi')
+									->join('bills b', 'b.id = bi.bill_id', 'inner')
+									->select('LOWER(bi.item_name) as item_name')
+									->where('b.patient_id', $patientId)
+									->where('b.status', 'paid')
+									->where('bi.item_type', 'medication')
+									->get()
+									->getResultArray();
+								
+								$paidMedNames = array_map(function($med) {
+									$name = strtolower(trim($med['item_name'] ?? ''));
+									// Remove dosage info for comparison
+									return preg_replace('/\s*\d+.*?(mg|ml|g|kg|mcg|iu|units?)\s*/i', '', $name);
+								}, $paidMedications);
+								
+								$allMedicationsPaid = true;
+								foreach ($prescriptionMedications as $presMed) {
+									$presMedClean = preg_replace('/\s*\d+.*?(mg|ml|g|kg|mcg|iu|units?)\s*/i', '', $presMed);
+									$found = false;
+									foreach ($paidMedNames as $paidMed) {
+										if (strpos($paidMed, $presMedClean) !== false || strpos($presMedClean, $paidMed) !== false) {
+											$found = true;
+											break;
+										}
+									}
+									if (!$found) {
+										$allMedicationsPaid = false;
+										break;
+									}
+								}
+								
+								// If all medications from this prescription are paid, skip the entire prescription
+								if ($allMedicationsPaid) {
+									continue; // Skip this prescription - all medications already paid
+								}
+							}
+						}
+						
 						$medCodeCounter = 1;
 						foreach ($items as $item) {
 							if (!is_array($item)) continue;
@@ -1536,6 +2098,30 @@ class Accounts extends Controller
 							
 							$medicationName = $item['name'] ?? $item['medication'] ?? $item['med_name'] ?? '';
 							if (empty($medicationName)) continue;
+							
+							// Check if this specific medication has already been billed and paid
+							// Check bill_items for paid bills with matching medication name (regardless of reference_id)
+							if ($db->tableExists('bill_items') && $db->tableExists('bills')) {
+								$medicationNameLower = strtolower(trim($medicationName));
+								$medicationNameClean = preg_replace('/\s*\d+.*?(mg|ml|g|kg|mcg|iu|units?)\s*/i', '', $medicationNameLower);
+								$medicationNameClean = trim($medicationNameClean);
+								
+								// Check if this medication name (or similar) has been billed in paid bills
+								$alreadyBilled = $db->table('bill_items bi')
+									->join('bills b', 'b.id = bi.bill_id', 'inner')
+									->where('b.patient_id', $patientId)
+									->where('b.status', 'paid') // Only check paid bills
+									->where('bi.item_type', 'medication')
+									->groupStart()
+										->like('LOWER(bi.item_name)', $medicationNameLower, 'both') // Exact match
+										->orLike('LOWER(bi.item_name)', $medicationNameClean, 'both') // Match without dosage
+									->groupEnd()
+									->countAllResults() > 0;
+								
+								if ($alreadyBilled) {
+									continue; // Skip this medication - already billed and paid
+								}
+							}
 							
 							// Calculate quantity
 							$quantity = 1;
@@ -1972,6 +2558,7 @@ class Accounts extends Controller
 				'unit_price' => ['type' => 'DECIMAL', 'constraint' => '10,2'],
 				'total_price' => ['type' => 'DECIMAL', 'constraint' => '10,2'],
 				'reference_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
+				'reference_type' => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => true, 'comment' => 'Type of reference: appointment, prescription, lab_request, lab_result, room, admission'],
 				'category' => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => true, 'comment' => 'Item category for insurance mapping'],
 				'insurance_coverage_percent' => ['type' => 'DECIMAL', 'constraint' => '5,2', 'default' => 0.00, 'null' => true, 'comment' => 'Insurance coverage percentage'],
 				'insurance_discount_amount' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'default' => 0.00, 'null' => true, 'comment' => 'Discount amount from insurance'],
@@ -1982,6 +2569,15 @@ class Accounts extends Controller
 			$forge->addKey('id', true);
 			$forge->addKey('bill_id');
 			$forge->createTable('bill_items', true);
+		} else {
+			// Check if reference_type column exists, if not add it
+			$columns = $db->getFieldNames('bill_items');
+			if (!in_array('reference_type', $columns)) {
+				$forge = \Config\Database::forge();
+				$forge->addColumn('bill_items', [
+					'reference_type' => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => true, 'comment' => 'Type of reference: appointment, prescription, lab_request, lab_result, room, admission', 'after' => 'reference_id']
+				]);
+			}
 		}
 		
 		// Create payments table

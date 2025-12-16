@@ -45,6 +45,11 @@
                                 <div class="kpi-text">Upcoming</div>
                             </div>
                         </div>
+                        <div style="margin-top: 1rem;">
+                            <a href="<?= base_url('admin/doctors/schedule/' . $doctor['id']) ?>" class="btn-primary" style="padding: 0.6rem 1.2rem; background: #3b82f6; color: white; border: none; border-radius: 0.5rem; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+                                <span>📅</span> View Schedule
+                            </a>
+                        </div>
                     </div>
 
                     <?php if (!empty($doctor['recent_appointments'])): ?>
@@ -71,10 +76,12 @@
                                                         <span class="appointment-time-modern" style="color: #db2777;">Admitted</span>
                                                     <?php endif; ?>
                                                 </div>
-                                                <div class="appointment-room-modern">
-                                                    <span class="room-text">Room: </span>
-                                                    <span class="room-value"><?= esc($appointment['room_number'] ?? '—') ?></span>
-                                                </div>
+                                                <?php if (($appointment['source'] ?? '') === 'admission'): ?>
+                                                    <div class="appointment-room-modern">
+                                                        <span class="room-text">Room: </span>
+                                                        <span class="room-value"><?= esc($appointment['room_number'] ?? '—') ?></span>
+                                                    </div>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                         <div class="appointment-status-modern">
